@@ -11,6 +11,7 @@ const TIME_LIMIT = 90;
 const maxDangerHits = 10;
 const cellLookup = new Map();
 const visitedSafe = new Set();
+const purpleSafeKeys = new Set();
 const collectableTiles = [];
 let score = 0;
 let dangerHits = 0;
@@ -45,6 +46,10 @@ function coordKey(x, y) {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function isGoldenBuffActive() {
+  return goldenBuffUntil > Date.now();
 }
 
 function setStatus(message) {
@@ -138,20 +143,29 @@ function tickDangerPatterns() {
 function drawCell(cell, x, y) {
   const key = coordKey(x, y);
   const isDanger = dangerSet.has(key);
-  const isGolden = goldenCellKey === key && goldenBuffUntil > Date.now();
+  const isGolden = goldenCellKey === key && isGoldenBuffActive();
+  const isDangerGold = isDanger && isGoldenBuffActive();
   const isVisited = visitedSafe.has(key);
+  const isPurple = purpleSafeKeys.has(key) && !isDanger;
 
   cell.className = isDanger ? "keycap danger" : "keycap safe";
   cell.dataset.x = String(x);
   cell.dataset.y = String(y);
-  cell.classList.toggle("gold", isGolden);
-  cell.classList.toggle("visited", isVisited);
+  cell.classList.toggle("gold", isGolden || isDangerGold);
+  cell.classList.toggle("visited", isVisited && !isPurple && !isDanger);
+  cell.classList.toggle("purple", isPurple);
   cell.classList.remove("pressed");
 
-  if (isVisited && !isDanger) {
-    cell.style.opacity = "0.5";
+  if (isPurple || (isVisited && !isDanger && !isPurple)) {
+    cell.style.opacity = "0.7";
   } else {
     cell.style.opacity = "1";
+  }
+
+  if (isDangerGold) {
+    cell.style.boxShadow = "inset 0 0 0 2px rgba(255,255,255,0.35), 0 0 18px rgba(255, 209, 77, 0.9)";
+  } else {
+    cell.style.boxShadow = "";
   }
 }
 
@@ -209,7 +223,7 @@ function triggerGoldenBuff() {
 
   goldenBuffUntil = Date.now() + 20000;
   score += 50;
-  setStatus("황금 버프! 20초 동안 모든 안전 발판에서 점수 상승!");
+  setStatus("황금 버프! 20초 동안 검은 발판도 황금색이 되고 점수 두 배!");
   playTone(860, 0.12, "triangle", 0.09);
   playTone(1220, 0.14, "triangle", 0.07);
   redrawBoard();
@@ -237,20 +251,35 @@ function spawnGoldenCell() {
 }
 
 function handleSafeStep(key) {
-  if (visitedSafe.has(key)) {
-    setStatus("이미 밟은 파스텔 발판입니다.");
+  const previousPurpleKey = purpleSafeKeys.size ? [...purpleSafeKeys][0] : null;
+  if (previousPurpleKey && previousPurpleKey !== key) {
+    purpleSafeKeys.delete(previousPurpleKey);
+  }
+
+  if (visitedSafe.has(key) && purpleSafeKeys.has(key)) {
+    setStatus("이미 밟은 발판은 보라색으로 잠겨 있습니다.");
     return;
   }
 
-  visitedSafe.add(key);
-  score += goldenBuffUntil > Date.now() ? 15 : 10;
+  if (!visitedSafe.has(key)) {
+    visitedSafe.add(key);
+  } else {
+    setStatus("이미 밟은 발판입니다.");
+    return;
+  }
+
+  const scoreGain = isGoldenBuffActive() ? 20 : 10;
+  score += scoreGain;
+
+  purpleSafeKeys.clear();
+  purpleSafeKeys.add(key);
 
   if (goldenCellKey === key) {
     goldenCellKey = null;
     triggerGoldenBuff();
   } else {
     playTone(540, 0.08, "triangle", 0.05);
-    setStatus("파스텔 발판을 밟았습니다.");
+    setStatus("발판을 밟았습니다.");
   }
 
   if (visitedSafe.size >= collectableTiles.length) {
@@ -279,8 +308,14 @@ function gameOver() {
 function movePlayer(dx, dy) {
   if (!gameRunning) return;
 
+  const currentX = player.x;
+  const currentY = player.y;
   const nextX = clamp(player.x + dx, 0, cols - 1);
   const nextY = clamp(player.y + dy, 0, rows - 1);
+
+  if (nextX === currentX && nextY === currentY) {
+    return;
+  }
 
   const nextKey = coordKey(nextX, nextY);
   const cell = cellLookup.get(nextKey);
@@ -314,8 +349,10 @@ function resetGame() {
   timeLeft = TIME_LIMIT;
   player = { x: 0, y: 5 };
   visitedSafe.clear();
+  purpleSafeKeys.clear();
   goldenCellKey = null;
   goldenBuffUntil = 0;
+  lastDangerStep = 0;
   if (goldenTimerId) {
     clearTimeout(goldenTimerId);
     goldenTimerId = null;
@@ -367,7 +404,7 @@ function handleKey(event) {
 function animateBoard(time) {
   const t = time * 0.001;
 
-  if (time - lastDangerStep > 260) {
+  if (time - lastDangerStep >= 5000) {
     tickDangerPatterns();
     lastDangerStep = time;
   }

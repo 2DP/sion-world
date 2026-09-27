@@ -12,6 +12,7 @@
   --safe-5: #e5ddff;
   --danger: #0a0a0a;
   --gold: #ffd24d;
+  --purple: #a986ff;
   --accent: #ff9ec8;
   --accent-2: #7bd8ff;
   --shadow: 0 28px 60px rgba(0, 0, 0, 0.42);
@@ -124,8 +125,13 @@ body {
 }
 
 .keycap.visited {
-  opacity: 0.5;
+  opacity: 0.6;
   filter: grayscale(0.12);
+}
+
+.keycap.purple {
+  background: linear-gradient(135deg, #dacbff, var(--purple));
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.2), 0 0 16px rgba(161, 133, 255, 0.35);
 }
 
 .keycap.danger {
@@ -158,9 +164,9 @@ body {
   position: relative;
   width: 58%;
   height: 68%;
-  border-radius: 22px 22px 16px 16px;
+  border-radius: 22px 22px 18px 18px;
   background: linear-gradient(180deg, #ffe9d1, #f7c9a8);
-  box-shadow: 0 12px 18px rgba(0,0,0,0.22);
+  box-shadow: 0 10px 18px rgba(0,0,0,0.2);
   border: 2px solid rgba(120, 75, 40, 0.18);
 }
 
@@ -168,21 +174,26 @@ body {
   content: "";
   position: absolute;
   left: 50%;
-  top: -22%;
-  width: 62%;
+  top: -24%;
+  width: 70%;
   height: 42%;
   transform: translateX(-50%);
-  background: linear-gradient(180deg, #382521, #1d0f13);
-  border-radius: 50% 50% 38% 38%;
-  box-shadow: inset 0 -3px 0 rgba(255,255,255,0.1);
+  background: linear-gradient(180deg, #4d2b2a, #231619);
+  border-radius: 48% 48% 38% 38%;
+  box-shadow: -16px 14px 0 -8px rgba(61, 35, 38, 0.95), 16px 14px 0 -8px rgba(61, 35, 38, 0.95), inset 0 -2px 0 rgba(255,255,255,0.08);
 }
 
 .character-inner::after {
   content: "";
   position: absolute;
-  inset: 18% 16% 12%;
-  border-radius: 48% 48% 40% 40%;
-  background: radial-gradient(circle at 50% 35%, #f9e6d0 0%, #f7d4b4 38%, rgba(255,255,255,0) 39%);
+  left: 50%;
+  bottom: -16%;
+  width: 62%;
+  height: 28%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #ffbfd2, #f199b9);
+  border-radius: 18px 18px 20px 20px;
+  box-shadow: 0 8px 16px rgba(214, 126, 165, 0.25);
 }
 
 .face {
@@ -196,7 +207,7 @@ body {
   height: 7px;
   border-radius: 50%;
   background: #1d1d22;
-  top: 40%;
+  top: 38%;
 }
 
 .face .eye.left { left: 30%; }
