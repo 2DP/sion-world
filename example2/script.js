@@ -11,7 +11,6 @@ const TIME_LIMIT = 90;
 const maxDangerHits = 10;
 const cellLookup = new Map();
 const visitedSafe = new Set();
-const purpleSafeKeys = new Set();
 const collectableTiles = [];
 let score = 0;
 let dangerHits = 0;
@@ -21,20 +20,25 @@ let player = { x: 0, y: 5 };
 let goldenCellKey = null;
 let goldenBuffUntil = 0;
 let goldenTimerId = null;
+let goldenSpawnTimerId = null;
 let dangerPatterns = [];
 let dangerSet = new Set();
 let timerId = null;
 let lastDangerStep = 0;
+let activePurpleKey = null;
 
 const character = document.createElement("div");
 character.className = "character";
 character.setAttribute("aria-label", "주인공 캐릭터");
 character.innerHTML = `
-  <div class="character-inner">
+  <div class="character-inner hamster">
     <div class="face">
+      <span class="ear left"></span>
+      <span class="ear right"></span>
       <span class="eye left"></span>
       <span class="eye right"></span>
       <span class="smile"></span>
+      <span class="nose"></span>
     </div>
   </div>
 `;
@@ -63,7 +67,7 @@ function updateHud() {
   progressValueEl.textContent = `${visitedSafe.size}/${collectableTiles.length}`;
 }
 
-function playTone(frequency, duration, type = "triangle", volume = 0.06) {
+function playKeycapClick(frequency = 880, duration = 0.06) {
   const AudioCtor = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtor) return;
 
@@ -71,11 +75,10 @@ function playTone(frequency, duration, type = "triangle", volume = 0.06) {
   const oscillator = audioContext.createOscillator();
   const gainNode = audioContext.createGain();
 
-  oscillator.type = type;
-  oscillator.frequency.value = frequency;
-
+  oscillator.type = "square";
+  oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
   gainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
-  gainNode.gain.exponentialRampToValueAtTime(volume, audioContext.currentTime + 0.02);
+  gainNode.gain.exponentialRampToValueAtTime(0.06, audioContext.currentTime + 0.01);
   gainNode.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration);
 
   oscillator.connect(gainNode);
@@ -83,17 +86,17 @@ function playTone(frequency, duration, type = "triangle", volume = 0.06) {
 
   oscillator.start();
   oscillator.stop(audioContext.currentTime + duration);
-
   oscillator.onended = () => audioContext.close();
 }
 
 function initializeCollectableTiles() {
+  collectableTiles.length = 0;
   for (let y = 0; y < rows; y += 1) {
     for (let x = 0; x < cols; x += 1) {
       if (x === 0 || y === 0 || x === cols - 1 || y === rows - 1) continue;
-      if ((x + y) % 3 !== 0) {
-        collectableTiles.push({ x, y });
-      }
+      const key = coordKey(x, y);
+      if (dangerSet.has(key)) continue;
+      collectableTiles.push({ x, y });
     }
   }
 }
@@ -137,6 +140,7 @@ function tickDangerPatterns() {
   });
 
   refreshDangerSet();
+  initializeCollectableTiles();
   redrawBoard();
 }
 
@@ -146,7 +150,7 @@ function drawCell(cell, x, y) {
   const isGolden = goldenCellKey === key && isGoldenBuffActive();
   const isDangerGold = isDanger && isGoldenBuffActive();
   const isVisited = visitedSafe.has(key);
-  const isPurple = purpleSafeKeys.has(key) && !isDanger;
+  const isPurple = isVisited && !isDanger && key === activePurpleKey;
 
   cell.className = isDanger ? "keycap danger" : "keycap safe";
   cell.dataset.x = String(x);
@@ -156,8 +160,8 @@ function drawCell(cell, x, y) {
   cell.classList.toggle("purple", isPurple);
   cell.classList.remove("pressed");
 
-  if (isPurple || (isVisited && !isDanger && !isPurple)) {
-    cell.style.opacity = "0.7";
+  if (isVisited && !isDanger) {
+    cell.style.opacity = isPurple ? "0.8" : "0.56";
   } else {
     cell.style.opacity = "1";
   }
@@ -191,6 +195,7 @@ function createBoard() {
   }
 
   refreshDangerSet();
+  initializeCollectableTiles();
   redrawBoard();
 }
 
@@ -224,8 +229,8 @@ function triggerGoldenBuff() {
   goldenBuffUntil = Date.now() + 20000;
   score += 50;
   setStatus("황금 버프! 20초 동안 검은 발판도 황금색이 되고 점수 두 배!");
-  playTone(860, 0.12, "triangle", 0.09);
-  playTone(1220, 0.14, "triangle", 0.07);
+  playKeycapClick(1220, 0.12);
+  playKeycapClick(1560, 0.14);
   redrawBoard();
 
   goldenTimerId = window.setTimeout(() => {
@@ -235,7 +240,24 @@ function triggerGoldenBuff() {
   }, 20000);
 }
 
+function scheduleGoldenSpawn() {
+  if (goldenSpawnTimerId) {
+    clearTimeout(goldenSpawnTimerId);
+  }
+
+  goldenSpawnTimerId = window.setTimeout(() => {
+    goldenSpawnTimerId = null;
+    if (!gameRunning || goldenCellKey) return;
+    spawnGoldenCell();
+    if (!goldenCellKey) {
+      scheduleGoldenSpawn();
+    }
+  }, 3500);
+}
+
 function spawnGoldenCell() {
+  if (goldenCellKey) return;
+
   const candidates = collectableTiles.filter(({ x, y }) => {
     const key = coordKey(x, y);
     return !visitedSafe.has(key) && key !== coordKey(player.x, player.y);
@@ -247,46 +269,33 @@ function spawnGoldenCell() {
   goldenCellKey = coordKey(chosen.x, chosen.y);
   redrawBoard();
   setStatus("황금 발판 등장! 밟으면 버프!");
-  playTone(960, 0.08, "triangle", 0.05);
+  playKeycapClick(960, 0.08);
 }
 
 function handleSafeStep(key) {
-  const previousPurpleKey = purpleSafeKeys.size ? [...purpleSafeKeys][0] : null;
-  if (previousPurpleKey && previousPurpleKey !== key) {
-    purpleSafeKeys.delete(previousPurpleKey);
-  }
-
-  if (visitedSafe.has(key) && purpleSafeKeys.has(key)) {
-    setStatus("이미 밟은 발판은 보라색으로 잠겨 있습니다.");
+  if (visitedSafe.has(key)) {
+    activePurpleKey = key;
+    setStatus("이미 밟은 발판입니다. 점수는 더 올라가지 않습니다.");
     return;
   }
 
-  if (!visitedSafe.has(key)) {
-    visitedSafe.add(key);
-  } else {
-    setStatus("이미 밟은 발판입니다.");
-    return;
-  }
-
-  const scoreGain = isGoldenBuffActive() ? 20 : 10;
-  score += scoreGain;
-
-  purpleSafeKeys.clear();
-  purpleSafeKeys.add(key);
+  visitedSafe.add(key);
+  activePurpleKey = key;
+  score += isGoldenBuffActive() ? 20 : 10;
 
   if (goldenCellKey === key) {
     goldenCellKey = null;
     triggerGoldenBuff();
   } else {
-    playTone(540, 0.08, "triangle", 0.05);
+    playKeycapClick(540, 0.08);
     setStatus("발판을 밟았습니다.");
   }
 
   if (visitedSafe.size >= collectableTiles.length) {
     gameRunning = false;
-    setStatus("성공! 모든 파스텔 발판을 밟았습니다!");
-    playTone(700, 0.12, "triangle", 0.08);
-    playTone(980, 0.12, "triangle", 0.08);
+    setStatus("성공! 검은 발판을 제외한 모든 발판을 밟았습니다!");
+    playKeycapClick(700, 0.12);
+    playKeycapClick(980, 0.12);
     if (timerId) {
       clearInterval(timerId);
       timerId = null;
@@ -301,7 +310,7 @@ function gameOver() {
     timerId = null;
   }
   setStatus("게임 오버! 다시 시작합니다.");
-  playTone(140, 0.25, "square", 0.12);
+  playKeycapClick(140, 0.25);
   setTimeout(() => resetGame(), 1200);
 }
 
@@ -328,7 +337,7 @@ function movePlayer(dx, dy) {
   if (dangerSet.has(nextKey)) {
     dangerHits += 1;
     score = Math.max(0, score - 5);
-    playTone(180, 0.12, "sawtooth", 0.08);
+    playKeycapClick(180, 0.12);
     setStatus(`검은 발판에 닿았습니다! (${dangerHits}/${maxDangerHits})`);
 
     if (dangerHits >= maxDangerHits) {
@@ -349,7 +358,7 @@ function resetGame() {
   timeLeft = TIME_LIMIT;
   player = { x: 0, y: 5 };
   visitedSafe.clear();
-  purpleSafeKeys.clear();
+  activePurpleKey = null;
   goldenCellKey = null;
   goldenBuffUntil = 0;
   lastDangerStep = 0;
@@ -357,8 +366,13 @@ function resetGame() {
     clearTimeout(goldenTimerId);
     goldenTimerId = null;
   }
+  if (goldenSpawnTimerId) {
+    clearTimeout(goldenSpawnTimerId);
+    goldenSpawnTimerId = null;
+  }
   generateDangerPatterns();
   refreshDangerSet();
+  initializeCollectableTiles();
   redrawBoard();
   setStatus("게임 시작!");
   updateHud();
@@ -379,7 +393,7 @@ function resetGame() {
     }
   }, 1000);
 
-  window.setTimeout(() => spawnGoldenCell(), 800);
+  scheduleGoldenSpawn();
 }
 
 function handleKey(event) {
@@ -421,10 +435,10 @@ function animateBoard(time) {
 }
 
 function initializeGame() {
-  initializeCollectableTiles();
-  createBoard();
   generateDangerPatterns();
   refreshDangerSet();
+  initializeCollectableTiles();
+  createBoard();
   redrawBoard();
   updateHud();
   setPlayerPosition();
