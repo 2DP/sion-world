@@ -1,0 +1,300 @@
+:root {
+  --bg1: #141526;
+  --bg2: #1b1d38;
+  --panel: rgba(17, 20, 34, 0.82);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --text: #edf2ff;
+  --muted: #b6bfd9;
+  --safe-1: #ffd9e8;
+  --safe-2: #d9f7ff;
+  --safe-3: #dff7d9;
+  --safe-4: #fff0c7;
+  --safe-5: #e5ddff;
+  --danger: #121212;
+  --danger-shadow: #000;
+  --accent: #ff9ec8;
+  --accent-2: #7bd8ff;
+  --shadow: 0 28px 60px rgba(0, 0, 0, 0.42);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(255, 158, 200, 0.22), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(123, 216, 255, 0.18), transparent 26%),
+    linear-gradient(135deg, var(--bg1), var(--bg2));
+  color: var(--text);
+}
+
+body {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 28px;
+}
+
+.game-shell {
+  width: min(1080px, 100%);
+  background: rgba(12, 14, 24, 0.7);
+  border: 1px solid var(--panel-border);
+  border-radius: 32px;
+  box-shadow: var(--shadow);
+  padding: 22px 22px 18px;
+  backdrop-filter: blur(10px);
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 8px 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.brand {
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+.mission {
+  color: var(--accent-2);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(260px, 0.9fr);
+  gap: 20px;
+  align-items: stretch;
+}
+
+.board-panel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 26px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-board {
+  position: relative;
+  width: min(100%, 720px);
+  aspect-ratio: 1.35;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, #0d1120, #11192d);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+}
+
+.keycap {
+  position: relative;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: inset 0 -10px 14px rgba(0,0,0,0.08);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  overflow: hidden;
+}
+
+.keycap.safe {
+  background: linear-gradient(135deg, var(--safe-1), var(--safe-2));
+}
+
+.keycap.safe:nth-child(3n) {
+  background: linear-gradient(135deg, var(--safe-3), var(--safe-4));
+}
+
+.keycap.safe:nth-child(5n) {
+  background: linear-gradient(135deg, var(--safe-5), var(--safe-3));
+}
+
+.keycap.danger {
+  background: linear-gradient(135deg, #070707, var(--danger));
+  box-shadow: inset 0 -10px 18px rgba(0, 0, 0, 0.45), inset 0 0 0 1px rgba(255,255,255,0.03);
+}
+
+.keycap.pressed {
+  transform: translateY(6px) scale(0.98);
+  filter: saturate(1.1) brightness(0.98);
+}
+
+.keycap.safe.pressed {
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.25), inset 0 -8px 14px rgba(0,0,0,0.12);
+}
+
+.keycap.danger.pressed {
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.08), inset 0 8px 20px rgba(255,255,255,0.03);
+}
+
+.character {
+  position: absolute;
+  width: calc((100% - 10px * 6) / 7);
+  height: calc((100% - 10px * 4) / 5);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transition: transform 0.18s ease;
+}
+
+.character-inner {
+  position: relative;
+  width: 58%;
+  height: 66%;
+  border-radius: 18px 18px 16px 16px;
+  background: linear-gradient(180deg, #ffe6c4, #f3c7a2);
+  box-shadow: 0 12px 18px rgba(0,0,0,0.2);
+  border: 2px solid rgba(110, 64, 28, 0.2);
+}
+
+.character-inner::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -18%;
+  width: 68%;
+  height: 42%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #311d17, #1d0d11);
+  border-radius: 40% 40% 32% 32%;
+}
+
+.character-inner::after {
+  content: "";
+  position: absolute;
+  inset: 18% 18% 10%;
+  border-radius: 50% 50% 38% 38%;
+  background: radial-gradient(circle at 50% 45%, #f7d8c4 0%, #f0bf9d 35%, rgba(255,255,255,0) 36%);
+}
+
+.face {
+  position: absolute;
+  inset: 0;
+}
+
+.face .eye {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #1c1c20;
+  top: 38%;
+}
+
+.face .eye.left { left: 28%; }
+.face .eye.right { right: 28%; }
+
+.face .smile {
+  position: absolute;
+  width: 18px;
+  height: 10px;
+  border-bottom: 3px solid rgba(125, 77, 69, 0.8);
+  border-radius: 0 0 16px 16px;
+  left: 50%;
+  bottom: 22%;
+  transform: translateX(-50%);
+}
+
+.info-panel {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 26px;
+  padding: 24px 20px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  font-weight: 700;
+}
+
+.info-panel h1 {
+  margin: 12px 0 10px;
+  font-size: clamp(2rem, 2.4vw, 2.7rem);
+  line-height: 1.08;
+}
+
+.description {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+  font-size: 0.98rem;
+}
+
+.legend {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  display: inline-block;
+}
+
+.swatch.safe {
+  background: linear-gradient(135deg, var(--safe-1), var(--safe-2));
+}
+
+.swatch.danger {
+  background: linear-gradient(135deg, #070707, #1d1d1d);
+}
+
+.status-box {
+  margin-top: 24px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 16px 18px;
+}
+
+.status-label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+#statusText {
+  font-size: 1.15rem;
+}
+
+@media (max-width: 820px) {
+  .game-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .game-board {
+    aspect-ratio: 1.2;
+  }
+}

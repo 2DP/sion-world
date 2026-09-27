@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Keyboard Girl</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="game-shell">
+      <header class="topbar">
+        <div class="brand">SION WORLD</div>
+        <div class="mission">KEYBOARD WALK</div>
+      </header>
+
+      <main class="game-layout">
+        <section class="board-panel">
+          <div id="gameBoard" class="game-board" aria-label="키보드 바닥 게임 보드"></div>
+        </section>
+
+        <aside class="info-panel">
+          <p class="eyebrow">Mission</p>
+          <h1>키캡을 조심히 밟어라</h1>
+          <p class="description">
+            화살표 키 또는 WASD로 이동하세요. 파스텔 키캡을 밟으면 멜로디가
+            울리고, 검은 키캡은 위험합니다.
+          </p>
+
+          <div class="legend" aria-label="키캡 설명">
+            <div class="legend-item">
+              <span class="swatch safe"></span>
+              <span>밟아도 되는 키</span>
+            </div>
+            <div class="legend-item">
+              <span class="swatch danger"></span>
+              <span>밟으면 안 되는 키</span>
+            </div>
+          </div>
+
+          <div class="status-box">
+            <span class="status-label">상태</span>
+            <strong id="statusText">걸어보세요</strong>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
