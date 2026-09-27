@@ -90,13 +90,13 @@ body {
 
 .game-board {
   position: relative;
-  width: min(100%, 1200px);
-  aspect-ratio: 3.2;
+  width: min(100%, 1000px);
+  aspect-ratio: 1;
   display: grid;
-  grid-template-columns: repeat(24, minmax(0, 1fr));
-  grid-template-rows: repeat(6, minmax(0, 1fr));
-  gap: 7px;
-  padding: 14px;
+  grid-template-columns: repeat(25, minmax(0, 1fr));
+  grid-template-rows: repeat(25, minmax(0, 1fr));
+  gap: 5px;
+  padding: 12px;
   border-radius: 26px;
   background: linear-gradient(180deg, #0d1120, #11192d);
   border: 1px solid rgba(255,255,255,0.08);

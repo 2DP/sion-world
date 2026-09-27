@@ -5,8 +5,8 @@ const dangerCountEl = document.getElementById("dangerCount");
 const progressValueEl = document.getElementById("progressValue");
 const statusText = document.getElementById("statusText");
 
-const rows = 6;
-const cols = 24;
+const rows = 25;
+const cols = 25;
 const TIME_LIMIT = 90;
 const maxDangerHits = 10;
 const cellLookup = new Map();
@@ -89,11 +89,15 @@ function playKeycapClick(frequency = 880, duration = 0.06) {
   oscillator.onended = () => audioContext.close();
 }
 
+function playStepSound() {
+  playKeycapClick(720, 0.04);
+  window.setTimeout(() => playKeycapClick(560, 0.04), 50);
+}
+
 function initializeCollectableTiles() {
   collectableTiles.length = 0;
   for (let y = 0; y < rows; y += 1) {
     for (let x = 0; x < cols; x += 1) {
-      if (x === 0 || y === 0 || x === cols - 1 || y === rows - 1) continue;
       const key = coordKey(x, y);
       if (dangerSet.has(key)) continue;
       collectableTiles.push({ x, y });
@@ -287,7 +291,7 @@ function handleSafeStep(key) {
     goldenCellKey = null;
     triggerGoldenBuff();
   } else {
-    playKeycapClick(540, 0.08);
+    playStepSound();
     setStatus("발판을 밟았습니다.");
   }
 
@@ -356,7 +360,7 @@ function resetGame() {
   score = 0;
   dangerHits = 0;
   timeLeft = TIME_LIMIT;
-  player = { x: 0, y: 5 };
+  player = { x: 0, y: 24 };
   visitedSafe.clear();
   activePurpleKey = null;
   goldenCellKey = null;
@@ -418,7 +422,7 @@ function handleKey(event) {
 function animateBoard(time) {
   const t = time * 0.001;
 
-  if (time - lastDangerStep >= 5000) {
+  if (time - lastDangerStep >= 1000) {
     tickDangerPatterns();
     lastDangerStep = time;
   }
