@@ -20,26 +20,41 @@
 
         <aside class="info-panel">
           <p class="eyebrow">Mission</p>
-          <h1>키캡을 조심히 밟어라</h1>
+          <h1>황금 발판을 피하고 올라가라</h1>
           <p class="description">
-            화살표 키 또는 WASD로 이동하세요. 파스텔 키캡을 밟으면 멜로디가
-            울리고, 검은 키캡은 위험합니다.
+            화살표 키 또는 WASD로 이동하세요. 파스텔 키캡은 안전하고,
+            검은 키캡은 위험합니다. 황금 발판을 밟으면 20초 동안 버프가 걸립니다.
           </p>
+
+          <div class="score-grid">
+            <div class="score-box">
+              <span class="label">점수</span>
+              <strong id="scoreValue">0</strong>
+            </div>
+            <div class="score-box danger-box">
+              <span class="label">검은 발판</span>
+              <strong id="dangerCount">0/10</strong>
+            </div>
+          </div>
 
           <div class="legend" aria-label="키캡 설명">
             <div class="legend-item">
               <span class="swatch safe"></span>
-              <span>밟아도 되는 키</span>
+              <span>안전한 키</span>
             </div>
             <div class="legend-item">
               <span class="swatch danger"></span>
-              <span>밟으면 안 되는 키</span>
+              <span>검은 위험 키</span>
+            </div>
+            <div class="legend-item">
+              <span class="swatch gold"></span>
+              <span>황금 버프 키</span>
             </div>
           </div>
 
           <div class="status-box">
             <span class="status-label">상태</span>
-            <strong id="statusText">걸어보세요</strong>
+            <strong id="statusText">시작!</strong>
           </div>
         </aside>
       </main>
