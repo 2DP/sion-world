@@ -33,14 +33,10 @@
           <div class="board-wrap" id="board-wrap">
             <canvas id="board" width="800" height="800" tabindex="0" aria-label="7 곱하기 7 파스텔 정원. 방향키 또는 WASD로 이동하세요.">이 게임은 Canvas를 지원하는 브라우저가 필요합니다.</canvas>
             <div class="board-corner">✿ PASTEL GARDEN</div>
-            <div class="gold-banner" id="gold-banner" hidden><span>✦ GOLDEN TIME</span><strong id="gold-seconds">5.0</strong><div><i id="gold-meter"></i></div></div>
-            <div class="boost-banner" id="boost-banner" hidden>⚡ 십자 부스터 <strong id="boost-seconds">10.0s</strong></div>
-            <div class="rabbit-banner" id="rabbit-banner" hidden>🐰 토끼 친구 <strong id="rabbit-seconds">30.0s</strong></div>
-            <div class="shield-banner" id="shield-banner" hidden>🛡 실드 무적 <strong id="shield-seconds">10.0s</strong></div>
-            <div class="squirrel-banner" id="squirrel-banner" hidden>🐿 다람쥐 친구 <strong id="squirrel-seconds">30.0s</strong></div>
             <canvas id="minimap" width="150" height="150" aria-label="전체 정원 미니맵"></canvas>
             <div class="overlay" id="overlay">
               <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description">
+                <canvas id="ending-scene" width="960" height="480" hidden aria-label="꽃이 핀 정원에서 모모와 토끼, 다람쥐가 공을 가지고 함께 노는 엔딩"></canvas>
                 <div class="portrait" id="portrait"><span class="sparkle one">✦</span><span class="sparkle two">✧</span><img src="character.svg" alt="리본과 초록 베레모를 쓴 정원 소녀 모모" width="136" height="150"><span class="portrait-ground"></span></div>
                 <span class="dialog-kicker" id="dialog-kicker">HELLO, LITTLE EXPLORER</span>
                 <h2 id="dialog-title">우리, 산책할까요?</h2>
@@ -53,6 +49,16 @@
             </div>
             <div id="toast" class="toast" role="status" aria-live="polite"></div>
           </div>
+          <section class="active-effects" aria-label="활성 아이템과 남은 시간">
+            <span class="effects-label">사용 중인 아이템</span>
+            <div class="effects-list">
+            <div class="gold-banner" id="gold-banner" hidden><span>✦ GOLDEN TIME</span><strong id="gold-seconds">5.0</strong><div><i id="gold-meter"></i></div></div>
+            <div class="boost-banner" id="boost-banner" hidden>⚡ 십자 부스터 <strong id="boost-seconds">10.0s</strong></div>
+            <div class="rabbit-banner" id="rabbit-banner" hidden>🐰 토끼 친구 <strong id="rabbit-seconds">30.0s</strong></div>
+            <div class="shield-banner" id="shield-banner" hidden>🛡 실드 무적 <strong id="shield-seconds">10.0s</strong></div>
+            <div class="squirrel-banner" id="squirrel-banner" hidden>🐿 다람쥐 친구 <strong id="squirrel-seconds">30.0s</strong></div>
+            </div>
+          </section>
           <div class="progress-section"><div><span>정원에 남긴 발자국</span><strong><span id="visited">1</span><small id="total-tiles"> / 49</small></strong></div><div class="progress-track" role="progressbar" aria-label="발판 방문 진행률" aria-valuemin="0" aria-valuemax="49" aria-valuenow="1" id="progress"><i id="progress-fill"></i></div><span id="progress-caption">서두르지 않아도 괜찮아요. 한 칸씩 시작해요.</span></div>
           <div class="mobile-controls" aria-label="이동 방향 패드"><div class="dpad"><button data-dir="up" class="up" aria-label="위로 이동">↑</button><button data-dir="left" class="left" aria-label="왼쪽으로 이동">←</button><span>✿</span><button data-dir="right" class="right" aria-label="오른쪽으로 이동">→</button><button data-dir="down" class="down" aria-label="아래로 이동">↓</button></div><p>꾹 누르면 계속 이동해요.<br><span>작은 지도에서 내 위치를 확인해요.</span></p></div>
           <div class="keyboard-tip"><span><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> 또는 <b>W A S D</b> 이동</span><span><kbd>ESC</kbd> 잠깐 쉬기</span></div>

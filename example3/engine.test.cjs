@@ -286,12 +286,12 @@ test("all ten stages increase difficulty, preserve the run and win only on stage
     g.nextStage();
     if (stage < 10) {
       assert.equal(g.status, "playing"); assert.equal(g.visitedCount, 1);
-      assert.equal(g.lives, 7); assert.equal(g.score, 0); assert.equal(g.time, time);
+      assert.equal(g.lives, 10); assert.equal(g.score, 0); assert.equal(g.time, time);
       assert.equal(g.bonus, null); assert.equal(g.heal, null); assert.equal(g.goldUntil, 0);
       assert.equal(g.nextHazardAt, time + g.hazardInterval);
     }
   }
-  assert.equal(g.score, 700); assert.equal(g.stage, 10);
+  assert.equal(g.score, 1000); assert.equal(g.stage, 10);
   g.reset(); assert.equal(g.stage, 1); assert.equal(g.hazards.length, 3);
   assert.equal(g.hazardInterval, 1); assert.equal(g.heal, null);
 });

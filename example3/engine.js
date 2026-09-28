@@ -79,6 +79,7 @@
     nextStage() {
       if (this.status !== "stage-clear" || this.stage >= this.config.stages) return;
       this.stage++;
+      this.lives = this.config.lives;
       this.setupStage();
       this.status = "playing";
     }

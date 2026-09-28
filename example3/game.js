@@ -2,6 +2,8 @@
   "use strict";
   const $ = id => document.getElementById(id);
   const game = new PastelStep.Game();
+  let endingPreview = new URLSearchParams(location.search).get("ending") === "preview";
+  const endingCanvas = $("ending-scene"), endingCtx = endingCanvas.getContext("2d");
   const canvas = $("board"), ctx = canvas.getContext("2d");
   const mini = $("minimap"), mctx = mini.getContext("2d");
   const character = new Image();
@@ -79,6 +81,7 @@
     $("toast").classList.add("visible");
   }
   function restart() {
+    endingPreview = false;
     setupAudio(); clearInput(); game.reset(); fx = []; viewPlayer = { ...game.player };
     toastUntil = 0; $("toast").classList.remove("visible"); accumulator = 0;
     uiStatus = ""; syncUI(); canvas.focus({ preventScroll: true });
@@ -100,6 +103,7 @@
     else restart();
   });
   $("secondary").addEventListener("click", () => {
+    endingPreview = false; uiStatus = "";
     clearInput(); game.reset(false); viewPlayer = { ...game.player }; fx = [];
     toastUntil = 0; $("toast").classList.remove("visible"); syncUI(); $("primary").focus();
   });
@@ -205,7 +209,10 @@
   }
 
   function showDialog() {
-    const status = game.status, paused = status === "paused", result = status === "won" || status === "lost";
+    const status = endingPreview ? "won" : game.status, paused = status === "paused", result = status === "won" || status === "lost";
+    $("overlay").classList.toggle("ending-overlay", status === "won");
+    $("ending-scene").hidden = status !== "won";
+    $("portrait").hidden = status === "won";
     $("overlay").hidden = status === "playing";
     $("pause").disabled = !["playing", "paused"].includes(status);
     $("pause").textContent = paused ? "▷" : "Ⅱ";
@@ -227,12 +234,16 @@
     if (status === "stage-clear") {
       $("dialog-kicker").textContent = "STAGE " + game.stage + " CLEAR";
       $("dialog-title").textContent = "스테이지 " + game.stage + " 완료!";
-      $("dialog-description").textContent = "다음 정원에는 더 많고 빠른 그림자가 기다려요. 라이프와 점수는 그대로 이어져요.";
+      $("dialog-description").textContent = "다음 정원에는 더 많고 빠른 그림자가 기다려요. 라이프는 10개로 회복되고 점수는 이어져요.";
       $("primary").textContent = "스테이지 " + (game.stage + 1) + " 시작 →";
       $("dialog-hint").textContent = "준비되면 다음 스테이지를 시작하세요.";
     } else if (status === "won") {
       $("dialog-title").textContent = "10개 스테이지 모두 완료!";
-      $("dialog-description").textContent = "모든 정원에 발자국을 남겼어요. 남은 하트당 100점이 추가됐어요!";
+      $("dialog-kicker").textContent = endingPreview ? "ENDING PREVIEW" : "OUR LITTLE HAPPY ENDING";
+      $("dialog-title").textContent = "우리의 정원, 함께라서 행복해!";
+      $("dialog-description").textContent = "모험을 마친 모모와 토끼, 다람쥐. 이제 꽃이 가득한 정원에서 함께 놀아요.";
+      $("dialog-hint").textContent = endingPreview ? "엔딩 미리보기 · 플레이 기록에는 반영되지 않아요" : "10개 스테이지 클리어! 함께해 주셔서 고마워요.";
+      if (endingPreview) { $("result-stats").hidden = true; $("primary").textContent = "처음부터 모험하기 →"; }
     } else if (status === "ready") {
       $("dialog-description").textContent = "7×7부터 25×25까지 커지는 정원 10개에 도전해요. 회복 하트와 십자 부스터도 챙겨보세요!";
     }
@@ -534,6 +545,48 @@
     mctx.strokeStyle = "#758766"; mctx.lineWidth = 1.5; mctx.strokeRect(cx * step, cy * step, cells * step, cells * step);
     mctx.beginPath(); mctx.arc((game.player.x + .5) * step, (game.player.y + .5) * step, step * .85, 0, Math.PI * 2); mctx.fillStyle = "#b35178"; mctx.fill(); mctx.strokeStyle = "#fff"; mctx.stroke();
   }
+  function drawEnding(seconds) {
+    const c = endingCtx, w = endingCanvas.width, h = endingCanvas.height;
+    const t = reducedMotion.matches ? 0 : seconds;
+    c.clearRect(0, 0, w, h);
+    const sky = c.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, "#dcf3f2"); sky.addColorStop(1, "#fff3d8"); c.fillStyle = sky; c.fillRect(0, 0, w, h);
+    c.fillStyle = "#ffe4a0"; c.beginPath(); c.arc(780, 82, 45, 0, Math.PI * 2); c.fill();
+    for (const [x, y] of [[130, 70], [430, 45], [640, 110]]) {
+      c.fillStyle = "#ffffffb0"; c.beginPath(); c.ellipse(x + Math.sin(t * .18) * 10, y, 65, 18, 0, 0, Math.PI * 2); c.fill();
+    }
+    c.fillStyle = "#bfd8ad"; c.beginPath(); c.ellipse(480, 460, 650, 250, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = "#d6e5b6"; c.beginPath(); c.ellipse(350, 460, 520, 200, -.08, 0, Math.PI * 2); c.fill();
+    // Picket fence and a flower-filled lawn frame the play area.
+    for (let x = 25; x < w; x += 48) rounded(c, x, 218, 15, 65, 7, "#fff8e7");
+    rounded(c, 0, 237, w, 9, 3, "#fff8e7"); rounded(c, 0, 261, w, 8, 3, "#fff8e7");
+    for (let i = 0; i < 38; i++) {
+      const x = (i * 137 + 24) % w, y = 300 + (i * 53 % 170);
+      if (x > 270 && x < 700 && y < 400) continue;
+      c.strokeStyle = "#81a16b"; c.lineWidth = 2; c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 16); c.stroke();
+      for (let p = 0; p < 5; p++) {
+        const a = p * Math.PI * 2 / 5; c.fillStyle = ["#efb7c7", "#fff9e6", "#c8b8e3"][i % 3];
+        c.beginPath(); c.arc(x + Math.cos(a) * 6, y + Math.sin(a) * 6, 5, 0, Math.PI * 2); c.fill();
+      }
+      c.fillStyle = "#e8bf61"; c.beginPath(); c.arc(x, y, 3, 0, Math.PI * 2); c.fill();
+    }
+    const girlX = 475 + Math.sin(t * .9) * 16, rabbitX = 315 + Math.sin(t * 1.2) * 25, squirrelX = 640 + Math.sin(t * 1.1 + 2) * 24;
+    for (const [x, rx] of [[girlX, 48], [rabbitX, 31], [squirrelX, 29]]) {
+      c.fillStyle = "#75965c25"; c.beginPath(); c.ellipse(x, 380, rx, 9, 0, 0, Math.PI * 2); c.fill();
+    }
+    if (character.complete && character.naturalWidth) c.drawImage(character, girlX - 95, 166 - Math.abs(Math.sin(t * 2)) * 7, 190, 214);
+    bunny(c, rabbitX, 329 - Math.abs(Math.sin(t * 2.4)) * 16, 99);
+    squirrelIcon(c, squirrelX, 332 - Math.abs(Math.sin(t * 2.1 + 1)) * 10, 87);
+    const ballX = 475 + Math.sin(t * 1.35) * 108, ballY = 381 - Math.abs(Math.cos(t * 1.35)) * 38;
+    c.save(); c.translate(ballX, ballY); c.rotate(t * 1.6);
+    c.fillStyle = "#f4c4a1"; c.beginPath(); c.arc(0, 0, 17, 0, Math.PI * 2); c.fill();
+    star(c, 0, 0, 12, "#fff6dd"); c.restore();
+    for (let i = 0; i < 3; i++) {
+      const x = 240 + i * 210 + Math.sin(t + i) * 14, y = 147 + Math.cos(t * .8 + i) * 13;
+      c.fillStyle = "#e2a5c0"; c.beginPath(); c.ellipse(x - 5, y, 7, 4 + Math.abs(Math.sin(t * 4)) * 3, -.5, 0, Math.PI * 2); c.fill();
+      c.beginPath(); c.ellipse(x + 5, y, 7, 4 + Math.abs(Math.sin(t * 4)) * 3, .5, 0, Math.PI * 2); c.fill();
+    }
+  }
   function frame(timestamp) {
     const delta = previous ? Math.min(.1, (timestamp - previous) / 1000) : 0;
     previous = timestamp;
@@ -550,7 +603,9 @@
       viewPlayer.x += (game.player.x - viewPlayer.x) * blend;
       viewPlayer.y += (game.player.y - viewPlayer.y) * blend;
     } else accumulator = 0;
-    syncUI(); draw(); requestAnimationFrame(frame);
+    syncUI(); draw();
+    if (game.status === "won" || endingPreview) drawEnding(timestamp / 1000);
+    requestAnimationFrame(frame);
   }
   resize(); syncUI(); requestAnimationFrame(frame);
 })();

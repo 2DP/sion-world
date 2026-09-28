@@ -37,3 +37,22 @@ button,a{touch-action:manipulation}button{font:inherit;cursor:pointer}button:dis
 .squirrel-banner{position:absolute;bottom:132px;left:12px;padding:8px 12px;border-radius:12px;background:#ffe7c5;color:#83552e;font-size:12px;pointer-events:none}.squirrel-banner strong{margin-left:8px}
 
 .compact-guide .rule{margin-top:12px;gap:10px}.compact-guide .rule h3{margin:0 0 3px}.compact-guide .rule p{margin:0;line-height:1.55}.compact-guide .tile-icon{width:32px;height:32px;flex-shrink:0}.compact-guide #hazard-info{font-size:10px}
+
+/* Effect timers stay in normal flow below the board on desktop and mobile. */
+.active-effects{margin-top:12px;padding:10px 12px;border:1px solid #e0e5d7;border-radius:12px;background:#f9faf3}
+.effects-label{display:block;font-size:10px;color:#819076;margin-bottom:7px}
+.effects-list{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;min-height:34px}
+.effects-list:not(:has(>div:not([hidden])))::after{content:"아이템을 획득하면 남은 시간이 표시돼요.";font-size:11px;color:#96a08b;align-self:center}
+.effects-list>div{position:static;inset:auto;transform:none;width:auto;max-width:100%;margin:0;padding:8px 10px;border-radius:9px;box-shadow:none;z-index:auto;font-size:11px}
+.effects-list strong{font-variant-numeric:tabular-nums}
+.effects-list .gold-banner{min-width:165px}
+.effects-list .gold-banner strong{margin-left:12px}
+
+.ending-overlay{position:fixed;inset:0;z-index:50;background:#eaf1e3ed;padding:20px;overflow:auto;backdrop-filter:blur(8px)}
+.ending-overlay .dialog{width:min(760px,100%);max-width:760px;padding:22px 26px;border-radius:24px;margin:auto}
+#ending-scene{display:block;width:100%;height:auto;aspect-ratio:2;border-radius:17px;margin-bottom:18px;border:1px solid #d6e5cb}
+.ending-overlay .dialog h2{font-size:27px;margin:10px 0}
+.ending-overlay .dialog p{margin-bottom:14px}
+.ending-overlay .result-stats{max-width:470px;margin:0 auto 15px}
+.ending-overlay .primary-button{max-width:340px;margin-inline:auto}
+@media(max-width:760px){.ending-overlay{padding:12px}.ending-overlay .dialog{padding:16px}.ending-overlay .dialog h2{font-size:21px}.ending-overlay .dialog-hint{display:block;font-size:10px}#ending-scene{margin-bottom:12px}}
