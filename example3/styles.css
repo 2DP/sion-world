@@ -22,3 +22,18 @@ button,a{touch-action:manipulation}button{font:inherit;cursor:pointer}button:dis
 @media(max-width:760px){.play-card{scroll-margin-top:8px}}
 
 @media(max-width:370px){.overlay{padding:8px}.dialog{padding:10px 14px 12px}.portrait{height:48px;margin-bottom:0}.portrait img{height:50px}.portrait:before{width:44px;height:44px}.portrait-ground{width:40px;height:5px}.sparkle.one{font-size:14px;top:5px;left:38px}.sparkle.two{font-size:16px;right:38px;bottom:9px}.dialog-hint{display:none}.dialog p{font-size:10px;margin-bottom:10px}.dialog h2{font-size:20px}.result-stats div{padding:3px}.result-stats b{font-size:14px;margin-top:2px}.text-button{padding-top:8px}}
+.tile-icon.recovery{background:#ffe4ec;color:#c3547e;border:1px solid #c3547e}
+
+.tile-icon.booster{background:#d5f4ff;color:#287aaf;border:1px solid #287aaf}
+.boost-banner{position:absolute;bottom:12px;left:12px;padding:8px 12px;border-radius:12px;background:#d5f4ff;color:#205d85;font-size:12px;pointer-events:none}.boost-banner strong{margin-left:8px}
+
+.tile-icon.rabbit{background:#eedfff;color:#9466ae;border:1px solid #9466ae}
+.rabbit-banner{position:absolute;bottom:52px;left:12px;padding:8px 12px;border-radius:12px;background:#eedfff;color:#70428a;font-size:12px;pointer-events:none}.rabbit-banner strong{margin-left:8px}
+
+.tile-icon.shield{background:#d4f5ef;color:#37899d;border:1px solid #37899d}
+.shield-banner{position:absolute;bottom:92px;left:12px;padding:8px 12px;border-radius:12px;background:#d4f5ef;color:#276878;font-size:12px;pointer-events:none}.shield-banner strong{margin-left:8px}
+
+.tile-icon.squirrel{background:#ffe7c5;color:#ad7541;border:1px solid #ad7541}
+.squirrel-banner{position:absolute;bottom:132px;left:12px;padding:8px 12px;border-radius:12px;background:#ffe7c5;color:#83552e;font-size:12px;pointer-events:none}.squirrel-banner strong{margin-left:8px}
+
+.compact-guide .rule{margin-top:12px;gap:10px}.compact-guide .rule h3{margin:0 0 3px}.compact-guide .rule p{margin:0;line-height:1.55}.compact-guide .tile-icon{width:32px;height:32px;flex-shrink:0}.compact-guide #hazard-info{font-size:10px}

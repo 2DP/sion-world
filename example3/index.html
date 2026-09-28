@@ -20,7 +20,7 @@
     <main>
       <section class="heading">
         <div><div class="eyebrow"><span></span> YOUR DAILY DOSE OF PLAY</div><h1>한 걸음씩, 알록달록.</h1><p>그림자는 살짝 피하고, 모든 발판에 발자국을 남겨요.</p></div>
-        <div class="garden-tag"><span>✿</span><div>파스텔 정원<small>GARDEN 01 · 25 × 25</small></div></div>
+        <div class="garden-tag"><span>✿</span><div>파스텔 정원<small id="stage-label">STAGE 1 / 10 · 7 × 7</small></div></div>
       </section>
       <div class="layout">
         <section class="play-card" aria-label="게임 영역">
@@ -31,16 +31,20 @@
             <button id="pause" class="icon-button pause-button" type="button" aria-label="일시정지" disabled>Ⅱ</button>
           </div>
           <div class="board-wrap" id="board-wrap">
-            <canvas id="board" width="800" height="800" tabindex="0" aria-label="25 곱하기 25 파스텔 정원. 방향키 또는 WASD로 이동하세요.">이 게임은 Canvas를 지원하는 브라우저가 필요합니다.</canvas>
+            <canvas id="board" width="800" height="800" tabindex="0" aria-label="7 곱하기 7 파스텔 정원. 방향키 또는 WASD로 이동하세요.">이 게임은 Canvas를 지원하는 브라우저가 필요합니다.</canvas>
             <div class="board-corner">✿ PASTEL GARDEN</div>
             <div class="gold-banner" id="gold-banner" hidden><span>✦ GOLDEN TIME</span><strong id="gold-seconds">5.0</strong><div><i id="gold-meter"></i></div></div>
+            <div class="boost-banner" id="boost-banner" hidden>⚡ 십자 부스터 <strong id="boost-seconds">10.0s</strong></div>
+            <div class="rabbit-banner" id="rabbit-banner" hidden>🐰 토끼 친구 <strong id="rabbit-seconds">30.0s</strong></div>
+            <div class="shield-banner" id="shield-banner" hidden>🛡 실드 무적 <strong id="shield-seconds">10.0s</strong></div>
+            <div class="squirrel-banner" id="squirrel-banner" hidden>🐿 다람쥐 친구 <strong id="squirrel-seconds">30.0s</strong></div>
             <canvas id="minimap" width="150" height="150" aria-label="전체 정원 미니맵"></canvas>
             <div class="overlay" id="overlay">
               <section class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-description">
                 <div class="portrait" id="portrait"><span class="sparkle one">✦</span><span class="sparkle two">✧</span><img src="character.svg" alt="리본과 초록 베레모를 쓴 정원 소녀 모모" width="136" height="150"><span class="portrait-ground"></span></div>
                 <span class="dialog-kicker" id="dialog-kicker">HELLO, LITTLE EXPLORER</span>
                 <h2 id="dialog-title">우리, 산책할까요?</h2>
-                <p id="dialog-description">모모와 함께 625개의 파스텔 발판을<br>모두 밟아 꺼주세요.</p>
+                <p id="dialog-description">모모와 함께 49개의 파스텔 발판을<br>모두 밟아 꺼주세요.</p>
                 <div id="result-stats" class="result-stats" hidden></div>
                 <button class="primary-button" id="primary" type="button">모험 시작하기 <span>→</span></button>
                 <button class="text-button" id="secondary" type="button" hidden>처음으로</button>
@@ -49,16 +53,21 @@
             </div>
             <div id="toast" class="toast" role="status" aria-live="polite"></div>
           </div>
-          <div class="progress-section"><div><span>정원에 남긴 발자국</span><strong><span id="visited">1</span><small> / 625</small></strong></div><div class="progress-track" role="progressbar" aria-label="발판 방문 진행률" aria-valuemin="0" aria-valuemax="625" aria-valuenow="1" id="progress"><i id="progress-fill"></i></div><span id="progress-caption">서두르지 않아도 괜찮아요. 한 칸씩 시작해요.</span></div>
+          <div class="progress-section"><div><span>정원에 남긴 발자국</span><strong><span id="visited">1</span><small id="total-tiles"> / 49</small></strong></div><div class="progress-track" role="progressbar" aria-label="발판 방문 진행률" aria-valuemin="0" aria-valuemax="49" aria-valuenow="1" id="progress"><i id="progress-fill"></i></div><span id="progress-caption">서두르지 않아도 괜찮아요. 한 칸씩 시작해요.</span></div>
           <div class="mobile-controls" aria-label="이동 방향 패드"><div class="dpad"><button data-dir="up" class="up" aria-label="위로 이동">↑</button><button data-dir="left" class="left" aria-label="왼쪽으로 이동">←</button><span>✿</span><button data-dir="right" class="right" aria-label="오른쪽으로 이동">→</button><button data-dir="down" class="down" aria-label="아래로 이동">↓</button></div><p>꾹 누르면 계속 이동해요.<br><span>작은 지도에서 내 위치를 확인해요.</span></p></div>
           <div class="keyboard-tip"><span><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> 또는 <b>W A S D</b> 이동</span><span><kbd>ESC</kbd> 잠깐 쉬기</span></div>
         </section>
         <aside class="sidebar">
           <section class="companion-card"><div><span class="eyebrow">YOUR COMPANION</span><h2>안녕, 나는 모모!</h2><p>작은 발걸음도 모이면<br>멋진 모험이 될 거야.</p></div><img src="character.svg" width="105" height="120" alt=""><span class="companion-flower">✳</span></section>
-          <section class="guide-card"><div class="section-label">HOW TO PLAY <span>01 — 03</span></div><h2>가볍게 알아두기</h2>
-            <div class="rule"><span class="tile-icon pastel">✿</span><div><h3>파스텔은 사뿐사뿐</h3><p>처음 밟으면 불이 꺼져요.<br>꺼진 발판도 다시 지날 수 있어요.</p></div></div>
-            <div class="rule"><span class="tile-icon shadow">!</span><div><h3>움직이는 그림자 조심</h3><p>1초마다 한 칸씩 움직여요.<br>닿으면 하트를 하나 잃어요.</p></div></div>
-            <div class="rule"><span class="tile-icon golden">✦</span><div><h3>반짝이는 기회를 잡아요</h3><p>3초만 나타나는 황금 발판!<br>밟으면 5초 동안 무적 + 점수 2배.</p></div></div>
+          <section class="guide-card compact-guide"><div class="section-label">QUICK GUIDE</div><h2>효과 한눈에 보기</h2>
+            <div class="rule"><span class="tile-icon pastel">✿</span><div><h3>파스텔 발판</h3><p>처음 밟으면 +10점</p></div></div>
+            <div class="rule"><span class="tile-icon shadow">!</span><div><h3>검은 발판</h3><p>닿으면 하트 −1<br><span id="hazard-info">검은 발판 3개 · 1.00초마다 이동</span></p></div></div>
+            <div class="rule"><span class="tile-icon golden">✦</span><div><h3>황금</h3><p>5초 무적 · 방문 점수 2배</p></div></div>
+            <div class="rule"><span class="tile-icon recovery">♥</span><div><h3>회복 하트</h3><p>라이프 +1 · 최대 10개</p></div></div>
+            <div class="rule"><span class="tile-icon booster">⚡</span><div><h3>부스터</h3><p>10초 동안 상하좌우도 함께 누르기</p></div></div>
+            <div class="rule"><span class="tile-icon rabbit">🐰</span><div><h3>토끼</h3><p>30초 동안 발판 대신 누르기</p></div></div>
+            <div class="rule"><span class="tile-icon shield">🛡</span><div><h3>실드</h3><p>10초 동안 피해 방어</p></div></div>
+            <div class="rule"><span class="tile-icon squirrel">🐿</span><div><h3>다람쥐</h3><p>30초 활동 · 검은 발판 15초 정지·무피해<br>발판은 누르지 않아요</p></div></div>
           </section>
           <section class="bonus-card"><div class="bonus-heading"><span>✧</span><span>반짝이는 순간</span><b id="bonus-countdown">15s</b></div><p id="bonus-description">황금 발판은 15초마다 찾아와요.<br>보이면 놓치지 말고 달려가요!</p><div class="bonus-track"><i id="bonus-fill"></i></div></section>
           <section class="record-card"><span class="record-icon">♜</span><div><span>나의 최고 점수</span><strong id="best">0</strong></div><span class="local-label">PERSONAL BEST</span></section>
