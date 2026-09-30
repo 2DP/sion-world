@@ -3,6 +3,7 @@ import {COLORS} from './core.js';
 // Shared by the selection screen, village, profile, results and all race lanes.
 // Limb classes are the hooks used by the rhythm-input animations.
 export function swimmer(color=0, swimming=false, id='avatar', gear=[]) {
+  gear=gear.map(id=>id.split('-')[0]);
   const suit = COLORS[color];
   const hair = ['#674738', '#805035', '#493d46', '#795738', '#473d38'][color];
   const lens = gear.includes('goggles') ? '#c2f8ff' : '#edfaff';

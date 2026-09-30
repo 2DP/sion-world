@@ -4,8 +4,8 @@ import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 
 // Serve the game beneath a static-host mount, without a root-level asset fallback.
-// This reproduces deployment under /sion-world/example4/ as well as at /.
-for (const mount of ['/', '/sion-world/example4/']) {
+// This reproduces deployment under /sion-world/splash-club/ as well as at /.
+for (const mount of ['/', '/sion-world/splash-club/']) {
   test(`page and module dependencies load beneath ${mount}`, async () => {
     const root = new URL('../', import.meta.url);
     const server = http.createServer(async (req, res) => {

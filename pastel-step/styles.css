@@ -56,3 +56,8 @@ button,a{touch-action:manipulation}button{font:inherit;cursor:pointer}button:dis
 .ending-overlay .result-stats{max-width:470px;margin:0 auto 15px}
 .ending-overlay .primary-button{max-width:340px;margin-inline:auto}
 @media(max-width:760px){.ending-overlay{padding:12px}.ending-overlay .dialog{padding:16px}.ending-overlay .dialog h2{font-size:21px}.ending-overlay .dialog-hint{display:block;font-size:10px}#ending-scene{margin-bottom:12px}}
+
+/* Project game-list navigation, also available while playing. */
+.project-home{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:8px 12px;border:1px solid #d1dfc7;border-radius:14px;background:#fff7dc;color:#465b42;text-decoration:none;font-size:13px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.project-home:hover{background:#ffedb7}.project-home:focus-visible{outline:3px solid #527a62;outline-offset:3px}
+@media(max-width:480px){.header{height:auto;min-height:75px;flex-wrap:wrap;gap:10px;padding:12px 0}.header-actions{gap:8px;margin-left:auto}}

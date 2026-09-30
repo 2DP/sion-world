@@ -3,80 +3,223 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SION WORLD - GitHub Pages</title>
-    <meta name="description" content="GitHub Pages용 SION WORLD 예제 페이지입니다." />
+    <meta name="theme-color" content="#fff8e8" />
+    <title>SION WORLD - 게임 놀이터</title>
+    <meta name="description" content="SION WORLD의 알록달록 게임 놀이터! 파스텔 스텝과 첨벙클럽을 플레이하세요." />
     <style>
-      :root {
-        --bg: #0b1020;
-        --card: #121b2d;
-        --text: #edf4ff;
-        --muted: #a8b5d1;
-        --primary: #7c9cff;
-      }
       * { box-sizing: border-box; }
+      :root { color-scheme: light; --ink: #343653; }
       body {
         margin: 0;
         min-height: 100vh;
-        display: grid;
-        place-items: center;
-        font-family: Arial, sans-serif;
-        background: radial-gradient(circle at top, rgba(124, 156, 255, 0.2), transparent 30%), #0b1020;
-        color: var(--text);
+        color: var(--ink);
+        font-family: "Arial Rounded MT Bold", "Malgun Gothic", sans-serif;
+        background: radial-gradient(circle, #ebdcb9 1.5px, transparent 1.5px) 0 0 / 24px 24px, #fff8e8;
       }
-      .card {
-        width: min(560px, calc(100% - 32px));
-        background: rgba(18, 27, 45, 0.9);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 20px;
-        padding: 40px 28px;
-        text-align: center;
-        box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+      body::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 360px;
+        z-index: -1;
+        background: linear-gradient(#e0f5ff, #fff8e800);
       }
-      .label {
+      main { width: min(960px, calc(100% - 40px)); margin: 0 auto; padding: 44px 0 28px; }
+      header { text-align: center; position: relative; padding: 12px 0 30px; }
+      .welcome {
         display: inline-block;
-        padding: 6px 12px;
-        border-radius: 999px;
-        background: rgba(124, 156, 255, 0.12);
-        color: #a7bbff;
-        font-size: 12px;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        margin-bottom: 18px;
-      }
-      h1 {
-        margin: 0 0 12px;
-        font-size: clamp(2rem, 4vw, 3rem);
-      }
-      p {
-        margin: 0 0 24px;
-        color: var(--muted);
-        line-height: 1.7;
-      }
-      a {
-        display: inline-block;
-        background: linear-gradient(135deg, var(--primary), #a8c0ff);
-        color: #08111d;
-        text-decoration: none;
-        padding: 14px 22px;
-        border-radius: 999px;
+        padding: 9px 18px;
+        border: 2px solid #fff;
+        border-radius: 30px;
+        background: #fff3be;
+        color: #765322;
+        font-size: 14px;
         font-weight: 700;
+        transform: rotate(-3deg);
+        box-shadow: 0 4px 0 #e8dcb3;
       }
+      h1 { margin: 22px 0 10px; font-size: clamp(36px, 7vw, 66px); letter-spacing: -2px; line-height: 1.15; font-weight: 900; }
+      .sion { color: #ab4275; }
+      .world { color: #246c9c; }
+      .intro { margin: 0; font-size: clamp(16px, 2.5vw, 20px); line-height: 1.7; }
+      .sparkle { position: absolute; font-size: 38px; user-select: none; }
+      .sparkle.left { left: 6%; top: 48px; transform: rotate(-14deg); }
+      .sparkle.right { right: 5%; top: 78px; transform: rotate(12deg); }
+      .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 4px 18px; }
+      h2 { margin: 0; font-size: 19px; }
+      .count { background: #fff; padding: 7px 12px; border-radius: 20px; font-size: 13px; color: #626278; }
+      .games { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 26px; list-style: none; margin: 0; padding: 0; }
+      .games li { min-width: 0; }
+      .game {
+        display: flex;
+        height: 100%;
+        flex-direction: column;
+        padding: 12px;
+        border: 3px solid #fff;
+        border-radius: 30px;
+        background: #fff;
+        box-shadow: 0 7px 0 #e5ddc9, 0 14px 30px #685c3510;
+        color: inherit;
+        text-decoration: none;
+        transition: transform .18s ease, box-shadow .18s ease;
+      }
+      .game:hover { transform: translateY(-5px); box-shadow: 0 12px 0 #e5ddc9, 0 18px 32px #685c3518; }
+      .game:active { transform: translateY(2px); }
+      .game:focus-visible { outline: 4px solid #6754b5; outline-offset: 6px; }
+      .scene { height: 210px; border-radius: 20px; position: relative; overflow: hidden; display: grid; place-items: center; }
+      .garden { background: linear-gradient(#e0f5da 65%, #c5e7b5 65%); }
+      .pool { background: linear-gradient(#d9f2ff 65%, #91dce9 65%); }
+      .scene::before, .scene::after { position: absolute; font-size: 36px; }
+      .garden::before { content: "🌷"; bottom: 24px; left: 22px; transform: rotate(-12deg); }
+      .garden::after { content: "🌼"; right: 22px; bottom: 45px; }
+      .pool::before { content: "🫧"; left: 22px; bottom: 30px; }
+      .pool::after { content: "🫧"; right: 22px; top: 60px; }
+      .tag { position: absolute; top: 13px; left: 13px; padding: 7px 11px; background: #ffffffdf; border-radius: 12px; font-size: 12px; font-weight: 700; z-index: 1; }
+      .character { width: 118px; height: 150px; object-fit: contain; margin-top: 24px; filter: drop-shadow(0 7px 0 #587e4320); }
+      .swim { border-color: #fff4fa; }
+      .swim .pool {
+        background: linear-gradient(180deg, #fff0f7 0%, #e8efff 52%, #b8eef0 53%, #8bdae7 100%);
+        isolation: isolate;
+      }
+      .swim .tag { color: #775077; background: #ffffffeb; }
+      .swim .pool::before { content: ""; width: 13px; height: 13px; border: 3px solid #ffffffbd; border-radius: 50%; left: 19%; bottom: 47px; }
+      .swim .pool::after { content: ""; width: 8px; height: 8px; border: 2px solid #ffffffbd; border-radius: 50%; right: 18%; top: 85px; }
+      .club-character { position: absolute; height: 167px; width: 141px; bottom: 17px; left: calc(50% - 70px); z-index: 2; transform: rotate(-7deg); }
+      .swim-ring { position: absolute; bottom: 20px; left: calc(50% - 70px); width: 146px; height: 49px; border: 13px solid #f6a7c7; border-top-color: #ffd1e2; border-radius: 50%; z-index: 3; transform: rotate(-7deg); box-shadow: 0 6px 0 #679cb323, inset 0 -4px 0 #db7faa; }
+      .swim-ring::after { content: ""; position: absolute; width: 25px; height: 6px; bottom: -8px; left: 22px; background: #fff1f7; border-radius: 50%; transform: rotate(8deg); }
+      .duck-friend { position: absolute; bottom: 30px; right: 13%; font-size: 42px; z-index: 4; transform: rotate(9deg); filter: drop-shadow(0 5px 0 #508da51c); }
+      .pool-heart { position: absolute; color: #ce6490; font-size: 22px; top: 68px; right: 26%; transform: rotate(16deg); }
+      .pool-sparkle { position: absolute; left: 22%; top: 76px; color: #aa73ba; font-size: 26px; }
+      .pool-cloud { position: absolute; width: 57px; height: 16px; background: #ffffffb8; border-radius: 30px; }
+      .pool-cloud::before { content: ""; position: absolute; width: 24px; height: 24px; border-radius: 50%; background: inherit; bottom: 4px; left: 12px; }
+      .cloud-one { left: 9%; top: 65px; }
+      .cloud-two { right: 8%; top: 42px; transform: scale(.7); }
+      .pool-ripple { position: absolute; width: 62px; height: 13px; border-bottom: 3px solid #ffffffae; border-radius: 50%; }
+      .ripple-one { bottom: 15px; left: 10%; }
+      .ripple-two { bottom: 12px; right: 9%; width: 42px; }
+      .swim h3 { color: #795181; }
+      .swim .game-info .play { background: linear-gradient(110deg, #fce0ee, #e9e1ff); color: #784775; }
+      .game-info { display: flex; flex-direction: column; flex: 1; padding: 20px 12px 12px; }
+      h3 { font-size: 27px; margin: 0 0 9px; letter-spacing: -1px; }
+      .description { margin: 0 0 22px; color: #626278; line-height: 1.7; font-size: 15px; word-break: keep-all; }
+      .play { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding: 14px 18px; border-radius: 15px; background: #fce0eb; color: #833959; font-size: 17px; font-weight: 800; }
+      .swim .play { background: #d9efff; color: #245d87; }
+      .arrow { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 50%; background: #ffffffa8; }
+      footer { text-align: center; padding: 30px 0 0; color: #716755; font-size: 14px; line-height: 1.6; }
+      @media (max-width: 600px) {
+        main { width: calc(100% - 32px); padding-top: 24px; }
+        header { padding-bottom: 25px; }
+        .sparkle { font-size: 24px; }
+        .sparkle.left { left: 0; top: 10px; }
+        .sparkle.right { right: 0; top: 45px; }
+        .games { grid-template-columns: 1fr; gap: 24px; }
+        .scene { height: 180px; }
+        h3 { font-size: 25px; }
+      }
+      @media (prefers-reduced-motion: reduce) { .game { transition: none; } .game:hover, .game:active { transform: none; } }
     </style>
   </head>
   <body>
-    <main class="card">
-      <div class="label">GitHub Pages</div>
-      <h1>SION WORLD</h1>
-      <p>
-        GitHub Pages에서 열리는 기본 페이지입니다. 잠시 후 예제 페이지로 이동합니다.
-      </p>
-      <a href="./example1/">예제 페이지 바로가기</a>
-    </main>
+    <main>
+      <header>
+        <span class="sparkle left" aria-hidden="true">🌈</span>
+        <span class="welcome">반가워! 같이 놀자 ✨</span>
+        <h1><span class="sion">SION</span> <span class="world">WORLD</span></h1>
+        <p class="intro">오늘은 어떤 모험을 떠나볼까?</p>
+        <span class="sparkle right" aria-hidden="true">⭐</span>
+      </header>
+      <nav aria-labelledby="games-heading">
+        <div class="section-heading">
+          <h2 id="games-heading">나의 게임 놀이터</h2>
+          <span class="count">게임 2개</span>
+        </div>
+        <ul class="games">
+          <li>
+            <a class="game" href="./pastel-step/" aria-labelledby="pastel-title" aria-describedby="pastel-description">
+              <div class="scene garden" aria-hidden="true">
+                <span class="tag">🌱 두근두근 정원 산책</span>
+                <img class="character" src="./pastel-step/character.svg" alt="" width="118" height="150" />
+              </div>
+              <div class="game-info">
+                <h3 id="pastel-title">파스텔 스텝</h3>
+                <p class="description" id="pastel-description">모모와 폴짝폴짝!<br />알록달록 정원의 발판을 모두 밟아봐.</p>
+                <span class="play">놀러 가기 <span class="arrow" aria-hidden="true">→</span></span>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a class="game swim" href="./splash-club/" aria-labelledby="splash-title" aria-describedby="splash-description">
+              <div class="scene pool" aria-hidden="true">
+                <span class="tag">🫧 첨벙! 물놀이 시간</span>
+                <span class="pool-cloud cloud-one"></span>
+                <span class="pool-cloud cloud-two"></span>
+                <span class="pool-sparkle">✦</span>
+                <span class="pool-ripple ripple-one"></span>
+                <span class="pool-ripple ripple-two"></span>
+                <svg class="club-character" viewBox="0 0 160 190" aria-label="코랄 원피스 수영복을 입은 귀여운 여자아이 선수" role="img">
+    <ellipse cx="80" cy="178" rx="37" ry="6" fill="#233d4612"/>
+    <g class="body">
+      <g class="hair" fill="#805035">
+        <path d="M40 67 Q18 62 18 85 Q18 103 34 106 Q26 88 44 85Z"/>
+        <path d="M120 67 Q142 62 142 85 Q142 103 126 106 Q134 88 116 85Z"/>
+      </g>
+      <g fill="#f17d79" stroke="#fff4e8" stroke-width="2">
+        <path d="M29 76 Q17 63 18 78 Q18 91 29 82 Q40 92 40 78 Q40 67 29 76Z"/>
+        <path d="M131 76 Q119 63 120 78 Q120 91 131 82 Q142 92 142 78 Q142 67 131 76Z"/>
+      </g>
+      <g class="limb limb-q"><path d="M55 108 Q35 105 28 127" fill="none" stroke="#f6c6a3" stroke-width="13" stroke-linecap="round"/></g>
+      <g class="limb limb-o"><path d="M105 108 Q125 105 132 127" fill="none" stroke="#f6c6a3" stroke-width="13" stroke-linecap="round"/></g>
+      <g class="limb limb-w">
+        <path d="M66 139 L63 166" stroke="#f6c6a3" stroke-width="14" stroke-linecap="round"/>
 
-    <script>
-      setTimeout(() => {
-        window.location.href = './example1/';
-      }, 1200);
-    </script>
+      </g>
+      <g class="limb limb-p">
+        <path d="M94 139 L97 166" stroke="#f6c6a3" stroke-width="14" stroke-linecap="round"/>
+
+      </g>
+      <path d="M58 94 L70 94 Q80 101 90 94 L102 94 L107 138 Q99 146 91 145 L80 137 L69 145 Q61 146 53 138Z" fill="#f17d79"/>
+      <path d="M62 98 Q80 111 98 98" fill="none" stroke="#fff7eb" stroke-width="5" stroke-linecap="round"/>
+      <path d="M58 126 Q80 132 102 126" fill="none" stroke="#fff7eb" stroke-width="3" opacity=".85"/>
+      <g fill="#fffaf1" opacity=".88"><circle cx="63" cy="117" r="2"/><circle cx="97" cy="117" r="2"/><circle cx="66" cy="135" r="2"/><circle cx="95" cy="135" r="2"/></g>
+      <path d="M80 112 C72 104 70 117 80 122 C90 117 88 104 80 112Z" fill="#fff7ec"/>
+      <circle cx="37" cy="65" r="8" fill="#f6c6a3"/>
+      <circle cx="123" cy="65" r="8" fill="#f6c6a3"/>
+      <ellipse cx="80" cy="61" rx="43" ry="41" fill="#f9d0af"/>
+      <path d="M37 52 Q34 23 80 22 Q124 24 123 54 L115 62 111 42 Q104 55 88 52 L91 40 Q78 56 61 51 L65 40 Q52 52 44 48 L44 64Z" fill="#805035"/>
+      <path d="M35 43 Q34 9 80 9 Q126 9 125 43 Q80 29 35 43Z" fill="#f17d79"/>
+      <path d="M48 27 Q64 16 86 19" fill="none" stroke="white" stroke-width="5" stroke-linecap="round" opacity=".55"/>
+      <path d="M37 60 L123 60" stroke="#477c7e" stroke-width="4"/>
+      <rect x="43" y="51" width="31" height="25" rx="11" fill="#edfaff" fill-opacity=".72" stroke="#477c7e" stroke-width="3"/>
+      <rect x="86" y="51" width="31" height="25" rx="11" fill="#edfaff" fill-opacity=".72" stroke="#477c7e" stroke-width="3"/>
+      <path d="M74 61 Q80 56 86 61" fill="none" stroke="#477c7e" stroke-width="3"/>
+      <g fill="#483b39">
+        <ellipse cx="60" cy="64" rx="4.5" ry="6"/>
+        <ellipse cx="100" cy="64" rx="4.5" ry="6"/>
+      </g>
+      <g fill="white"><circle cx="61.5" cy="61.5" r="1.7"/><circle cx="101.5" cy="61.5" r="1.7"/></g>
+      <path d="M55 60 L52 57 M105 60 L108 57" stroke="#483b39" stroke-width="2" stroke-linecap="round"/>
+      <ellipse cx="49" cy="79" rx="8" ry="4.5" fill="#ed9d9c" opacity=".65"/>
+      <ellipse cx="111" cy="79" rx="8" ry="4.5" fill="#ed9d9c" opacity=".65"/>
+      <path d="M74 80 Q80 89 87 80" fill="#d88382" stroke="#ad6d63" stroke-width="2" stroke-linecap="round"/>
+      <g fill="#fff7ed"><circle cx="106" cy="27" r="4"/><circle cx="100" cy="31" r="4"/><circle cx="112" cy="31" r="4"/><circle cx="103" cy="36" r="4"/><circle cx="109" cy="36" r="4"/></g><circle cx="106" cy="32" r="3" fill="#f4cd68"/>
+    </g>
+  </svg>
+                <span class="swim-ring"></span>
+                <span class="duck-friend">🐤</span>
+                <span class="pool-heart">♥</span>
+              </div>
+              <div class="game-info">
+                <h3 id="splash-title">첨벙클럽</h3>
+                <p class="description" id="splash-description">첨벙첨벙, 박자에 맞춰 쏙쏙!<br />나만의 수영 선수와 함께 자라나 봐.</p>
+                <span class="play">놀러 가기 <span class="arrow" aria-hidden="true">→</span></span>
+              </div>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      <footer>작은 모험, 커다란 즐거움 <span aria-hidden="true">💛</span></footer>
+    </main>
   </body>
 </html>

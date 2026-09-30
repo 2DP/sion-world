@@ -219,7 +219,7 @@
 | 다람쥐·도토리 | 1초 이동, 방문·점수 없음, 예고 취소, 접근 접촉, 15초 정지·무피해 및 복구 |
 | 공통 수명 | 일시정지, 단계 전환, 재시작 초기화 |
 
-검증 명령은 example3 폴더에서 실행한다.
+검증 명령은 pastel-step 폴더에서 실행한다.
 
 ```powershell
 node --test --test-isolation=none engine.test.cjs
