@@ -29,14 +29,14 @@ test('100 unique items, 25 per slot, replacement removes prior bonus and keeps o
  equip(p,'cap');assert.ok(p.equipped.includes('cap'));assert.ok(!p.equipped.includes('cap-24'));
  assert.equal(stats(p).stability,p.stats.stability+ITEMS.find(i=>i.id==='cap').bonus+ITEMS.find(i=>i.id==='goggles-24').bonus);
 });
-test('every home activity spends coins AND energy and lasts exactly three starts',()=>{
- for(const a of ACTIVITIES){const p=newPlayer('집',0),base={...p.stats};assert.ok(doActivity(p,a.id));assert.equal(p.coins,120-a.coins);assert.equal(p.energy,60-a.energy);assert.equal(p.day,a.id==='sleep'?2:1);
+test('every home activity only spends energy and lasts exactly three starts',()=>{
+ for(const a of ACTIVITIES){const p=newPlayer('집',0),base={...p.stats};p.coins=0;assert.ok(doActivity(p,a.id));assert.equal(p.coins,0);assert.equal(p.energy,60-a.energy);assert.equal(p.day,a.id==='sleep'?2:1);
  for(let i=0;i<3;i++){const s=beginSwim(p);assert.equal(s[a.stat],base[a.stat]+a.bonus);}
  assert.deepEqual(beginSwim(p),base);assert.equal(p.buffs.length,0);}
 });
 test('activities refresh rather than multiply; insufficient resources leave state unchanged',()=>{
  const p=newPlayer('집',0);doActivity(p,'rest');beginSwim(p);doActivity(p,'rest');assert.deepEqual(p.buffs,[{id:'rest',remaining:3}]);doActivity(p,'tv');assert.equal(p.buffs.length,2);
- for(const resource of ['coins','energy']){const q=newPlayer('부족',0);q[resource]=0;const before=structuredClone(q);assert.equal(doActivity(q,'sleep'),false);assert.deepEqual(q,before);}
+ for(const resource of ['energy']){const q=newPlayer('부족',0);q[resource]=0;const before=structuredClone(q);assert.equal(doActivity(q,'sleep'),false);assert.deepEqual(q,before);}
 });
 test('finished swims replenish energy with cap and serialize day and remaining boosts',()=>{
  const storage=memory(),p=newPlayer('활력',0);p.energy=0;assert.equal(reward(p,'practice',1,100,20,60).energy,30);assert.equal(p.energy,30);reward(p,'race',1,100,20,100);assert.equal(p.energy,80);assert.equal(reward(p,'race',1,100,20,100).energy,20);assert.equal(p.energy,100);
