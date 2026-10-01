@@ -30,13 +30,13 @@ test('100 unique items, 25 per slot, replacement removes prior bonus and keeps o
  assert.equal(stats(p).stability,p.stats.stability+ITEMS.find(i=>i.id==='cap').bonus+ITEMS.find(i=>i.id==='goggles-24').bonus);
 });
 test('every home activity only spends energy and lasts exactly three starts',()=>{
- for(const a of ACTIVITIES){const p=newPlayer('집',0),base={...p.stats};p.coins=0;assert.ok(doActivity(p,a.id));assert.equal(p.coins,0);assert.equal(p.energy,60-a.energy);assert.equal(p.day,a.id==='sleep'?2:1);
+ for(const a of ACTIVITIES){const p=newPlayer('집',0),base={...p.stats};p.coins=0;p.lastPracticeDay=p.day;assert.ok(doActivity(p,a.id));assert.equal(p.coins,0);assert.equal(p.energy,60-a.energy);assert.equal(p.day,a.id==='sleep'?2:1);
  for(let i=0;i<3;i++){const s=beginSwim(p);assert.equal(s[a.stat],base[a.stat]+a.bonus);}
  assert.deepEqual(beginSwim(p),base);assert.equal(p.buffs.length,0);}
 });
 test('activities refresh rather than multiply; insufficient resources leave state unchanged',()=>{
  const p=newPlayer('집',0);doActivity(p,'rest');beginSwim(p);doActivity(p,'rest');assert.deepEqual(p.buffs,[{id:'rest',remaining:3}]);doActivity(p,'tv');assert.equal(p.buffs.length,2);
- for(const resource of ['energy']){const q=newPlayer('부족',0);q[resource]=0;const before=structuredClone(q);assert.equal(doActivity(q,'sleep'),false);assert.deepEqual(q,before);}
+ for(const resource of ['energy']){const q=newPlayer('부족',0);q[resource]=0;const before=structuredClone(q);assert.equal(doActivity(q,'eat'),false);assert.deepEqual(q,before);}
 });
 test('finished swims replenish energy with cap and serialize day and remaining boosts',()=>{
  const storage=memory(),p=newPlayer('활력',0);p.energy=0;assert.equal(reward(p,'practice',1,100,20,60).energy,30);assert.equal(p.energy,30);reward(p,'race',1,100,20,100);assert.equal(p.energy,80);assert.equal(reward(p,'race',1,100,20,100).energy,20);assert.equal(p.energy,100);
@@ -51,3 +51,5 @@ test('longer race chart lasts beyond the slowest unassisted swimmer',()=>{
  assert.deepEqual(DISTANCES,{practice:50,race:100});assert.ok(TIMING.perfect>.06);
  for(const mode of ['practice','race']){const duration=DISTANCES[mode]/.65+10,notes=chart(mode,1,duration);assert.ok(notes.at(-1).time>DISTANCES[mode]/.65);}
 });
+
+test('free sleep applies daily decay only without completed practice and respects floors',()=>{const p=newPlayer('매일',0);p.energy=0;p.coins=0;const base={...p.stats};doActivity(p,'sleep');assert.equal(p.day,2);assert.equal(p.energy,0);assert.equal(p.coins,0);assert.equal(p.stats.base,base.base*.99);reward(p,'race',1,0,0,100);const before=p.stats.base;doActivity(p,'sleep');assert.equal(p.stats.base,before*.99);reward(p,'practice',1,0,0,80);const trained=p.stats.base;doActivity(p,'sleep');assert.equal(p.stats.base,trained);for(let i=0;i<100;i++)doActivity(p,'sleep');for(const key of Object.keys(base))assert.ok(p.stats[key]>=base[key]*.8);const store=memory();savePlayer(store,p);assert.equal(readSave(store).player.lastPracticeDay,p.lastPracticeDay);});
