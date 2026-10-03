@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>아이돌 키우기 · 미니게임 점검</title>
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="../src/minigames.css">
+<main style="max-width:760px;margin:30px auto;padding:20px">
+ <h1>미니게임 수동 점검</h1>
+ <p>게임 저장과 분리된 개발용 화면입니다. 실제 저장 기록을 읽거나 쓰지 않습니다.</p>
+ <label>난이도 레벨 <select id="level"><option>1</option><option>6</option><option>16</option></select></label>
+ <label><input type="checkbox" id="easy"> 더 편하게</label>
+ <nav id="types" style="display:flex;flex-wrap:wrap;gap:8px;margin:20px 0"></nav>
+ <div id="host"></div>
+ <pre id="result" role="status" style="white-space:pre-wrap"></pre>
+</main>
+<script type="module">
+ import {startMinigame} from '../src/minigames.js';
+ import {characterSVG} from '../src/character.js';
+ import {newGame} from '../src/core.js';
+ import {createAudio} from '../src/audio.js';
+ const audio=createAudio(),appearance=newGame().appearance;
+ let active=null;
+ const result=document.querySelector('#result');
+ for(const [type,label] of Object.entries({rhythm:'노래',direction:'방향 춤',memory:'기억 춤',acting:'영화 연기',variety:'예능',makeup:'화장',compose:'작곡'})){
+  const button=document.createElement('button');button.textContent=label;button.className='secondary';
+  button.onclick=async()=>{
+   active?.destroy();await audio.unlock();result.textContent='';
+   active=startMinigame(document.querySelector('#host'),{type,level:Number(document.querySelector('#level').value),easy:document.querySelector('#easy').checked,seed:42,appearance,renderCharacter:characterSVG,tone:audio.tone,
+    onComplete:(score,extras)=>{result.textContent=JSON.stringify({type,score,...extras},null,2);},
+    onFallback:()=>result.textContent='일반 활동 전환',onCancel:()=>result.textContent='취소 완료'});
+  };
+  document.querySelector('#types').append(button);
+ }
+</script>
+</html>

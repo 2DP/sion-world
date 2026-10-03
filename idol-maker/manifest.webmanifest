@@ -1,0 +1,7 @@
+{
+  "id":"./", "name":"아이돌 키우기", "short_name":"아이돌 키우기",
+  "description":"다섯 친구와 함께 만드는 나만의 작은 꿈의 무대",
+  "lang":"ko", "start_url":"./", "scope":"./", "display":"standalone",
+  "background_color":"#f7f6ef", "theme_color":"#f7f6ef",
+  "icons":[{"src":"./assets/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+}

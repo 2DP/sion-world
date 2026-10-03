@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#fff8e8" />
     <title>SION WORLD - 게임 놀이터</title>
-    <meta name="description" content="SION WORLD의 알록달록 게임 놀이터! 파스텔 스텝과 첨벙클럽을 플레이하세요." />
+    <meta name="description" content="SION WORLD의 알록달록 게임 놀이터! 파스텔 스텝, 첨벙클럽, 아이돌 키우기를 플레이하세요." />
     <style>
       * { box-sizing: border-box; }
       :root { color-scheme: light; --ink: #343653; }
@@ -103,6 +103,10 @@
       .swim .game-info .play { background: linear-gradient(110deg, #fce0ee, #e9e1ff); color: #784775; }
       .game-info { display: flex; flex-direction: column; flex: 1; padding: 20px 12px 12px; }
       h3 { font-size: 27px; margin: 0 0 9px; letter-spacing: -1px; }
+      .idol h3 { display: flex; align-items: center; gap: 10px; color: #695189; }
+      .idol-icon { width: 38px; height: 38px; flex: 0 0 auto; border-radius: 10px; }
+      .idol-preview { width: 100%; height: 100%; object-fit: cover; }
+      .idol .play { background: linear-gradient(110deg, #e9def8, #dbefe5); color: #66517f; }
       .description { margin: 0 0 22px; color: #626278; line-height: 1.7; font-size: 15px; word-break: keep-all; }
       .play { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding: 14px 18px; border-radius: 15px; background: #fce0eb; color: #833959; font-size: 17px; font-weight: 800; }
       .swim .play { background: #d9efff; color: #245d87; }
@@ -133,9 +137,21 @@
       <nav aria-labelledby="games-heading">
         <div class="section-heading">
           <h2 id="games-heading">나의 게임 놀이터</h2>
-          <span class="count">게임 2개</span>
+          <span class="count">게임 3개</span>
         </div>
         <ul class="games">
+          <li>
+            <a class="game idol" href="./idol-maker/index.html" aria-labelledby="idol-title" aria-describedby="idol-description">
+              <div class="scene">
+                <img class="idol-preview" src="./idol-maker/assets/preview.svg" alt="민트와 라벤더 연습실에 모인 다섯 명의 아이돌" />
+              </div>
+              <div class="game-info">
+                <h3 id="idol-title"><img class="idol-icon" src="./idol-maker/assets/icon.svg" alt="" width="38" height="38" />아이돌 키우기</h3>
+                <p class="description" id="idol-description">노래하고, 춤추고, 나답게 반짝이기!<br />다섯 친구와 연습생부터 월드스타까지.</p>
+                <span class="play">꿈을 키우러 가기 <span class="arrow" aria-hidden="true">→</span></span>
+              </div>
+            </a>
+          </li>
           <li>
             <a class="game" href="./pastel-step/" aria-labelledby="pastel-title" aria-describedby="pastel-description">
               <div class="scene garden" aria-hidden="true">

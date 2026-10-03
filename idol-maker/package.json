@@ -1,0 +1,11 @@
+{
+  "name": "idol-maker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node build.mjs && node server.mjs",
+    "test": "node --test --test-isolation=none tests/*.test.mjs"
+  }
+}
