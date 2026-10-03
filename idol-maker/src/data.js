@@ -1,6 +1,17 @@
 export const SKILLS={vocal:'노래',dance:'춤',acting:'연기',variety:'예능감',charm:'매력'};
 export const STAGES=['연습생','데뷔','인기 아이돌','톱스타','월드스타'];
 export const SCALE_NAMES=['연습실','데뷔 무대','중형 무대','대형 무대','월드 무대'];
+export const APPEARANCE_OPTIONS={
+ hairStyle:{label:'머리 모양',values:{long:'긴 머리',bob:'단발',twin:'양갈래',pony:'포니테일',short:'짧은 머리',bun:'양쪽 만두머리',wavy:'웨이브'}},
+ bangs:{label:'앞머리',values:{side:'옆으로 넘기기',straight:'일자 앞머리',curtain:'가르마',open:'이마 보이기'}},
+ eyes:{label:'눈 모양',values:{round:'동그란 눈',smile:'웃는 눈',calm:'차분한 눈',star:'별빛 눈'}},
+ brows:{label:'눈썹',values:{soft:'부드럽게',straight:'일자',up:'씩씩하게'}},
+ mouth:{label:'입 모양',values:{smile:'살짝 미소',grin:'활짝 웃기',small:'작은 입'}},
+ faceShape:{label:'얼굴 모양',values:{round:'동글동글',oval:'갸름하게',heart:'하트형'}},
+ glasses:{label:'안경',values:{none:'안경 없음',round:'동그란 안경',square:'네모 안경'}}
+};
+export const APPEARANCE_DEFAULTS={bangs:'side',eyeColor:'#a697cf',brows:'soft',mouth:'smile',faceShape:'round',glasses:'none',freckles:false};
+export const MINI_NAMES={rhythm:'박자 맞추기',direction:'방향 춤',memory:'안무 기억',acting:'영화 장면 퍼즐',variety:'제시어 퀴즈쇼',makeup:'자유 메이크업',compose:'멜로디 만들기',exercise:'힘 모아 멀리뛰기',beauty:'보송보송 거품 세안',meal:'알록달록 도시락',rest:'구름 호흡 놀이',play:'친구 카드 짝 맞추기',gaming:'별 바구니',snack:'과일 탑 쌓기',vacation:'해변 보물 찾기'};
 export const MEMBER_STORIES={
  나래:'동네 합창단에서 노래하던 친구. 오늘도 다섯 목소리가 어울리는 화음을 찾고 있어요.',
  루아:'학교 댄스 모임에서 시작한 춤꾼. 어려운 안무를 기억하기 쉬운 동작으로 나눠 줘요.',
@@ -38,5 +49,5 @@ export const ACTIVITIES=[
  a('song','자작곡 작업','🎼','studio','vocal',12,25,[22,22],3,{project:3,cost:100,money:[120,250],fans:[100,200],followers:[50,120],streams:[1000,5000]}),
  a('overseas','해외에 우리 소개하기','🌏','agency','vocal',10,25,[16,16],2,{public:true})
 ];
-const colors=['#b9a3e3','#99d9cc','#a9d5ef','#f6df9e','#e9aec6','#a6bcec'];
-export const ITEMS=[...['lavender','mint','cream'].map((c,i)=>({id:`starter-${c}`,name:['라벤더 첫걸음','민트 산책','크림 구름'][i],type:'outfit',color:i===2?'#f6df9e':colors[i],price:0,style:'daily'})),...Array.from({length:24},(_,i)=>({id:`outfit-${i+1}`,name:`${['구름','별빛','바다','꽃잎','달빛','무지개'][i%6]} ${['산책복','무대복','촬영복','축제복'][Math.floor(i/6)]}`,type:'outfit',color:colors[i%6],price:80+Math.floor(i/6)*60,style:['daily','stage','movie','party'][Math.floor(i/6)]})),...['shoes','accessory'].flatMap((type)=>Array.from({length:6},(_,i)=>({id:`${type}-${i+1}`,name:`${['민트','라벤더','크림','하늘','장미','별빛'][i]} ${type==='shoes'?'신발':'장식'}`,type,color:colors[i],price:80+i*40,style:'daily'}))),...['vocal','dance','acting','variety'].flatMap((skill)=>[1,2,3].map(tier=>({id:`${skill}-equipment-${tier}`,name:`${SKILLS[skill]} 연습 장비 ${tier}`,type:'equipment',skill,tier,price:[150,400,900][tier-1],color:'#b9a3e3',style:'equipment'})))];
+export const WARDROBE_COLORS=[{name:'라벤더',color:'#b9a3e3'},{name:'민트',color:'#99d9cc'},{name:'하늘',color:'#a9d5ef'},{name:'크림',color:'#f6df9e'},{name:'장미',color:'#e9aec6'},{name:'블루베리',color:'#a6bcec'}];
+export const ITEMS=[...['lavender','mint','cream'].map((c,i)=>({id:`starter-${c}`,name:['라벤더 첫걸음','민트 산책','크림 구름'][i],type:'outfit',...{color:WARDROBE_COLORS[[0,1,3][i]].color,colorName:WARDROBE_COLORS[[0,1,3][i]].name},price:0,style:'daily'})),...Array.from({length:24},(_,i)=>({id:`outfit-${i+1}`,name:`${WARDROBE_COLORS[i%6].name} ${['산책복','무대복','촬영복','축제복'][Math.floor(i/6)]}`,type:'outfit',color:WARDROBE_COLORS[i%6].color,colorName:WARDROBE_COLORS[i%6].name,price:80+Math.floor(i/6)*60,style:['daily','stage','movie','party'][Math.floor(i/6)]})),...['shoes','accessory'].flatMap((type)=>Array.from({length:6},(_,i)=>({id:`${type}-${i+1}`,name:`${WARDROBE_COLORS[i].name} ${type==='shoes'?'신발':'리본'}`,type,color:WARDROBE_COLORS[i].color,colorName:WARDROBE_COLORS[i].name,price:80+i*40,style:type==='accessory'?'bow':'daily'}))),...['vocal','dance','acting','variety'].flatMap((skill)=>[1,2,3].map(tier=>({id:`${skill}-equipment-${tier}`,name:`${SKILLS[skill]} 연습 장비 ${tier}`,type:'equipment',skill,tier,price:[150,400,900][tier-1],color:'#b9a3e3',style:'equipment'})))];

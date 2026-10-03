@@ -17,16 +17,17 @@
 <script type="module">
  import {startMinigame} from '../src/minigames.js';
  import {characterSVG} from '../src/character.js';
+ import {MINI_NAMES} from '../src/data.js';
  import {newGame} from '../src/core.js';
  import {createAudio} from '../src/audio.js';
  const audio=createAudio(),appearance=newGame().appearance;
  let active=null;
  const result=document.querySelector('#result');
- for(const [type,label] of Object.entries({rhythm:'노래',direction:'방향 춤',memory:'기억 춤',acting:'영화 연기',variety:'예능',makeup:'화장',compose:'작곡'})){
+ for(const [type,label] of Object.entries(MINI_NAMES)){
   const button=document.createElement('button');button.textContent=label;button.className='secondary';
   button.onclick=async()=>{
    active?.destroy();await audio.unlock();result.textContent='';
-   active=startMinigame(document.querySelector('#host'),{type,level:Number(document.querySelector('#level').value),easy:document.querySelector('#easy').checked,seed:42,appearance,renderCharacter:characterSVG,tone:audio.tone,
+   active=startMinigame(document.querySelector('#host'),{type,level:Number(document.querySelector('#level').value),easy:document.querySelector('#easy').checked,seed:42,appearance,renderCharacter:characterSVG,tone:audio.tone,startRhythm:audio.startRhythm,
     onComplete:(score,extras)=>{result.textContent=JSON.stringify({type,score,...extras},null,2);},
     onFallback:()=>result.textContent='일반 활동 전환',onCancel:()=>result.textContent='취소 완료'});
   };

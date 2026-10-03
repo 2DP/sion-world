@@ -1,3 +1,4 @@
+import {RHYTHM_BEAT_MS,RHYTHM_DURATION_MS} from './rhythm.js';
 export function createAudio() {
  let ctx, musicGain, sfxGain, unlocked=false, timer=null, active=false, place='practice', step=0, next=0;
  let musicVolume=.35,sfxVolume=.65;
@@ -8,7 +9,7 @@ export function createAudio() {
   if(!ctx || !unlocked || ctx.state!=='running')return;
   const osc=ctx.createOscillator(),env=ctx.createGain();
   osc.type=type;osc.frequency.value=freq;env.gain.setValueAtTime(0,time);env.gain.linearRampToValueAtTime(volume,time+.025);env.gain.exponentialRampToValueAtTime(.0001,time+duration);
-  osc.connect(env);env.connect(gainNode);voices.add(osc);osc.onended=()=>{voices.delete(osc);osc.disconnect();env.disconnect();};osc.start(time);osc.stop(time+duration+.03);
+  osc.connect(env);env.connect(gainNode);voices.add(osc);osc.onended=()=>{voices.delete(osc);osc.disconnect();env.disconnect();};osc.start(time);osc.stop(time+duration+.03);return osc;
  }
  function tick(){
   if(!ctx||!unlocked||!active||ctx.state!=='running')return;
@@ -26,5 +27,27 @@ export function createAudio() {
  function tone(freq,duration=.12){if(Number.isFinite(freq)&&freq>0)note(Math.min(freq,12000),Math.max(.05,Math.min(duration,3)),sfxGain,.16);}
  function effect(name='click'){if(!ctx||!unlocked)return;const tones={click:[76],success:[72,76,79],reward:[76,79,84,88],level:[72,76,79,84],levelup:[72,76,79,84],buy:[79,84],save:[76,79],error:[64,60],rest:[72,67],start:[72,76,79]}[name]||[76,79];tones.forEach((n,i)=>note(hz(n),.22,sfxGain,.13,ctx.currentTime+i*.09));}
  function destroy(){stop();unlocked=false;if(ctx){ctx.close().catch(()=>{});ctx=null;}}
- return {unlock,setVolume,start,stop,tone,effect,destroy};
+ function startRhythm(chart){
+  stop();if(!ctx||!unlocked||ctx.state!=='running')return null;
+  let origin=0,offset=0,playing=false,ended=false;
+  const trackVoices=new Set(),targets=new Set(chart),melody=[72,76,79,76,74,77,81,79,76,79,84,79,77,76,74,71];
+  const position=()=>playing?Math.max(offset,(ctx.currentTime-origin)*1000):offset;
+  function silence(){for(const osc of trackVoices){try{osc.stop();}catch{}}trackVoices.clear();}
+  function resume(){
+   if(ended||playing)return;playing=true;origin=ctx.currentTime+.08-offset/1000;
+   const play=(pitch,duration,volume,time,type='triangle')=>{const osc=note(hz(pitch),duration,musicGain,volume,time,type);if(osc)trackVoices.add(osc);};
+   for(let at=Math.ceil(offset/RHYTHM_BEAT_MS)*RHYTHM_BEAT_MS;at<RHYTHM_DURATION_MS;at+=RHYTHM_BEAT_MS){
+    const beat=at/RHYTHM_BEAT_MS,time=origin+at/1000;
+    play(melody[beat%melody.length],.32,.075,time);
+    // A short tick marks every beat; the bright bell marks a playable note.
+    play(beat%4===0?84:79,.065,beat%4===0?.09:.04,time,'sine');
+    if(beat%4===0)play([48,53,55,48][Math.floor(beat/4)%4],1.6,.09,time,'sine');
+    if(targets.has(at))play(96,.14,.18,time,'sine');
+   }
+  }
+  function pause(){if(!playing||ended)return;offset=position();playing=false;silence();}
+  function stopTrack(){pause();ended=true;silence();}
+  resume();return {position,pause,resume,stop:stopTrack};
+ }
+ return {unlock,setVolume,start,stop,tone,effect,destroy,startRhythm};
 }

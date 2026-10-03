@@ -1,4 +1,4 @@
-const CACHE='idol-maker-assets-v3';
+const CACHE='idol-maker-assets-v11';
 const FILES=['./','./index.html','./styles.css','./src/minigames.css','./manifest.webmanifest','./assets/icon.svg','./assets/preview.svg','./game.bundle.js'];
 const urls=FILES.map(f=>new URL(f,self.registration.scope).href);
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(urls))));
