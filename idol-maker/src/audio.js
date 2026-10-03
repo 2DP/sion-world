@@ -27,7 +27,7 @@ export function createAudio() {
  function tone(freq,duration=.12){if(Number.isFinite(freq)&&freq>0)note(Math.min(freq,12000),Math.max(.05,Math.min(duration,3)),sfxGain,.16);}
  function effect(name='click'){if(!ctx||!unlocked)return;const tones={click:[76],success:[72,76,79],reward:[76,79,84,88],level:[72,76,79,84],levelup:[72,76,79,84],buy:[79,84],save:[76,79],error:[64,60],rest:[72,67],start:[72,76,79]}[name]||[76,79];tones.forEach((n,i)=>note(hz(n),.22,sfxGain,.13,ctx.currentTime+i*.09));}
  function destroy(){stop();unlocked=false;if(ctx){ctx.close().catch(()=>{});ctx=null;}}
- function startRhythm(chart){
+ function startRhythm(chart,{beatMs=RHYTHM_BEAT_MS,durationMs=RHYTHM_DURATION_MS,pitches=[],drums=false}={}){
   stop();if(!ctx||!unlocked||ctx.state!=='running')return null;
   let origin=0,offset=0,playing=false,ended=false;
   const trackVoices=new Set(),targets=new Set(chart),melody=[72,76,79,76,74,77,81,79,76,79,84,79,77,76,74,71];
@@ -36,13 +36,20 @@ export function createAudio() {
   function resume(){
    if(ended||playing)return;playing=true;origin=ctx.currentTime+.08-offset/1000;
    const play=(pitch,duration,volume,time,type='triangle')=>{const osc=note(hz(pitch),duration,musicGain,volume,time,type);if(osc)trackVoices.add(osc);};
-   for(let at=Math.ceil(offset/RHYTHM_BEAT_MS)*RHYTHM_BEAT_MS;at<RHYTHM_DURATION_MS;at+=RHYTHM_BEAT_MS){
-    const beat=at/RHYTHM_BEAT_MS,time=origin+at/1000;
+   for(let at=Math.ceil(offset/beatMs)*beatMs;at<durationMs;at+=beatMs){
+    const beat=at/beatMs,time=origin+at/1000;
     play(melody[beat%melody.length],.32,.075,time);
+    if(drums){
+     // Kick on each beat, backbeat snare and offbeat hi-hat share the arrow clock.
+     play(36,.18,.32,time,'sine');
+     if(beat%2===1){play(50,.09,.12,time,'triangle');play(86,.055,.06,time,'square');}
+     const offbeat=at+beatMs/2;
+     if(offbeat<durationMs)play(110,.035,.035,origin+offbeat/1000,'square');
+    }
     // A short tick marks every beat; the bright bell marks a playable note.
     play(beat%4===0?84:79,.065,beat%4===0?.09:.04,time,'sine');
     if(beat%4===0)play([48,53,55,48][Math.floor(beat/4)%4],1.6,.09,time,'sine');
-    if(targets.has(at))play(96,.14,.18,time,'sine');
+    if(targets.has(at)){play(96,.14,.18,time,'sine');const pitch=pitches[chart.indexOf(at)];if(pitch){const osc=note(pitch,.5,musicGain,.18,time,'sine');if(osc)trackVoices.add(osc);}}
    }
   }
   function pause(){if(!playing||ended)return;offset=position();playing=false;silence();}

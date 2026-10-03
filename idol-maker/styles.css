@@ -10,3 +10,6 @@
 .custom-color{display:flex;align-items:center;gap:8px;font-size:13px;color:#68567d}.custom-color input{width:44px;height:40px;padding:3px;border:1px solid #d6c9e4;border-radius:9px;background:#fff}.appearance-controls select{width:100%;min-height:44px}.appearance-controls .swatches{flex-wrap:wrap}.appearance-controls{display:grid;grid-template-columns:1fr;gap:3px}
 
 .wardrobe>aside{align-self:start;position:sticky;top:20px}.wardrobe>aside .create-preview{position:static}@media(max-width:560px){.wardrobe>aside{position:static}}
+
+/* Match the runner facing right inside the exercise minigame. */
+.activity-card[data-activity="exercise"] .activity-icon{transform:scaleX(-1)}

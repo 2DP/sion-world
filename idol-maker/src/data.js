@@ -11,7 +11,7 @@ export const APPEARANCE_OPTIONS={
  glasses:{label:'안경',values:{none:'안경 없음',round:'동그란 안경',square:'네모 안경'}}
 };
 export const APPEARANCE_DEFAULTS={bangs:'side',eyeColor:'#a697cf',brows:'soft',mouth:'smile',faceShape:'round',glasses:'none',freckles:false};
-export const MINI_NAMES={rhythm:'박자 맞추기',direction:'방향 춤',memory:'안무 기억',acting:'영화 장면 퍼즐',variety:'제시어 퀴즈쇼',makeup:'자유 메이크업',compose:'멜로디 만들기',exercise:'힘 모아 멀리뛰기',beauty:'보송보송 거품 세안',meal:'알록달록 도시락',rest:'구름 호흡 놀이',play:'친구 카드 짝 맞추기',gaming:'별 바구니',snack:'과일 탑 쌓기',vacation:'해변 보물 찾기'};
+export const MINI_NAMES={rhythm:'노래 연습',direction:'방향 춤',memory:'안무 기억',acting:'영화 장면 퍼즐',variety:'제시어 퀴즈쇼',makeup:'자유 메이크업',compose:'멜로디 만들기',exercise:'장애물 달리기',beauty:'보송보송 거품 세안',meal:'알록달록 도시락',rest:'구름 호흡 놀이',play:'친구 카드 짝 맞추기',gaming:'별 바구니',snack:'과일 탑 쌓기',vacation:'해변 보물 찾기'};
 export const MEMBER_STORIES={
  나래:'동네 합창단에서 노래하던 친구. 오늘도 다섯 목소리가 어울리는 화음을 찾고 있어요.',
  루아:'학교 댄스 모임에서 시작한 춤꾼. 어려운 안무를 기억하기 쉬운 동작으로 나눠 줘요.',
@@ -34,8 +34,8 @@ export const PERSONALITIES=[{id:'steady',name:'차근차근',description:'훈련
 const a=(id,name,icon,place,skill,energy,xp,range,stress,extra={})=>({id,name,icon,place,skill,energy,xp,range,stress,cost:0,description:`${name}으로 우리만의 하루를 만들어요.`,...extra});
 export const ACTIVITIES=[
  ...['vocal','dance','acting','variety'].map((s,i)=>a(s,`${SKILLS[s]} 기본 연습`,['🎤','💃','🎬','🎙️'][i],'practice',s,8,15,[16,24],3,{training:true})),
- a('choreo','안무 만들기','🧠','practice','dance',8,15,[16,24],3,{training:true}),a('lesson','전문 수업','📚','practice','vocal',10,20,[26,34],4,{cost:40,training:true}),
- a('exercise','즐거운 운동','🏃','practice','charm',10,15,[18,26],-4),a('beauty','피부관리','🫧','home','charm',5,10,[14,20],-6),a('makeup','화장 꾸미기','🎨','home','charm',5,10,[18,18],-6),a('meal','균형 식사','🥗','home','charm',-10,5,[8,8],-10),
+ a('choreo','안무 만들기','👣','practice','dance',8,15,[16,24],3,{training:true}),a('lesson','전문 수업','📚','practice','vocal',10,20,[26,34],4,{cost:40,training:true}),
+ a('exercise','즐거운 운동','🏃','practice','charm',10,15,[18,26],-4),a('beauty','피부관리','bubbles','home','charm',5,10,[14,20],-6),a('makeup','화장 꾸미기','🎨','home','charm',5,10,[18,18],-6),a('meal','균형 식사','🥗','home','charm',-10,5,[8,8],-10),
  ...[['rest','숙소에서 쉬기','☁️',-25,-20],['play','멤버와 놀기','🧸',-15,-25],['gaming','함께 게임하기','🎮',-15,-25],['snack','간식 먹기','🍓',-15,-15],['vacation','하루 휴가','🏖️',-100,-50]].map(([id,n,i,e,s])=>a(id,n,i,'home',null,e,0,[0,0],s)),
  a('audition','데뷔 오디션','🌟','agency','vocal',20,30,[8,8],6),a('agency','대형 소속사 오디션','🏢','agency','vocal',20,30,[16,16],6),
  a('stream','연습 영상·라이브','📱','studio','vocal',8,15,[10,10],4,{public:true,money:[30,60],fans:[10,30],followers:[20,50]}),

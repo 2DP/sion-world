@@ -1,3 +1,4 @@
+import { BUBBLES_ICON, BASKET_ICON, gameIconText } from './icons.js';
 // Each activity has its own interaction. The host owns time, pause and cleanup.
 export function mountExtraMinigame(type,k){
  const {body,el,button,schedule,sound,result,finish,rand,tier,o,now,setTick,setInput,setKeyUp,setPause,listen}=k;
@@ -37,17 +38,33 @@ export function mountExtraMinigame(type,k){
  }
 
  function exercise(){
-  const status=meter(),arena=board('멀리뛰기 운동장','mini-jump-field'),runner=el('div','mini-jumper','🏃'),mark=el('div','mini-jump-target','🏁');arena.append(runner,mark);
-  const gauge=el('div','mini-charge'),zone=el('span','mini-charge-zone'),fill=el('i','mini-charge-fill');gauge.append(zone,fill);body.append(gauge);const hint=feedback();
-  let holding=false,charge=0,start=0,round=0,points=0,flying=false;const target=70,width=o.easy?30:24-tier*4;
-  zone.style.left=`${target-width/2}%`;zone.style.width=`${width}%`;
-  const hold=button('누르고 힘 모으기 · 놓으면 점프!',()=>{},'mini-primary mini-hold');body.append(hold);hold.setAttribute('aria-label','힘 모으기');
-  function press(){if(flying||holding)return;holding=true;start=now();hint.textContent='연두 구간에서 손을 떼 보세요!';}
-  function release(){if(!holding||flying)return;holding=false;flying=true;hold.disabled=true;round++;const distance=Math.abs(charge-target);points+=distance<=width/2?100:Math.max(20,100-distance*2);runner.style.left=`${12+charge*.65}%`;runner.classList.add('jumping');sound(440+charge*5);hint.textContent=`${round}번째 점프 · ${(charge/20+1).toFixed(1)}m!`;
-   schedule(900,()=>{if(round===3){result(points/3,'세 번의 멋진 점프 완료!');return;}flying=false;hold.disabled=false;charge=0;fill.style.width='0%';runner.style.left='12%';runner.classList.remove('jumping');});}
-  listen(hold,'pointerdown',e=>{e.preventDefault();hold.setPointerCapture?.(e.pointerId);press();});listen(hold,'pointerup',release);listen(hold,'pointercancel',()=>{holding=false;charge=0;fill.style.width='0%';});
-  setInput(e=>{if(e.code==='Space')press();});setKeyUp(e=>{if(e.code==='Space')release();});setPause(()=>{holding=false;charge=0;fill.style.width='0%';});
-  setTick(()=>{if(holding){charge=clamp((now()-start)/(o.easy?24:19));fill.style.width=`${charge}%`;if(charge===100)release();}status.textContent=`${Math.min(round+1,3)}/3번째 점프 · Space를 길게 눌렀다 놓아도 돼요`;});
+  const status=meter(),arena=board('장애물 달리기 운동장','mini-run-field'),runner=el('div','mini-runner','🏃');arena.append(runner);
+  body.append(el('p','mini-guide','Space 또는 점프 버튼으로 장애물을 넘어요. 10개를 지나면 완주!'));
+  const hint=feedback(),duration=o.easy?1100:950,speed=o.easy?29:34+tier*3,total=10;
+  let jumpAt=null,last=now(),distance=0,passed=0,hits=0,ended=false;
+  let nextObstacle=110;
+  const obstacles=Array.from({length:total},(_,i)=>{const node=el('div','mini-run-obstacle');node.setAttribute('aria-label',(i+1)+'번 장애물');arena.append(node);const x=nextObstacle;nextObstacle+=(o.easy?52:48)+rand()*38;return {node,x,hit:false,done:false};});
+  function height(t){if(jumpAt===null)return 0;const p=(t-jumpAt)/duration;return p>=1?0:Math.max(0,Math.sin(p*Math.PI)*105);}
+  function jump(){if(ended||(jumpAt!==null&&now()-jumpAt<duration))return;jumpAt=now();sound(560,.1);hint.textContent='훌쩍! 장애물을 뛰어넘어요.';}
+  const control=button('점프 · Space',jump,'mini-primary mini-tap');body.append(control);
+  listen(control,'pointerdown',e=>{e.preventDefault();jump();});
+  setInput(e=>{if(e.code==='Space')jump();});
+  setTick(()=>{
+   const t=now(),dt=t-last;last=t;
+   // Small steps prevent a slow frame from skipping a collision.
+   for(let step=0;step<dt;){const ms=Math.min(16,dt-step);step+=ms;distance+=speed*ms/1000;const y=height(t-dt+step);
+    for(const obstacle of obstacles){if(obstacle.done)continue;const x=obstacle.x-distance;
+     if(!obstacle.hit&&x<24&&x+6>16&&y<38){obstacle.hit=true;hits++;obstacle.node.classList.add('hit');hint.textContent='괜찮아요! 다음 장애물을 준비해요.';sound(220,.1);}
+     if(x+6<16){obstacle.done=true;passed++;if(!obstacle.hit){sound(720,.08);hint.textContent='좋아요! 장애물을 넘었어요.';}}
+    }
+   }
+   runner.style.bottom=(38+height(t))+'px';
+   runner.style.transform='scaleX(-1) rotate('+(height(t)>0?-8:Math.sin(distance)*4)+'deg)';
+   arena.style.backgroundPosition=(-distance*4)+'px 0';
+   for(const obstacle of obstacles){obstacle.node.style.left=(obstacle.x-distance)+'%';obstacle.node.hidden=obstacle.done;}
+   status.textContent='장애물 '+passed+'/'+total+'개 · 성공 '+obstacles.filter(obstacle=>obstacle.done&&!obstacle.hit).length+'개';
+   if(passed===total){ended=true;control.disabled=true;result((total-hits)/total*100,'장애물 달리기 완주!');}
+  });
  }
 
  function beauty(){
@@ -55,7 +72,7 @@ export function mountExtraMinigame(type,k){
   const count=8+tier*2,spots=shuffled(Array.from({length:12},(_,i)=>({x:24+(i%4)*17,y:18+Math.floor(i/4)*17}))).slice(0,count),cleared=new Set(),bubbles=[];
   const hint=feedback();hint.textContent='손가락으로 거품을 문지르거나 하나씩 눌러 주세요.';
   function clean(i){if(cleared.has(i))return;cleared.add(i);bubbles[i].classList.add('clean');bubbles[i].disabled=true;sound(650+i*25,.07);status.textContent=`보송보송 ${cleared.size}/${count}`;if(cleared.size===count)schedule(450,()=>finish(80));}
-  spots.forEach((spot,i)=>{const b=button('🫧',()=>clean(i),'mini-foam');b.setAttribute('aria-label',`${i+1}번 거품 닦기`);b.style.left=`${spot.x}%`;b.style.top=`${spot.y}%`;bubbles.push(b);arena.append(b);});status.textContent=`보송보송 0/${count}`;
+  spots.forEach((spot,i)=>{const b=button('',()=>clean(i),'mini-foam');b.innerHTML=BUBBLES_ICON;b.setAttribute('aria-label',`${i+1}번 거품 닦기`);b.style.left=`${spot.x}%`;b.style.top=`${spot.y}%`;bubbles.push(b);arena.append(b);});status.textContent=`보송보송 0/${count}`;
   const rub=e=>{if(e.type==='pointermove'&&!e.buttons)return;const rect=arena.getBoundingClientRect();spots.forEach((spot,i)=>{const x=rect.left+rect.width*spot.x/100,y=rect.top+rect.height*spot.y/100;if(Math.hypot(e.clientX-x,e.clientY-y)<32)clean(i);});};listen(arena,'pointerdown',rub);listen(arena,'pointermove',rub);
  }
 
@@ -63,8 +80,8 @@ export function mountExtraMinigame(type,k){
   const groups=[{name:'든든한 곡물',food:['🍚 밥','🍞 빵','🍠 고구마']},{name:'고소한 단백질',food:['🥚 달걀','🫘 콩','🐟 생선']},{name:'알록달록 채소',food:['🥦 브로콜리','🥕 당근','🍅 토마토']}];
   const status=meter(),tray=el('div','mini-bento'),pantry=el('div','mini-pantry');body.append(tray,pantry);const chosen=[null,null,null],slots=[];const hint=feedback();hint.textContent='재료를 골라 도시락을 채워요. 같은 칸의 재료는 언제든 바꿀 수 있어요.';
   const done=button('다섯 친구와 맛있게 먹기',()=>{if(chosen.every(Boolean))finish(80);},'mini-primary');done.disabled=true;body.append(done);
-  function put(g,n){chosen[g]=groups[g].food[n];slots[g].textContent=chosen[g];slots[g].classList.add('filled');done.disabled=!chosen.every(Boolean);status.textContent=`도시락 ${chosen.filter(Boolean).length}/3칸`;sound(392+g*100);}
-  groups.forEach((group,g)=>{const slot=el('div','mini-bento-slot',group.name);slot.ondragover=e=>e.preventDefault();slot.ondrop=e=>{e.preventDefault();const [a,b]=e.dataTransfer.getData('text/plain').split(':').map(Number);if(a===g&&group.food[b])put(a,b);};slots.push(slot);tray.append(slot);const section=el('section','mini-food-group');section.append(el('h3','',group.name));group.food.forEach((food,n)=>{const b=button(food,()=>put(g,n));b.draggable=true;b.ondragstart=e=>e.dataTransfer.setData('text/plain',`${g}:${n}`);section.append(b);});pantry.append(section);});status.textContent='도시락 0/3칸';
+  function put(g,n){chosen[g]=groups[g].food[n];slots[g].innerHTML=gameIconText(chosen[g]);slots[g].classList.add('filled');done.disabled=!chosen.every(Boolean);status.textContent=`도시락 ${chosen.filter(Boolean).length}/3칸`;sound(392+g*100);}
+  groups.forEach((group,g)=>{const slot=el('div','mini-bento-slot',group.name);slot.ondragover=e=>e.preventDefault();slot.ondrop=e=>{e.preventDefault();const [a,b]=e.dataTransfer.getData('text/plain').split(':').map(Number);if(a===g&&group.food[b])put(a,b);};slots.push(slot);tray.append(slot);const section=el('section','mini-food-group');section.append(el('h3','',group.name));group.food.forEach((food,n)=>{const b=button(food,()=>put(g,n));b.innerHTML=gameIconText(food);b.draggable=true;b.ondragstart=e=>e.dataTransfer.setData('text/plain',`${g}:${n}`);section.append(b);});pantry.append(section);});status.textContent='도시락 0/3칸';
  }
 
  function rest(){
@@ -74,7 +91,7 @@ export function mountExtraMinigame(type,k){
  }
 
  function play(){
-  const icons=['🐶','🐱','🐰','🦊','🐼'].slice(0,3+tier),deck=shuffled([...icons,...icons]),status=meter(),grid=el('div','mini-pairs');body.append(grid);const hint=feedback();let first=null,locked=false,matches=0,turns=0;const cards=[];
+  const icons=['🐶','🐱','🐰','🦊','🐼','🐸','🐵','🐷','🐯','🐨'],deck=shuffled([...icons,...icons]),status=meter(),grid=el('div','mini-pairs');body.append(grid);const hint=feedback();let first=null,locked=false,matches=0,turns=0;const cards=[];
   deck.forEach((icon,i)=>{const b=button('★',()=>flip(i),'mini-pair-card');b.setAttribute('aria-label',`${i+1}번 카드 뒤집기`);cards.push(b);grid.append(b);});
   function flip(i){if(locked||cards[i].disabled||i===first)return;cards[i].textContent=deck[i];cards[i].setAttribute('aria-label',`${i+1}번 카드 ${deck[i]}`);cards[i].classList.add('revealed');if(first===null){first=i;return;}const previous=first;first=null;turns++;locked=true;
    if(deck[previous]===deck[i]){matches++;cards[i].disabled=cards[previous].disabled=true;hint.textContent='같은 친구를 찾았어요!';sound(660);schedule(450,()=>{locked=false;if(matches===icons.length)result(Math.max(60,100-(turns-icons.length)*4),'친구 카드를 모두 모았어요!');});}
@@ -83,13 +100,13 @@ export function mountExtraMinigame(type,k){
  }
 
  function gaming(){
-  const status=meter(),arena=board('떨어지는 별 받기','mini-catcher'),basket=el('div','mini-basket','🧺');arena.append(basket);body.append(el('p','mini-guide','바구니를 움직여 별을 받아요. 회색 구름은 피하세요. 화살표·버튼·손가락 끌기로 움직여요.'));
-  const hint=feedback();let lane=1,hits=0,stars=0,next=0,drops=[];const start=now(),duration=22000,speed=o.easy?3400:2900-tier*300;
-  function move(n){lane=clamp(n,0,2);basket.style.left=`${17+lane*33}%`;}
-  const controls=el('div','mini-catcher-controls');['왼쪽 바구니','가운데 바구니','오른쪽 바구니'].forEach((name,i)=>controls.append(button(name,()=>move(i))));body.append(controls);
-  const movePointer=e=>{if(e.type==='pointermove'&&!e.buttons)return;const r=arena.getBoundingClientRect();move(Math.floor((e.clientX-r.left)/r.width*3));};listen(arena,'pointerdown',movePointer);listen(arena,'pointermove',movePointer);setInput(e=>{if(e.key==='ArrowLeft')move(lane-1);if(e.key==='ArrowRight')move(lane+1);});move(1);
-  setTick(()=>{const t=now()-start;if(t>=duration){result(stars?hits/stars*100:0,'별 바구니 놀이 완료!');return;}if(t>=next&&t<duration-speed){next=t+1050;const good=rand()>.23,column=Math.floor(rand()*3),node=el('div','mini-falling',good?'⭐':'☁');node.style.left=`${17+column*33}%`;arena.append(node);drops.push({node,good,column,born:t});if(good)stars++;}
-   drops=drops.filter(drop=>{const p=(t-drop.born)/speed;drop.node.style.top=`${p*86}%`;if(p<1)return true;if(drop.column===lane){if(drop.good){hits++;sound(700);hint.textContent='반짝이는 별을 받았어요!';}else hint.textContent='구름은 다음에 살짝 피해 보아요.';}drop.node.remove();return false;});status.textContent=`${Math.ceil((duration-t)/1000)}초 · 별 ${hits}개`;
+  const status=meter(),arena=board('떨어지는 별 받기','mini-catcher'),basket=el('div','mini-basket');basket.innerHTML=BASKET_ICON;basket.setAttribute('aria-label','빈 별 바구니');arena.append(basket);body.append(el('p','mini-guide','바구니를 움직여 별을 받아요. 회색 구름은 피하세요. 화살표·버튼·손가락 끌기로 움직여요.'));
+  const hint=feedback();let lane=3,hits=0,stars=0,next=0,drops=[];const start=now(),duration=22000,speed=o.easy?3400:2900-tier*300;
+  function move(n){lane=clamp(n,0,6);basket.style.left=`${(lane+.5)/7*100}%`;}
+  const controls=el('div','mini-catcher-controls');Array.from({length:7},(_,i)=>`${i+1}칸`).forEach((name,i)=>controls.append(button(name,()=>move(i))));body.append(controls);
+  const movePointer=e=>{if(e.type==='pointermove'&&!e.buttons)return;const r=arena.getBoundingClientRect();move(Math.floor((e.clientX-r.left)/r.width*7));};listen(arena,'pointerdown',movePointer);listen(arena,'pointermove',movePointer);setInput(e=>{if(e.key==='ArrowLeft')move(lane-1);if(e.key==='ArrowRight')move(lane+1);});move(3);
+  setTick(()=>{const t=now()-start;if(t>=duration){result(stars?hits/stars*100:0,'별 바구니 놀이 완료!');return;}if(t>=next&&t<duration-speed){next=t+1050;const good=rand()>.23,column=Math.floor(rand()*7),node=el('div','mini-falling',good?'⭐':'☁');node.style.left=`${(column+.5)/7*100}%`;arena.append(node);drops.push({node,good,column,born:t});if(good)stars++;}
+   drops=drops.filter(drop=>{const p=(t-drop.born)/speed;drop.node.style.top=`${p*86}%`;const basketTop=basket.offsetTop,starBottom=p*.86*arena.clientHeight+drop.node.offsetHeight;const caught=drop.column===lane&&starBottom>=basketTop+8&&p*.86*arena.clientHeight<=basketTop+basket.offsetHeight;if(!caught&&p<1.15)return true;if(caught){if(drop.good){hits++;sound(700);hint.textContent='반짝이는 별을 받았어요!';}else hint.textContent='구름은 다음에 살짝 피해 보아요.';}drop.node.remove();return false;});status.textContent=`${Math.ceil((duration-t)/1000)}초 · 별 ${hits}개`;
   });
  }
 
@@ -102,10 +119,10 @@ export function mountExtraMinigame(type,k){
  }
 
  function vacation(){
-  const status=meter(),arena=board('해변 보물 지도','mini-beach'),wanted=['🐚','⭐','🦀','🪸'],found=new Set();body.append(el('p','mini-guide','찾을 보물: 조개 🐚 · 별 ⭐ · 게 🦀 · 산호 🪸'));const hint=feedback();const objects=shuffled([...wanted,'🌴','🌺','🌊','🪨','🐟','🍃','☀️','⛱️']);
+  const status=meter(),arena=board('해변 보물 지도','mini-beach'),wanted=['🐚','⭐','🦀','🪸'],found=new Set();const guide=el('p','mini-guide');guide.innerHTML=gameIconText('찾을 보물: 조개 🐚 · 별 ⭐ · 게 🦀 · 산호 🪸');body.append(guide);const hint=feedback();const objects=shuffled([...wanted,'🌴','🌺','🌊','🪨','🐟','🍃','☀️','⛱️']);
   const names={'🐚':'조개','⭐':'별','🦀':'게','🪸':'산호','🌴':'야자수','🌺':'꽃','🌊':'파도','🪨':'바위','🐟':'물고기','🍃':'나뭇잎','☀️':'햇님','⛱️':'파라솔'};
   const done=button('📮 여행 엽서 완성하기',()=>{if(found.size===4)finish(80);},'mini-primary');done.disabled=true;body.append(done);
-  objects.forEach((icon,i)=>{const b=button(icon,()=>{if(wanted.includes(icon)){found.add(icon);b.disabled=true;b.classList.add('found');hint.textContent=`${names[icon]}를 찾았어요!`;sound(600);done.disabled=found.size!==4;}else hint.textContent=`${names[icon]}도 예쁘네요. 목록의 보물도 찾아봐요!`;status.textContent=`해변 보물 ${found.size}/4개`;},'mini-beach-object');b.style.left=`${12+(i%4)*25}%`;b.style.top=`${20+Math.floor(i/4)*30}%`;b.setAttribute('aria-label',names[icon]);arena.append(b);});status.textContent='해변 보물 0/4개';
+  objects.forEach((icon,i)=>{const b=button(icon,()=>{if(wanted.includes(icon)){found.add(icon);b.disabled=true;b.classList.add('found');hint.textContent=`${names[icon]}를 찾았어요!`;sound(600);done.disabled=found.size!==4;}else hint.textContent=`${names[icon]}도 예쁘네요. 목록의 보물도 찾아봐요!`;status.textContent=`해변 보물 ${found.size}/4개`;},'mini-beach-object');b.innerHTML=gameIconText(icon);b.style.left=`${12+(i%4)*25}%`;b.style.top=`${20+Math.floor(i/4)*30}%`;b.setAttribute('aria-label',names[icon]);arena.append(b);});status.textContent='해변 보물 0/4개';
  }
  const games={acting,variety,exercise,beauty,meal,rest,play,gaming,snack,vacation};
  games[type]();

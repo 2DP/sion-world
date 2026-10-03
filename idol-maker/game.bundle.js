@@ -2,6 +2,22 @@
 (function () {
 'use strict';
 const modules = Object.create(null);
+// ---- src/icons.js ----
+modules["icons.js"] = (() => {
+// Font-independent artwork for devices without newer emoji fonts.
+const BUBBLES_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="1em" height="1em" aria-hidden="true" focusable="false" style="vertical-align:middle"><g fill="#e3f8ff" stroke="#699fc1" stroke-width="3"><circle cx="24" cy="40" r="18"/><circle cx="46" cy="17" r="11"/><circle cx="49" cy="48" r="8"/></g><g fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"><path d="M13 38a11 11 0 0 1 9-9"/><path d="M41 16a5 5 0 0 1 4-4"/></g></svg>';
+const PAUSE_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="1em" height="1em" aria-hidden="true" focusable="false" style="vertical-align:-.1em"><rect x="4" y="2" width="4" height="16" rx="1" fill="currentColor"/><rect x="12" y="2" width="4" height="16" rx="1" fill="currentColor"/></svg>';
+
+const BASKET_ICON = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\" width=\"1em\" height=\"1em\" aria-hidden=\"true\" focusable=\"false\" style=\"vertical-align:middle\"><path d=\"M5 17h54l-7 39H12Z\" fill=\"#d9a567\" stroke=\"#92603a\" stroke-width=\"3\"/><path d=\"M17 25l3 26m12-26v26m15-26-3 26M10 32h44M12 43h40\" stroke=\"#af7945\" stroke-width=\"3\"/><ellipse cx=\"32\" cy=\"17\" rx=\"27\" ry=\"9\" fill=\"#805336\" stroke=\"#e6bd84\" stroke-width=\"5\"/></svg>";
+const CORAL_ICON = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\" width=\"1em\" height=\"1em\" aria-hidden=\"true\" focusable=\"false\" style=\"vertical-align:middle\"><path d=\"M32 57V12m0 27L15 29V12m0 10L6 17m26 13 17-9V8m0 8 9-6M32 48l19-8v-9M32 18l-9-8\" fill=\"none\" stroke=\"#ed797d\" stroke-width=\"7\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><ellipse cx=\"32\" cy=\"58\" rx=\"20\" ry=\"4\" fill=\"#daa575\"/></svg>";
+const ROCK_ICON = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\" width=\"1em\" height=\"1em\" aria-hidden=\"true\" focusable=\"false\" style=\"vertical-align:middle\"><path d=\"m5 46 9-26 20-9 18 13 8 25-15 7H19Z\" fill=\"#99a2b2\" stroke=\"#606c80\" stroke-width=\"3\"/><path d=\"m14 20 18 9 20-5M32 29l-5 24\" fill=\"none\" stroke=\"#c7ced8\" stroke-width=\"3\"/></svg>";
+const BEANS_ICON = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 64 64\" width=\"1em\" height=\"1em\" aria-hidden=\"true\" focusable=\"false\" style=\"vertical-align:middle\"><g fill=\"#a95743\" stroke=\"#713c36\" stroke-width=\"2\"><path d=\"M26 8C8 3 3 29 15 34c11 4 9-10 14-12 8-4 6-12-3-14Z\"/><path d=\"M48 30c-18-6-29 18-17 25 10 7 13-6 19-7 9-2 8-15-2-18Z\"/></g><path d=\"m20 13-5 13m29 10-8 12\" stroke=\"#e7b58d\" stroke-width=\"3\"/></svg>";
+function gameIconText(text){return text.replace(/🪸|🪨|🫘/gu,icon=>({'🪸':CORAL_ICON,'🪨':ROCK_ICON,'🫘':BEANS_ICON}[icon]));}
+
+const SAVE_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="1.15em" height="1.15em" aria-hidden="true" focusable="false" style="vertical-align:-.2em"><path d="M4 3h13l4 4v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M7 3v6h9V3M7 21v-8h10v8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M13 5v2" stroke="currentColor" stroke-width="1.8"/></svg>';
+return Object.freeze({BUBBLES_ICON, PAUSE_ICON, BASKET_ICON, CORAL_ICON, ROCK_ICON, BEANS_ICON, gameIconText, SAVE_ICON});
+})();
+
 // ---- src/data.js ----
 modules["data.js"] = (() => {
 const SKILLS={vocal:'노래',dance:'춤',acting:'연기',variety:'예능감',charm:'매력'};
@@ -17,7 +33,7 @@ const APPEARANCE_OPTIONS={
  glasses:{label:'안경',values:{none:'안경 없음',round:'동그란 안경',square:'네모 안경'}}
 };
 const APPEARANCE_DEFAULTS={bangs:'side',eyeColor:'#a697cf',brows:'soft',mouth:'smile',faceShape:'round',glasses:'none',freckles:false};
-const MINI_NAMES={rhythm:'박자 맞추기',direction:'방향 춤',memory:'안무 기억',acting:'영화 장면 퍼즐',variety:'제시어 퀴즈쇼',makeup:'자유 메이크업',compose:'멜로디 만들기',exercise:'힘 모아 멀리뛰기',beauty:'보송보송 거품 세안',meal:'알록달록 도시락',rest:'구름 호흡 놀이',play:'친구 카드 짝 맞추기',gaming:'별 바구니',snack:'과일 탑 쌓기',vacation:'해변 보물 찾기'};
+const MINI_NAMES={rhythm:'노래 연습',direction:'방향 춤',memory:'안무 기억',acting:'영화 장면 퍼즐',variety:'제시어 퀴즈쇼',makeup:'자유 메이크업',compose:'멜로디 만들기',exercise:'장애물 달리기',beauty:'보송보송 거품 세안',meal:'알록달록 도시락',rest:'구름 호흡 놀이',play:'친구 카드 짝 맞추기',gaming:'별 바구니',snack:'과일 탑 쌓기',vacation:'해변 보물 찾기'};
 const MEMBER_STORIES={
  나래:'동네 합창단에서 노래하던 친구. 오늘도 다섯 목소리가 어울리는 화음을 찾고 있어요.',
  루아:'학교 댄스 모임에서 시작한 춤꾼. 어려운 안무를 기억하기 쉬운 동작으로 나눠 줘요.',
@@ -40,8 +56,8 @@ const PERSONALITIES=[{id:'steady',name:'차근차근',description:'훈련 능력
 const a=(id,name,icon,place,skill,energy,xp,range,stress,extra={})=>({id,name,icon,place,skill,energy,xp,range,stress,cost:0,description:`${name}으로 우리만의 하루를 만들어요.`,...extra});
 const ACTIVITIES=[
  ...['vocal','dance','acting','variety'].map((s,i)=>a(s,`${SKILLS[s]} 기본 연습`,['🎤','💃','🎬','🎙️'][i],'practice',s,8,15,[16,24],3,{training:true})),
- a('choreo','안무 만들기','🧠','practice','dance',8,15,[16,24],3,{training:true}),a('lesson','전문 수업','📚','practice','vocal',10,20,[26,34],4,{cost:40,training:true}),
- a('exercise','즐거운 운동','🏃','practice','charm',10,15,[18,26],-4),a('beauty','피부관리','🫧','home','charm',5,10,[14,20],-6),a('makeup','화장 꾸미기','🎨','home','charm',5,10,[18,18],-6),a('meal','균형 식사','🥗','home','charm',-10,5,[8,8],-10),
+ a('choreo','안무 만들기','👣','practice','dance',8,15,[16,24],3,{training:true}),a('lesson','전문 수업','📚','practice','vocal',10,20,[26,34],4,{cost:40,training:true}),
+ a('exercise','즐거운 운동','🏃','practice','charm',10,15,[18,26],-4),a('beauty','피부관리','bubbles','home','charm',5,10,[14,20],-6),a('makeup','화장 꾸미기','🎨','home','charm',5,10,[18,18],-6),a('meal','균형 식사','🥗','home','charm',-10,5,[8,8],-10),
  ...[['rest','숙소에서 쉬기','☁️',-25,-20],['play','멤버와 놀기','🧸',-15,-25],['gaming','함께 게임하기','🎮',-15,-25],['snack','간식 먹기','🍓',-15,-15],['vacation','하루 휴가','🏖️',-100,-50]].map(([id,n,i,e,s])=>a(id,n,i,'home',null,e,0,[0,0],s)),
  a('audition','데뷔 오디션','🌟','agency','vocal',20,30,[8,8],6),a('agency','대형 소속사 오디션','🏢','agency','vocal',20,30,[16,16],6),
  a('stream','연습 영상·라이브','📱','studio','vocal',8,15,[10,10],4,{public:true,money:[30,60],fans:[10,30],followers:[20,50]}),
@@ -119,10 +135,10 @@ function chooseEvent(s,index){if(!s.event||s.activeAction||!Number.isInteger(ind
 function buyItem(s,id){const i=ITEMS.find(i=>i.id===id);if(!i)return{ok:false,reason:'알 수 없는 물건이에요.'};if(s.inventory.includes(id))return{ok:false,reason:'이미 가지고 있어요.'};if(i.type==='equipment'&&i.tier===3&&!s.agency)return{ok:false,reason:'대형 소속사에 합격하면 열려요.'};if(s.money<i.price)return{ok:false,reason:'코인이 부족해요.'};s.money-=i.price;s.inventory.push(id);if(i.type==='equipment')s.equipment[i.skill]=Math.max(s.equipment[i.skill],i.tier);return{ok:true};}
 function equipItem(s,id){const i=ITEMS.find(i=>i.id===id);if(!i||!s.inventory.includes(id)||i.type==='equipment')return{ok:false,reason:'먼저 구입해 주세요.'};s.appearance[i.type]=id;syncGroupOutfits(s);return{ok:true};}
 function changePersonality(s,id){if(!PERSONALITIES.some(p=>p.id===id))return{ok:false};s.pendingPersonality=id;return{ok:true};}
-function updateAppearance(s,p){if(!p||typeof p!=='object')return{ok:false};const color=x=>typeof x==='string'&&/^#[\da-f]{6}$/i.test(x);for(const k of ['skin','hair','eyeColor'])if(color(p[k]))s.appearance[k]=p[k];for(const [key,options] of Object.entries(APPEARANCE_OPTIONS))if(Object.hasOwn(options.values,p[key]))s.appearance[key]=p[key];if(typeof p.freckles==='boolean')s.appearance.freckles=p.freckles;for(const k of ['outfit','shoes','accessory'])if(s.inventory.includes(p[k]))s.appearance[k]=p[k];if(p.makeup&&typeof p.makeup==='object'){for(const k of ['blush','lip'])if(color(p.makeup[k])||p.makeup[k]==='none')s.appearance.makeup[k]=p.makeup[k];if(typeof p.makeup.sparkle==='boolean')s.appearance.makeup.sparkle=p.makeup.sparkle;}syncGroupOutfits(s);return{ok:true};}
+function updateAppearance(s,p){if(!p||typeof p!=='object')return{ok:false};const color=x=>typeof x==='string'&&/^#[\da-f]{6}$/i.test(x);for(const k of ['skin','hair','eyeColor'])if(color(p[k]))s.appearance[k]=p[k];for(const [key,options] of Object.entries(APPEARANCE_OPTIONS))if(Object.hasOwn(options.values,p[key]))s.appearance[key]=p[key];if(typeof p.freckles==='boolean')s.appearance.freckles=p.freckles;for(const k of ['outfit','shoes','accessory'])if(s.inventory.includes(p[k]))s.appearance[k]=p[k];if(p.makeup&&typeof p.makeup==='object'){for(const k of ['blush','lip','eyeshadow','eyeliner','brow'])if(color(p.makeup[k])||p.makeup[k]==='none')s.appearance.makeup[k]=p.makeup[k];if(typeof p.makeup.sparkle==='boolean')s.appearance.makeup.sparkle=p.makeup.sparkle;}syncGroupOutfits(s);return{ok:true};}
 function updateSettings(s,p){if(!p||typeof p!=='object')return{ok:false};for(const k of ['music','sfx'])if(Number.isFinite(p[k]))s.settings[k]=clamp(p[k],0,1);for(const k of ['easy','reducedMotion'])if(typeof p[k]==='boolean')s.settings[k]=p[k];return{ok:true};}
 function validStructure(s){
- const obj=x=>x&&typeof x==='object'&&!Array.isArray(x),num=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0,col=x=>typeof x==='string'&&/^#[\da-f]{6}$/i.test(x),app=x=>obj(x)&&col(x.skin)&&col(x.hair)&&Object.hasOwn(APPEARANCE_OPTIONS.hairStyle.values,x.hairStyle)&&Object.hasOwn(APPEARANCE_OPTIONS.eyes.values,x.eyes)&&Object.entries(APPEARANCE_OPTIONS).every(([k,o])=>x[k]===undefined||Object.hasOwn(o.values,x[k]))&&(x.eyeColor===undefined||col(x.eyeColor))&&(x.freckles===undefined||typeof x.freckles==='boolean')&&typeof x.outfit==='string'&&typeof x.shoes==='string'&&typeof x.accessory==='string'&&obj(x.makeup)&&(col(x.makeup.blush)||x.makeup.blush==='none')&&(col(x.makeup.lip)||x.makeup.lip==='none')&&typeof x.makeup.sparkle==='boolean';
+ const obj=x=>x&&typeof x==='object'&&!Array.isArray(x),num=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0,col=x=>typeof x==='string'&&/^#[\da-f]{6}$/i.test(x),app=x=>obj(x)&&col(x.skin)&&col(x.hair)&&Object.hasOwn(APPEARANCE_OPTIONS.hairStyle.values,x.hairStyle)&&Object.hasOwn(APPEARANCE_OPTIONS.eyes.values,x.eyes)&&Object.entries(APPEARANCE_OPTIONS).every(([k,o])=>x[k]===undefined||Object.hasOwn(o.values,x[k]))&&(x.eyeColor===undefined||col(x.eyeColor))&&(x.freckles===undefined||typeof x.freckles==='boolean')&&typeof x.outfit==='string'&&typeof x.shoes==='string'&&typeof x.accessory==='string'&&obj(x.makeup)&&(col(x.makeup.blush)||x.makeup.blush==='none')&&(col(x.makeup.lip)||x.makeup.lip==='none')&&['eyeshadow','eyeliner','brow'].every(k=>x.makeup[k]===undefined||col(x.makeup[k])||x.makeup[k]==='none')&&typeof x.makeup.sparkle==='boolean';
  if(!obj(s)||!app(s.appearance)||!obj(s.settings)||!['music','sfx'].every(k=>num(s.settings[k])&&s.settings[k]<=1)||!['easy','reducedMotion'].every(k=>typeof s.settings[k]==='boolean'))return false;
  if(!obj(s.annual)||!num(s.annual.movies)||!num(s.annual.audience)||!Array.isArray(s.annual.movieScores)||s.annual.movieScores.length>3||s.annual.movieScores.some(n=>!num(n)||n>100))return false;
  for(const k of ['stage','variety','creation'])if(!obj(s.annual[k])||!num(s.annual[k].count)||!num(s.annual[k].sum))return false;
@@ -138,7 +154,7 @@ function validStructure(s){
 }
 function validateState(s){try{if(!validStructure(s))return false;const finite=(x,min=0,max=Number.MAX_SAFE_INTEGER)=>typeof x==='number'&&Number.isFinite(x)&&x>=min&&x<=max;const integer=(x,min=0,max=Number.MAX_SAFE_INTEGER)=>finite(x,min,max)&&Number.isInteger(x);if(!s||s.version!==1||typeof s.id!=='string'||!s.id||typeof s.name!=='string'||typeof s.groupName!=='string'||!PERSONALITIES.some(p=>p.id===s.personality))return false;for(const k of ['day','level'])if(!integer(s[k],1))return false;for(const k of ['money','fans','followers','xp','serial','curiousDay'])if(!finite(s[k]))return false;if(!integer(s.used,0,7)||!integer(s.stage,0,4)||!finite(s.energy,0,energyMax(s))||!finite(s.stress,0,100)||!finite(s.fame,0,100)||!integer(s.miniCount,0,2)||!integer(s.miniOffers,0,7))return false;for(const k of keys)if(!integer(s.skills[k],0,100)||!finite(s.skillXp[k])||!finite(s.mastery[k]))return false;for(const k of ['vocal','dance','acting','variety'])if(!integer(s.equipment[k],0,3))return false;for(const k of ['inventory','works','badges','history','claimed','members'])if(!Array.isArray(s[k]))return false;if(s.members.length!==4||s.history.length>100||s.works.length>100||s.inventory.some(id=>!ITEMS.some(i=>i.id===id)))return false;for(const m of s.members)if(typeof m.name!=='string'||!keys.includes(m.specialty)||!integer(m.level,1)||keys.some(k=>!finite(m.skills[k],0,100)))return false;for(const k of ['public','concerts','movies','songs','variety','audience','streams'])if(!finite(s.records[k]))return false;if(!Array.isArray(s.records.tour)||s.records.tour.some(n=>!integer(n,0,2))||typeof s.records.overseas!=='boolean')return false;if(!s.projects||!s.annual||!s.seenEvents||!s.settings||!s.appearance?.makeup)return false;for(const [id,p]of Object.entries(s.projects))if(!['movie','album','song'].includes(id)||!integer(p.scale,1,4)||!Array.isArray(p.scores)||p.scores.length>=ACTIVITIES.find(a=>a.id===id).project||p.scores.some(n=>!finite(n,0,100)))return false;if(s.activeAction){const r=s.activeAction;if(typeof r.id!=='string'||!ACTIVITIES.some(a=>a.id===r.activityId)||!integer(r.scale,1,4)||!integer(r.seed)||!finite(r.cost)||!finite(r.energy,-100,100)||!integer(r.slots,1,7)||!r.before||![60,80].includes(r.preparation))return false;}const walk=(v,depth=0)=>{if(depth>20)return false;if(typeof v==='number')return Number.isFinite(v);if(v===null||['string','boolean'].includes(typeof v))return true;if(typeof v==='object')return Object.values(v).every(x=>walk(x,depth+1));return false;};return walk(s);}catch{return false;}}
 
-function syncGroupOutfits(s){for(const m of s.members||[])for(const key of ['outfit','shoes','accessory'])m.appearance[key]=s.appearance[key];}
+function syncGroupOutfits(s){for(const m of s.members||[]){for(const key of ['outfit','shoes','accessory'])m.appearance[key]=s.appearance[key];m.appearance.makeup={...s.appearance.makeup};}}
 function prepareLoadedState(s){s.appearance={...APPEARANCE_DEFAULTS,...s.appearance};for(const m of s.members)m.appearance={...APPEARANCE_DEFAULTS,...m.appearance};syncGroupOutfits(s);for(const r of [s.activeAction,s.retry])if(r&&!r.mini)r.mini=miniFor(r.activityId,r.skill||ACTIVITIES.find(a=>a.id===r.activityId)?.skill);return s;}
 return Object.freeze({energyMax, levelNeed, skillNeed, formatDay, newGame, activityView, startActivity, cancelActivity, finishActivity, progression, nextGoal, endDay, chooseEvent, buyItem, equipItem, changePersonality, updateAppearance, updateSettings, validateState, syncGroupOutfits, prepareLoadedState});
 })();
@@ -230,8 +246,10 @@ function characterSVG(a = {}, opts = {}) {
  <g data-layer="face" transform="translate(25.2 1.3) scale(.72)">
  <g data-feature="face-outline"><path d="${faceOutline}" fill="${skin}" stroke="#b18d7d" stroke-width="1.35"/><path d="${faceOutline}" fill="#fff9ec" opacity=".12" stroke="none"/></g>
  <g data-layer="front-hair">${hairLock(crownPath)}${fringeUnderlay}${fringe}<path d="M51 48Q65 33 81 33M97 32Q119 36 130 51M57 51Q65 40 74 37M110 39Q118 44 123 51" fill="none" stroke="#fff0dc" stroke-width="1" opacity=".18"/></g>
- <path data-feature="brows" d="${a.brows==='straight'?'M62 72H74M106 72H118':a.brows==='up'?'M62 74Q67 70 74 71M106 71Q113 70 118 74':'M62 73Q68 69 74 72M106 72Q112 69 118 73'}" fill="none" stroke="${hair}" stroke-width="1.5" opacity=".7"/>
+ <path data-feature="brows" d="${a.brows==='straight'?'M62 72H74M106 72H118':a.brows==='up'?'M62 74Q67 70 74 71M106 71Q113 70 118 74':'M62 73Q68 69 74 72M106 72Q112 69 118 73'}" fill="none" stroke="${color(a.makeup?.brow,hair)}" stroke-width="1.5" opacity=".7"/>
+ ${a.makeup?.eyeshadow&&a.makeup.eyeshadow!=='none'?`<g data-feature="eyeshadow" fill="none" stroke="${color(a.makeup.eyeshadow,'#bd9adb')}" stroke-width="7" opacity=".5"><path d="M58 80Q68 69 78 80M102 80Q112 69 122 80"/></g>`:''}
  ${smile?'<path data-feature="smiling-eyes" d="M60 90Q68 81 76 90M104 90Q112 81 120 90" fill="none" stroke="#74564b" stroke-width="2"/>':`${eye(68)}${eye(112)}`}
+ ${a.makeup?.eyeliner&&a.makeup.eyeliner!=='none'?`<path data-feature="eyeliner" d="${smile?'M58 87Q68 78 78 87M102 87Q112 78 122 87':'M58 83Q68 70 78 83M102 83Q112 70 122 83'}M58 83L55 79M122 83L125 79" fill="none" stroke="${color(a.makeup.eyeliner,'#494252')}" stroke-width="2.2"/>`:''}
  ${a.glasses==='round'?'<g fill="none" stroke="#807092" stroke-width="2.5"><circle cx="68" cy="87" r="15"/><circle cx="112" cy="87" r="15"/><path d="M83 86Q90 80 97 86M53 86L43 82M127 86L137 82"/></g>':a.glasses==='square'?'<g fill="none" stroke="#807092" stroke-width="2.5"><rect x="52" y="74" width="32" height="27" rx="6"/><rect x="96" y="74" width="32" height="27" rx="6"/><path d="M84 85H96M52 84L43 81M128 84L137 81"/></g>':''}
  ${a.freckles?'<g fill="#ae795c" stroke="none"><circle cx="54" cy="103" r="1"/><circle cx="59" cy="105" r="1"/><circle cx="64" cy="103" r="1"/><circle cx="116" cy="103" r="1"/><circle cx="121" cy="105" r="1"/><circle cx="126" cy="103" r="1"/></g>':''}
  ${a.makeup?.blush==='none'?'':`<g data-feature="blush" fill="${blush}" stroke="none"><ellipse cx="59" cy="105" rx="8.5" ry="4.5" opacity=".17"/><ellipse cx="121" cy="105" rx="8.5" ry="4.5" opacity=".17"/></g><g fill="url(#${id}-cheek)" stroke="none"><ellipse cx="59" cy="105" rx="11" ry="7.5"/><ellipse cx="121" cy="105" rx="11" ry="7.5"/></g>`}<circle data-feature="nose" cx="90" cy="100" r=".65" fill="#b18d7d" stroke="none" opacity=".35"/>
@@ -261,7 +279,33 @@ function rhythmChart(tier=0){
  const count=[8,12,16][Math.max(0,Math.min(2,tier))];
  return Array.from({length:count},(_,i)=>(4+Math.round(i*52/(count-1)))*RHYTHM_BEAT_MS);
 }
-return Object.freeze({RHYTHM_BEAT_MS, RHYTHM_DURATION_MS, rhythmChart});
+
+// Falling arrows arrive every two beats, with a generous timing window.
+const DANCE_BEAT_MS=750;
+const DANCE_PREVIEW_MS=3000;
+const DANCE_TURN_MS=1500;
+const DANCE_DURATION_MS=66000;
+function danceChart(tier=0,random=Math.random){
+ return [Array.from({length:40},(_,step)=>({step,direction:Math.floor(random()*4),at:DANCE_PREVIEW_MS+step*DANCE_TURN_MS}))];
+}
+function createDanceRun(turns,easy=false){
+ const notes=turns.flat().map(note=>({...note,status:'pending',score:0}));
+ const window=easy?700:600;let hits=0,combo=0,bestCombo=0;
+ function advance(time){for(const n of notes)if(n.status==='pending'&&time-n.at>window){n.status='miss';combo=0;}}
+ function press(direction,time){
+  advance(time);
+  const note=notes.filter(n=>n.status==='pending'&&n.direction===direction&&Math.abs(time-n.at)<=window).sort((a,b)=>Math.abs(time-a.at)-Math.abs(time-b.at))[0];
+  if(!note)return null;
+  note.score=100;note.status='perfect';hits++;combo++;bestCombo=Math.max(bestCombo,combo);return note;
+ }
+ return {notes,advance,press,window,get current(){return notes.find(n=>n.status==='pending');},get score(){return hits/notes.length*100;},get hits(){return hits;},get combo(){return combo;},get bestCombo(){return bestCombo;}};
+}
+function memorySequences(random=Math.random){return Array.from({length:3},()=>Array.from({length:4+Math.floor(random()*3)},()=>Math.floor(random()*4)));}
+const VOCAL_PITCHES=[261.63,293.66,329.63,349.23,392];
+function vocalChart(tier=0){return rhythmChart(tier).map((at,i)=>({at,pitch:[2,3,1,2,4,3,2,0][i%8]}));}
+function movePitch(pitch,direction,dt){return Math.max(0,Math.min(4,pitch+direction*Math.max(0,Math.min(dt,100))/700));}
+function vocalScore(timingScore,pitch,target){return Math.abs(pitch-target)<=.65?timingScore:0;}
+return Object.freeze({RHYTHM_BEAT_MS, RHYTHM_DURATION_MS, rhythmChart, DANCE_BEAT_MS, DANCE_PREVIEW_MS, DANCE_TURN_MS, DANCE_DURATION_MS, danceChart, createDanceRun, memorySequences, VOCAL_PITCHES, vocalChart, movePitch, vocalScore});
 })();
 
 // ---- src/audio.js ----
@@ -296,7 +340,7 @@ function createAudio() {
  function tone(freq,duration=.12){if(Number.isFinite(freq)&&freq>0)note(Math.min(freq,12000),Math.max(.05,Math.min(duration,3)),sfxGain,.16);}
  function effect(name='click'){if(!ctx||!unlocked)return;const tones={click:[76],success:[72,76,79],reward:[76,79,84,88],level:[72,76,79,84],levelup:[72,76,79,84],buy:[79,84],save:[76,79],error:[64,60],rest:[72,67],start:[72,76,79]}[name]||[76,79];tones.forEach((n,i)=>note(hz(n),.22,sfxGain,.13,ctx.currentTime+i*.09));}
  function destroy(){stop();unlocked=false;if(ctx){ctx.close().catch(()=>{});ctx=null;}}
- function startRhythm(chart){
+ function startRhythm(chart,{beatMs=RHYTHM_BEAT_MS,durationMs=RHYTHM_DURATION_MS,pitches=[],drums=false}={}){
   stop();if(!ctx||!unlocked||ctx.state!=='running')return null;
   let origin=0,offset=0,playing=false,ended=false;
   const trackVoices=new Set(),targets=new Set(chart),melody=[72,76,79,76,74,77,81,79,76,79,84,79,77,76,74,71];
@@ -305,13 +349,20 @@ function createAudio() {
   function resume(){
    if(ended||playing)return;playing=true;origin=ctx.currentTime+.08-offset/1000;
    const play=(pitch,duration,volume,time,type='triangle')=>{const osc=note(hz(pitch),duration,musicGain,volume,time,type);if(osc)trackVoices.add(osc);};
-   for(let at=Math.ceil(offset/RHYTHM_BEAT_MS)*RHYTHM_BEAT_MS;at<RHYTHM_DURATION_MS;at+=RHYTHM_BEAT_MS){
-    const beat=at/RHYTHM_BEAT_MS,time=origin+at/1000;
+   for(let at=Math.ceil(offset/beatMs)*beatMs;at<durationMs;at+=beatMs){
+    const beat=at/beatMs,time=origin+at/1000;
     play(melody[beat%melody.length],.32,.075,time);
+    if(drums){
+     // Kick on each beat, backbeat snare and offbeat hi-hat share the arrow clock.
+     play(36,.18,.32,time,'sine');
+     if(beat%2===1){play(50,.09,.12,time,'triangle');play(86,.055,.06,time,'square');}
+     const offbeat=at+beatMs/2;
+     if(offbeat<durationMs)play(110,.035,.035,origin+offbeat/1000,'square');
+    }
     // A short tick marks every beat; the bright bell marks a playable note.
     play(beat%4===0?84:79,.065,beat%4===0?.09:.04,time,'sine');
     if(beat%4===0)play([48,53,55,48][Math.floor(beat/4)%4],1.6,.09,time,'sine');
-    if(targets.has(at))play(96,.14,.18,time,'sine');
+    if(targets.has(at)){play(96,.14,.18,time,'sine');const pitch=pitches[chart.indexOf(at)];if(pitch){const osc=note(pitch,.5,musicGain,.18,time,'sine');if(osc)trackVoices.add(osc);}}
    }
   }
   function pause(){if(!playing||ended)return;offset=position();playing=false;silence();}
@@ -325,6 +376,8 @@ return Object.freeze({createAudio});
 
 // ---- src/extra-minigames.js ----
 modules["extra-minigames.js"] = (() => {
+const { BUBBLES_ICON, BASKET_ICON, gameIconText } = modules["icons.js"];
+
 // Each activity has its own interaction. The host owns time, pause and cleanup.
 function mountExtraMinigame(type,k){
  const {body,el,button,schedule,sound,result,finish,rand,tier,o,now,setTick,setInput,setKeyUp,setPause,listen}=k;
@@ -364,17 +417,33 @@ function mountExtraMinigame(type,k){
  }
 
  function exercise(){
-  const status=meter(),arena=board('멀리뛰기 운동장','mini-jump-field'),runner=el('div','mini-jumper','🏃'),mark=el('div','mini-jump-target','🏁');arena.append(runner,mark);
-  const gauge=el('div','mini-charge'),zone=el('span','mini-charge-zone'),fill=el('i','mini-charge-fill');gauge.append(zone,fill);body.append(gauge);const hint=feedback();
-  let holding=false,charge=0,start=0,round=0,points=0,flying=false;const target=70,width=o.easy?30:24-tier*4;
-  zone.style.left=`${target-width/2}%`;zone.style.width=`${width}%`;
-  const hold=button('누르고 힘 모으기 · 놓으면 점프!',()=>{},'mini-primary mini-hold');body.append(hold);hold.setAttribute('aria-label','힘 모으기');
-  function press(){if(flying||holding)return;holding=true;start=now();hint.textContent='연두 구간에서 손을 떼 보세요!';}
-  function release(){if(!holding||flying)return;holding=false;flying=true;hold.disabled=true;round++;const distance=Math.abs(charge-target);points+=distance<=width/2?100:Math.max(20,100-distance*2);runner.style.left=`${12+charge*.65}%`;runner.classList.add('jumping');sound(440+charge*5);hint.textContent=`${round}번째 점프 · ${(charge/20+1).toFixed(1)}m!`;
-   schedule(900,()=>{if(round===3){result(points/3,'세 번의 멋진 점프 완료!');return;}flying=false;hold.disabled=false;charge=0;fill.style.width='0%';runner.style.left='12%';runner.classList.remove('jumping');});}
-  listen(hold,'pointerdown',e=>{e.preventDefault();hold.setPointerCapture?.(e.pointerId);press();});listen(hold,'pointerup',release);listen(hold,'pointercancel',()=>{holding=false;charge=0;fill.style.width='0%';});
-  setInput(e=>{if(e.code==='Space')press();});setKeyUp(e=>{if(e.code==='Space')release();});setPause(()=>{holding=false;charge=0;fill.style.width='0%';});
-  setTick(()=>{if(holding){charge=clamp((now()-start)/(o.easy?24:19));fill.style.width=`${charge}%`;if(charge===100)release();}status.textContent=`${Math.min(round+1,3)}/3번째 점프 · Space를 길게 눌렀다 놓아도 돼요`;});
+  const status=meter(),arena=board('장애물 달리기 운동장','mini-run-field'),runner=el('div','mini-runner','🏃');arena.append(runner);
+  body.append(el('p','mini-guide','Space 또는 점프 버튼으로 장애물을 넘어요. 10개를 지나면 완주!'));
+  const hint=feedback(),duration=o.easy?1100:950,speed=o.easy?29:34+tier*3,total=10;
+  let jumpAt=null,last=now(),distance=0,passed=0,hits=0,ended=false;
+  let nextObstacle=110;
+  const obstacles=Array.from({length:total},(_,i)=>{const node=el('div','mini-run-obstacle');node.setAttribute('aria-label',(i+1)+'번 장애물');arena.append(node);const x=nextObstacle;nextObstacle+=(o.easy?52:48)+rand()*38;return {node,x,hit:false,done:false};});
+  function height(t){if(jumpAt===null)return 0;const p=(t-jumpAt)/duration;return p>=1?0:Math.max(0,Math.sin(p*Math.PI)*105);}
+  function jump(){if(ended||(jumpAt!==null&&now()-jumpAt<duration))return;jumpAt=now();sound(560,.1);hint.textContent='훌쩍! 장애물을 뛰어넘어요.';}
+  const control=button('점프 · Space',jump,'mini-primary mini-tap');body.append(control);
+  listen(control,'pointerdown',e=>{e.preventDefault();jump();});
+  setInput(e=>{if(e.code==='Space')jump();});
+  setTick(()=>{
+   const t=now(),dt=t-last;last=t;
+   // Small steps prevent a slow frame from skipping a collision.
+   for(let step=0;step<dt;){const ms=Math.min(16,dt-step);step+=ms;distance+=speed*ms/1000;const y=height(t-dt+step);
+    for(const obstacle of obstacles){if(obstacle.done)continue;const x=obstacle.x-distance;
+     if(!obstacle.hit&&x<24&&x+6>16&&y<38){obstacle.hit=true;hits++;obstacle.node.classList.add('hit');hint.textContent='괜찮아요! 다음 장애물을 준비해요.';sound(220,.1);}
+     if(x+6<16){obstacle.done=true;passed++;if(!obstacle.hit){sound(720,.08);hint.textContent='좋아요! 장애물을 넘었어요.';}}
+    }
+   }
+   runner.style.bottom=(38+height(t))+'px';
+   runner.style.transform='scaleX(-1) rotate('+(height(t)>0?-8:Math.sin(distance)*4)+'deg)';
+   arena.style.backgroundPosition=(-distance*4)+'px 0';
+   for(const obstacle of obstacles){obstacle.node.style.left=(obstacle.x-distance)+'%';obstacle.node.hidden=obstacle.done;}
+   status.textContent='장애물 '+passed+'/'+total+'개 · 성공 '+obstacles.filter(obstacle=>obstacle.done&&!obstacle.hit).length+'개';
+   if(passed===total){ended=true;control.disabled=true;result((total-hits)/total*100,'장애물 달리기 완주!');}
+  });
  }
 
  function beauty(){
@@ -382,7 +451,7 @@ function mountExtraMinigame(type,k){
   const count=8+tier*2,spots=shuffled(Array.from({length:12},(_,i)=>({x:24+(i%4)*17,y:18+Math.floor(i/4)*17}))).slice(0,count),cleared=new Set(),bubbles=[];
   const hint=feedback();hint.textContent='손가락으로 거품을 문지르거나 하나씩 눌러 주세요.';
   function clean(i){if(cleared.has(i))return;cleared.add(i);bubbles[i].classList.add('clean');bubbles[i].disabled=true;sound(650+i*25,.07);status.textContent=`보송보송 ${cleared.size}/${count}`;if(cleared.size===count)schedule(450,()=>finish(80));}
-  spots.forEach((spot,i)=>{const b=button('🫧',()=>clean(i),'mini-foam');b.setAttribute('aria-label',`${i+1}번 거품 닦기`);b.style.left=`${spot.x}%`;b.style.top=`${spot.y}%`;bubbles.push(b);arena.append(b);});status.textContent=`보송보송 0/${count}`;
+  spots.forEach((spot,i)=>{const b=button('',()=>clean(i),'mini-foam');b.innerHTML=BUBBLES_ICON;b.setAttribute('aria-label',`${i+1}번 거품 닦기`);b.style.left=`${spot.x}%`;b.style.top=`${spot.y}%`;bubbles.push(b);arena.append(b);});status.textContent=`보송보송 0/${count}`;
   const rub=e=>{if(e.type==='pointermove'&&!e.buttons)return;const rect=arena.getBoundingClientRect();spots.forEach((spot,i)=>{const x=rect.left+rect.width*spot.x/100,y=rect.top+rect.height*spot.y/100;if(Math.hypot(e.clientX-x,e.clientY-y)<32)clean(i);});};listen(arena,'pointerdown',rub);listen(arena,'pointermove',rub);
  }
 
@@ -390,8 +459,8 @@ function mountExtraMinigame(type,k){
   const groups=[{name:'든든한 곡물',food:['🍚 밥','🍞 빵','🍠 고구마']},{name:'고소한 단백질',food:['🥚 달걀','🫘 콩','🐟 생선']},{name:'알록달록 채소',food:['🥦 브로콜리','🥕 당근','🍅 토마토']}];
   const status=meter(),tray=el('div','mini-bento'),pantry=el('div','mini-pantry');body.append(tray,pantry);const chosen=[null,null,null],slots=[];const hint=feedback();hint.textContent='재료를 골라 도시락을 채워요. 같은 칸의 재료는 언제든 바꿀 수 있어요.';
   const done=button('다섯 친구와 맛있게 먹기',()=>{if(chosen.every(Boolean))finish(80);},'mini-primary');done.disabled=true;body.append(done);
-  function put(g,n){chosen[g]=groups[g].food[n];slots[g].textContent=chosen[g];slots[g].classList.add('filled');done.disabled=!chosen.every(Boolean);status.textContent=`도시락 ${chosen.filter(Boolean).length}/3칸`;sound(392+g*100);}
-  groups.forEach((group,g)=>{const slot=el('div','mini-bento-slot',group.name);slot.ondragover=e=>e.preventDefault();slot.ondrop=e=>{e.preventDefault();const [a,b]=e.dataTransfer.getData('text/plain').split(':').map(Number);if(a===g&&group.food[b])put(a,b);};slots.push(slot);tray.append(slot);const section=el('section','mini-food-group');section.append(el('h3','',group.name));group.food.forEach((food,n)=>{const b=button(food,()=>put(g,n));b.draggable=true;b.ondragstart=e=>e.dataTransfer.setData('text/plain',`${g}:${n}`);section.append(b);});pantry.append(section);});status.textContent='도시락 0/3칸';
+  function put(g,n){chosen[g]=groups[g].food[n];slots[g].innerHTML=gameIconText(chosen[g]);slots[g].classList.add('filled');done.disabled=!chosen.every(Boolean);status.textContent=`도시락 ${chosen.filter(Boolean).length}/3칸`;sound(392+g*100);}
+  groups.forEach((group,g)=>{const slot=el('div','mini-bento-slot',group.name);slot.ondragover=e=>e.preventDefault();slot.ondrop=e=>{e.preventDefault();const [a,b]=e.dataTransfer.getData('text/plain').split(':').map(Number);if(a===g&&group.food[b])put(a,b);};slots.push(slot);tray.append(slot);const section=el('section','mini-food-group');section.append(el('h3','',group.name));group.food.forEach((food,n)=>{const b=button(food,()=>put(g,n));b.innerHTML=gameIconText(food);b.draggable=true;b.ondragstart=e=>e.dataTransfer.setData('text/plain',`${g}:${n}`);section.append(b);});pantry.append(section);});status.textContent='도시락 0/3칸';
  }
 
  function rest(){
@@ -401,7 +470,7 @@ function mountExtraMinigame(type,k){
  }
 
  function play(){
-  const icons=['🐶','🐱','🐰','🦊','🐼'].slice(0,3+tier),deck=shuffled([...icons,...icons]),status=meter(),grid=el('div','mini-pairs');body.append(grid);const hint=feedback();let first=null,locked=false,matches=0,turns=0;const cards=[];
+  const icons=['🐶','🐱','🐰','🦊','🐼','🐸','🐵','🐷','🐯','🐨'],deck=shuffled([...icons,...icons]),status=meter(),grid=el('div','mini-pairs');body.append(grid);const hint=feedback();let first=null,locked=false,matches=0,turns=0;const cards=[];
   deck.forEach((icon,i)=>{const b=button('★',()=>flip(i),'mini-pair-card');b.setAttribute('aria-label',`${i+1}번 카드 뒤집기`);cards.push(b);grid.append(b);});
   function flip(i){if(locked||cards[i].disabled||i===first)return;cards[i].textContent=deck[i];cards[i].setAttribute('aria-label',`${i+1}번 카드 ${deck[i]}`);cards[i].classList.add('revealed');if(first===null){first=i;return;}const previous=first;first=null;turns++;locked=true;
    if(deck[previous]===deck[i]){matches++;cards[i].disabled=cards[previous].disabled=true;hint.textContent='같은 친구를 찾았어요!';sound(660);schedule(450,()=>{locked=false;if(matches===icons.length)result(Math.max(60,100-(turns-icons.length)*4),'친구 카드를 모두 모았어요!');});}
@@ -410,13 +479,13 @@ function mountExtraMinigame(type,k){
  }
 
  function gaming(){
-  const status=meter(),arena=board('떨어지는 별 받기','mini-catcher'),basket=el('div','mini-basket','🧺');arena.append(basket);body.append(el('p','mini-guide','바구니를 움직여 별을 받아요. 회색 구름은 피하세요. 화살표·버튼·손가락 끌기로 움직여요.'));
-  const hint=feedback();let lane=1,hits=0,stars=0,next=0,drops=[];const start=now(),duration=22000,speed=o.easy?3400:2900-tier*300;
-  function move(n){lane=clamp(n,0,2);basket.style.left=`${17+lane*33}%`;}
-  const controls=el('div','mini-catcher-controls');['왼쪽 바구니','가운데 바구니','오른쪽 바구니'].forEach((name,i)=>controls.append(button(name,()=>move(i))));body.append(controls);
-  const movePointer=e=>{if(e.type==='pointermove'&&!e.buttons)return;const r=arena.getBoundingClientRect();move(Math.floor((e.clientX-r.left)/r.width*3));};listen(arena,'pointerdown',movePointer);listen(arena,'pointermove',movePointer);setInput(e=>{if(e.key==='ArrowLeft')move(lane-1);if(e.key==='ArrowRight')move(lane+1);});move(1);
-  setTick(()=>{const t=now()-start;if(t>=duration){result(stars?hits/stars*100:0,'별 바구니 놀이 완료!');return;}if(t>=next&&t<duration-speed){next=t+1050;const good=rand()>.23,column=Math.floor(rand()*3),node=el('div','mini-falling',good?'⭐':'☁');node.style.left=`${17+column*33}%`;arena.append(node);drops.push({node,good,column,born:t});if(good)stars++;}
-   drops=drops.filter(drop=>{const p=(t-drop.born)/speed;drop.node.style.top=`${p*86}%`;if(p<1)return true;if(drop.column===lane){if(drop.good){hits++;sound(700);hint.textContent='반짝이는 별을 받았어요!';}else hint.textContent='구름은 다음에 살짝 피해 보아요.';}drop.node.remove();return false;});status.textContent=`${Math.ceil((duration-t)/1000)}초 · 별 ${hits}개`;
+  const status=meter(),arena=board('떨어지는 별 받기','mini-catcher'),basket=el('div','mini-basket');basket.innerHTML=BASKET_ICON;basket.setAttribute('aria-label','빈 별 바구니');arena.append(basket);body.append(el('p','mini-guide','바구니를 움직여 별을 받아요. 회색 구름은 피하세요. 화살표·버튼·손가락 끌기로 움직여요.'));
+  const hint=feedback();let lane=3,hits=0,stars=0,next=0,drops=[];const start=now(),duration=22000,speed=o.easy?3400:2900-tier*300;
+  function move(n){lane=clamp(n,0,6);basket.style.left=`${(lane+.5)/7*100}%`;}
+  const controls=el('div','mini-catcher-controls');Array.from({length:7},(_,i)=>`${i+1}칸`).forEach((name,i)=>controls.append(button(name,()=>move(i))));body.append(controls);
+  const movePointer=e=>{if(e.type==='pointermove'&&!e.buttons)return;const r=arena.getBoundingClientRect();move(Math.floor((e.clientX-r.left)/r.width*7));};listen(arena,'pointerdown',movePointer);listen(arena,'pointermove',movePointer);setInput(e=>{if(e.key==='ArrowLeft')move(lane-1);if(e.key==='ArrowRight')move(lane+1);});move(3);
+  setTick(()=>{const t=now()-start;if(t>=duration){result(stars?hits/stars*100:0,'별 바구니 놀이 완료!');return;}if(t>=next&&t<duration-speed){next=t+1050;const good=rand()>.23,column=Math.floor(rand()*7),node=el('div','mini-falling',good?'⭐':'☁');node.style.left=`${(column+.5)/7*100}%`;arena.append(node);drops.push({node,good,column,born:t});if(good)stars++;}
+   drops=drops.filter(drop=>{const p=(t-drop.born)/speed;drop.node.style.top=`${p*86}%`;const basketTop=basket.offsetTop,starBottom=p*.86*arena.clientHeight+drop.node.offsetHeight;const caught=drop.column===lane&&starBottom>=basketTop+8&&p*.86*arena.clientHeight<=basketTop+basket.offsetHeight;if(!caught&&p<1.15)return true;if(caught){if(drop.good){hits++;sound(700);hint.textContent='반짝이는 별을 받았어요!';}else hint.textContent='구름은 다음에 살짝 피해 보아요.';}drop.node.remove();return false;});status.textContent=`${Math.ceil((duration-t)/1000)}초 · 별 ${hits}개`;
   });
  }
 
@@ -429,10 +498,10 @@ function mountExtraMinigame(type,k){
  }
 
  function vacation(){
-  const status=meter(),arena=board('해변 보물 지도','mini-beach'),wanted=['🐚','⭐','🦀','🪸'],found=new Set();body.append(el('p','mini-guide','찾을 보물: 조개 🐚 · 별 ⭐ · 게 🦀 · 산호 🪸'));const hint=feedback();const objects=shuffled([...wanted,'🌴','🌺','🌊','🪨','🐟','🍃','☀️','⛱️']);
+  const status=meter(),arena=board('해변 보물 지도','mini-beach'),wanted=['🐚','⭐','🦀','🪸'],found=new Set();const guide=el('p','mini-guide');guide.innerHTML=gameIconText('찾을 보물: 조개 🐚 · 별 ⭐ · 게 🦀 · 산호 🪸');body.append(guide);const hint=feedback();const objects=shuffled([...wanted,'🌴','🌺','🌊','🪨','🐟','🍃','☀️','⛱️']);
   const names={'🐚':'조개','⭐':'별','🦀':'게','🪸':'산호','🌴':'야자수','🌺':'꽃','🌊':'파도','🪨':'바위','🐟':'물고기','🍃':'나뭇잎','☀️':'햇님','⛱️':'파라솔'};
   const done=button('📮 여행 엽서 완성하기',()=>{if(found.size===4)finish(80);},'mini-primary');done.disabled=true;body.append(done);
-  objects.forEach((icon,i)=>{const b=button(icon,()=>{if(wanted.includes(icon)){found.add(icon);b.disabled=true;b.classList.add('found');hint.textContent=`${names[icon]}를 찾았어요!`;sound(600);done.disabled=found.size!==4;}else hint.textContent=`${names[icon]}도 예쁘네요. 목록의 보물도 찾아봐요!`;status.textContent=`해변 보물 ${found.size}/4개`;},'mini-beach-object');b.style.left=`${12+(i%4)*25}%`;b.style.top=`${20+Math.floor(i/4)*30}%`;b.setAttribute('aria-label',names[icon]);arena.append(b);});status.textContent='해변 보물 0/4개';
+  objects.forEach((icon,i)=>{const b=button(icon,()=>{if(wanted.includes(icon)){found.add(icon);b.disabled=true;b.classList.add('found');hint.textContent=`${names[icon]}를 찾았어요!`;sound(600);done.disabled=found.size!==4;}else hint.textContent=`${names[icon]}도 예쁘네요. 목록의 보물도 찾아봐요!`;status.textContent=`해변 보물 ${found.size}/4개`;},'mini-beach-object');b.innerHTML=gameIconText(icon);b.style.left=`${12+(i%4)*25}%`;b.style.top=`${20+Math.floor(i/4)*30}%`;b.setAttribute('aria-label',names[icon]);arena.append(b);});status.textContent='해변 보물 0/4개';
  }
  const games={acting,variety,exercise,beauty,meal,rest,play,gaming,snack,vacation};
  games[type]();
@@ -442,19 +511,22 @@ return Object.freeze({mountExtraMinigame});
 
 // ---- src/minigames.js ----
 modules["minigames.js"] = (() => {
-const {rhythmChart,RHYTHM_BEAT_MS,RHYTHM_DURATION_MS} = modules["rhythm.js"];
+const { BUBBLES_ICON, PAUSE_ICON } = modules["icons.js"];
+
+const {vocalChart,movePitch,vocalScore,VOCAL_PITCHES,memorySequences,danceChart,createDanceRun,DANCE_BEAT_MS,DANCE_DURATION_MS,RHYTHM_BEAT_MS,RHYTHM_DURATION_MS} = modules["rhythm.js"];
 
 const {MINI_NAMES} = modules["data.js"];
 
 const {mountExtraMinigame} = modules["extra-minigames.js"];
 
 const DIRS = ['↑', '→', '↓', '←'];
+const arrowIcon = d => `<svg class="mini-arrow-icon" viewBox="0 0 40 40" aria-hidden="true" focusable="false"><g transform="rotate(${d*90} 20 20)" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 31V9M9 20 20 9 31 20"/></g></svg>`;
 const KEYS = ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft'];
 const TITLES = MINI_NAMES;
 const GUIDES = {
- rhythm:'음악의 반짝이는 종소리에 맞춰 Space 또는 박자 버튼! 음표가 가운데 별에 오는 순간과 같아요. 120 BPM으로 30초 동안 노래해요.',direction:'큰 화살표를 보고 같은 방향으로 춤춰요. 터치 버튼과 방향키 모두 가능해요.',memory:'안무 순서를 보고 기억한 동작을 차례로 눌러요. 다시 보기와 넉넉한 생각 시간이 있어요.',
- acting:'섞인 영화 장면을 필름 칸에 넣어 이야기를 완성해요. 장면 선택 후 칸을 누르거나 드래그해요.',variety:'제시어에 맞는 단어 세 개를 찾아요! 동물, 과일, 악기 주제가 바뀌어요. 숫자 1~9도 사용할 수 있어요.',makeup:'볼과 입술 색, 반짝이를 자유롭게 꾸며요. 외모는 채점하지 않아요.',compose:'네 마디의 음과 악기를 골라 나만의 노래를 만들어요. 끝까지 들어 보고 완성해요.',
- exercise:'버튼이나 Space를 누르고 힘을 모아요. 연두 구간에서 놓으면 멀리 점프! 세 번 도전해요.',beauty:'얼굴의 거품을 손가락으로 문질러 닦아요. 하나씩 클릭하거나 Tab·Enter로 눌러도 돼요.',meal:'곡물·단백질·채소를 골라 도시락 세 칸을 채워요. 마음에 드는 조합이면 모두 좋아요.',rest:'구름을 키우고 줄이는 느긋한 놀이예요. 세 번 함께 쉬면 완료! 점수 경쟁은 없어요.',play:'뒤집은 카드의 그림을 기억해 같은 친구 두 장을 찾아요. 시간 제한이 없어요.',gaming:'바구니를 좌우로 움직여 떨어지는 별을 받아요. 구름은 피해 봐요! 터치·드래그·방향키로 조작해요.',snack:'좌우로 움직이는 과일을 아래 과일 위에 쌓아요. 버튼이나 Space로 다섯 번 내려놓아요.',vacation:'해변 지도에서 조개·별·게·산호를 찾아 여행 엽서를 만들어요. 시간 제한 없이 쉬어 가요.'
+ rhythm:'→ 높이기 · ← 낮추기를 누르고 있으면 내 음정이 움직여요. 다음 음표의 음정에 맞추고, 음표가 가운데 별에 오면 Space 또는 박자 버튼을 눌러요. 음정과 박자를 함께 맞춰요!',direction:'위에서 내려오는 화살표가 아래 초록 판정 구간에 오면 같은 방향키를 눌러요. 총 10번 맞추면 완료! 조금 빠르거나 늦어도 괜찮아요. 아래 화살표 버튼으로도 할 수 있어요.',memory:'매번 무작위로 정해지는 4~6개 방향을 기억하고 따라 해요. 세 번의 안무에 도전해요. 다시 보기도 가능해요.',
+ acting:'섞인 영화 장면을 필름 칸에 넣어 이야기를 완성해요. 장면 선택 후 칸을 누르거나 드래그해요.',variety:'제시어에 맞는 단어 세 개를 찾아요! 동물, 과일, 악기 주제가 바뀌어요. 숫자 1~9도 사용할 수 있어요.',makeup:'볼, 입술, 눈두덩, 아이라인, 눈썹 색과 반짝이를 자유롭게 꾸며요. 외모는 채점하지 않아요.',compose:'네 마디의 음과 악기를 골라 나만의 노래를 만들어요. 끝까지 들어 보고 완성해요.',
+ exercise:'자동으로 달리는 동안 Space 또는 점프 버튼을 눌러 장애물을 뛰어넘어요. 장애물 10개를 지나면 완주! 부딪혀도 계속 달릴 수 있어요.',beauty:'얼굴의 거품을 손가락으로 문질러 닦아요. 하나씩 클릭하거나 Tab·Enter로 눌러도 돼요.',meal:'곡물·단백질·채소를 골라 도시락 세 칸을 채워요. 마음에 드는 조합이면 모두 좋아요.',rest:'구름을 키우고 줄이는 느긋한 놀이예요. 세 번 함께 쉬면 완료! 점수 경쟁은 없어요.',play:'뒤집은 카드의 그림을 기억해 같은 친구 두 장을 찾아요. 시간 제한이 없어요.',gaming:'바구니를 좌우로 움직여 떨어지는 별을 받아요. 구름은 피해 봐요! 터치·드래그·방향키로 조작해요.',snack:'좌우로 움직이는 과일을 아래 과일 위에 쌓아요. 버튼이나 Space로 다섯 번 내려놓아요.',vacation:'해변 지도에서 조개·별·게·산호를 찾아 여행 엽서를 만들어요. 시간 제한 없이 쉬어 가요.'
 };
 const rhythmScore = (delta,easy=false) => Math.abs(delta) <= (easy?250:180) ? 100 : Math.abs(delta) <= (easy?450:320) ? 70 : 0;
 function startMinigame(container, options) {
@@ -469,7 +541,7 @@ function startMinigame(container, options) {
   const root=el('section','minigame'); root.setAttribute('aria-label',TITLES[type]); container.replaceChildren(root);
   const header=el('header','mini-header'); const heading=el('h2','',TITLES[type]);header.append(heading);root.append(header);
   const button=(label,fn,cls='')=>{const b=el('button',`mini-button ${cls}`,label);b.type='button';b.addEventListener('click',()=>{if(!dead&&b.isConnected&&(!paused||!body.contains(b)))fn();});return b;};
-  const pauseButton=button('Ⅱ 잠깐 쉬기',()=>pause());header.append(pauseButton);
+  const pauseButton=button('잠깐 쉬기',()=>pause());pauseButton.innerHTML=PAUSE_ICON+' 잠깐 쉬기';header.append(pauseButton);
   const body=el('div','mini-body');root.append(body);
   const overlay=el('div','mini-overlay');overlay.hidden=true;root.append(overlay);
   const footer=el('footer','mini-footer');footer.append(button('일반 활동으로 바꾸기',()=>exit(o.onFallback)),button('취소 · 일정과 비용 돌려받기',()=>exit(o.onCancel)));root.append(footer);
@@ -482,22 +554,59 @@ function startMinigame(container, options) {
   function pause(){if(dead||paused)return;paused=true;rhythmMusic?.pause();onPause();root.classList.add('mini-paused');overlay.replaceChildren(el('div','mini-pause-icon','☁'),el('h3','','잠깐 쉬어 가요'),el('p','','돌아오면 이어서 할 수 있어요.'),button('▶ 이어 하기',resume,'mini-primary'));overlay.hidden=false;body.inert=true;overlay.querySelector('button').focus();}
   function resume(){if(dead||!paused||document.hidden)return;paused=false;rhythmMusic?.resume();root.classList.remove('mini-paused');last=performance.now();overlay.hidden=true;body.inert=false;}
   document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();},{signal:events.signal});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();paused?resume():pause();return;}if(dead||paused||!started)return;if(e.target?.matches?.('input,textarea,select,[contenteditable=true]'))return;const gameKey=(KEYS.includes(e.key)&&['direction','memory','gaming'].includes(type))||(e.code==='Space'&&['rhythm','exercise','snack'].includes(type))||(/^[1-9]$/.test(e.key)&&['acting','variety','compose'].includes(type));if(gameKey){e.preventDefault();if(!e.repeat)input(e);}}, {signal:events.signal});
-  document.addEventListener('keyup',e=>{if(!dead&&!paused&&started&&type==='exercise'&&e.code==='Space'){e.preventDefault();keyUp(e);}}, {signal:events.signal});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();paused?resume():pause();return;}if(dead||paused||!started)return;if(e.target?.matches?.('input,textarea,select,[contenteditable=true]'))return;const gameKey=(KEYS.includes(e.key)&&['direction','memory','gaming'].includes(type))||(type==='rhythm'&&['ArrowLeft','ArrowRight'].includes(e.key))||(e.code==='Space'&&['rhythm','exercise','snack'].includes(type))||(/^[1-9]$/.test(e.key)&&['acting','variety','compose'].includes(type));if(gameKey){e.preventDefault();if(!e.repeat)input(e);}}, {signal:events.signal});
+  document.addEventListener('keyup',e=>{if(!dead&&!paused&&started&&((type==='exercise'&&e.code==='Space')||(type==='rhythm'&&['ArrowLeft','ArrowRight'].includes(e.key)))){e.preventDefault();keyUp(e);}}, {signal:events.signal});
   function frame(now){if(dead)return;if(!last)last=now;if(!paused){elapsed+=Math.min(now-last,100);const ready=jobs.filter(j=>j.at<=elapsed);jobs=jobs.filter(j=>j.at>elapsed);ready.forEach(j=>{if(!dead)j.fn();});if(!dead)tick(elapsed);}last=now;if(!dead)raf=requestAnimationFrame(frame);}
   raf=requestAnimationFrame(frame);
   function pad(label,fn,cls=''){const b=button(label,()=>{},cls);b.addEventListener('pointerdown',e=>{e.preventDefault();if(!paused&&started&&!dead)fn();});b.addEventListener('click',e=>{if(e.detail===0&&!paused&&started&&!dead)fn();});return b;}
-  function arrows(fn){const wrap=el('div','mini-arrows');DIRS.forEach((d,i)=>{const b=pad(d,()=>fn(i));b.setAttribute('aria-label',['위','오른쪽','아래','왼쪽'][i]);wrap.append(b);});body.append(wrap);}
+  function arrows(fn){const wrap=el('div','mini-arrows');DIRS.forEach((d,i)=>{const b=pad(d,()=>fn(i));b.innerHTML=arrowIcon(i);b.setAttribute('aria-label',['위','오른쪽','아래','왼쪽'][i]);wrap.append(b);});body.append(wrap);}
   function result(score,message,extras={}){rhythmMusic?.stop();tick=()=>{};input=()=>{};keyUp=()=>{};jobs=[];body.replaceChildren(el('div','mini-result-icon','✦'),el('h3','',message),el('p','',`연습 점수 ${Math.round(score)}점 · 오늘도 한 걸음 자랐어요!`),button('활동 완료하기',()=>finish(score,extras),'mini-primary'));}
-  function begin(){if(beginning||started||dead)return;beginning=true;body.replaceChildren();const count=el('div','mini-countdown','3');body.append(count);sound(392);schedule(700,()=>{count.textContent='2';sound(440);});schedule(1400,()=>{count.textContent='1';sound(494);});schedule(2100,()=>{started=true;body.replaceChildren();const builtins={rhythm,direction,memory,makeup,compose};if(builtins[type])builtins[type]();else mountExtraMinigame(type,{body,el,button,schedule,sound,result,finish,rand,tier,o,now:()=>elapsed,setTick:fn=>tick=fn,setInput:fn=>input=fn,setKeyUp:fn=>keyUp=fn,setPause:fn=>onPause=fn,listen:(node,name,fn)=>node.addEventListener(name,e=>{if(!dead&&!paused&&started)fn(e);},{signal:events.signal})});});}
-  body.append(el('div','mini-intro-icon',{rhythm:'♫',direction:'✧',memory:'↗',acting:'🎬',variety:'✿',makeup:'✦',compose:'♬',exercise:'🏃',beauty:'🫧',meal:'🍱',rest:'☁',play:'🃏',gaming:'⭐',snack:'🍓',vacation:'🏖️'}[type]),el('p','mini-guide',GUIDES[type]),el('p','mini-muted',o.easy?'더 편하게 · 넉넉한 도움으로 함께해요':'틀려도 괜찮아요. 끝까지 하면 연습이 돼요!'),button('준비됐어요 · 시작',begin,'mini-primary'));
-  function rhythm(){const chart=rhythmChart(tier),count=chart.length,start=elapsed,total=RHYTHM_DURATION_MS;rhythmMusic=o.startRhythm?.(chart)||null;const songTime=()=>rhythmMusic?rhythmMusic.position():elapsed-start;let points=0,hits=0;const notes=chart.map(at=>({at,done:false,node:el('span','mini-note','♪')}));const meter=el('p','mini-meter');const lane=el('div','mini-lane');lane.setAttribute('aria-label','음표가 오른쪽에서 가운데 별로 다가와요');lane.append(el('span','mini-hitline','☆'));notes.forEach(n=>lane.append(n.node));body.append(meter,lane);const feedback=say();function hit(){const t=songTime();const n=notes.filter(n=>!n.done).sort((a,b)=>Math.abs(a.at-t)-Math.abs(b.at-t))[0];if(!n)return;const score=rhythmScore(t-n.at,o.easy);if(!score){feedback.textContent='별에 조금 더 가까워지면 눌러요!';return;}n.done=true;n.node.hidden=true;points+=score;hits++;feedback.textContent=score===100?'✦ 정확해요!':'♡ 거의 맞았어요!';}
-    body.append(pad('♫ 박자 맞추기 · Space',hit,'mini-tap'));input=e=>{if(e.code==='Space')hit();};tick=()=>{const t=songTime();lane.style.setProperty('--beat-glow',String(Math.max(0,1-(t%RHYTHM_BEAT_MS)/160)));meter.textContent=`${Math.max(0,Math.ceil((total-t)/1000))}초 · ♫ 120 BPM · ${hits}/${count}개`;notes.forEach(n=>{n.node.style.left=`${50+(n.at-t)/(o.easy?4500:3200)*50}%`;if(!n.done&&t-n.at>(o.easy?450:320)){n.done=true;n.node.hidden=true;feedback.textContent='다음 음표에서 다시 만나자!';}});if(t>=total)result(points/count,'노래 연습 완료!');};}
-  function direction(){const count=[6,9,12][tier],pattern=Array.from({length:count},()=>Math.floor(rand()*4));const start=elapsed,spacing=25000/count;let index=0,answered=false,points=0;const meter=el('p','mini-meter'),cue=el('div','mini-direction','준비'),bar=el('progress','mini-progress');bar.max=2000;body.append(meter,cue,bar);const feedback=say();function answer(d){const t=elapsed-start-index*spacing;if(index>=count||answered||t<0||t>2000)return;answered=true;const good=d===pattern[index];if(good){points++;sound(587);}feedback.textContent=good?'✦ 딱 맞는 한 걸음!':'괜찮아요! 다음 화살표를 보아요.';cue.textContent=good?'✓':'♡';}arrows(answer);input=e=>{const d=KEYS.indexOf(e.key);if(d>=0)answer(d);};tick=()=>{const t=elapsed-start;const next=Math.floor(t/spacing);if(next!==index){index=next;answered=false;}if(t>=25000){result(points/count*100,'댄스 연습 완료!');return;}const remaining=2000-(t-index*spacing);meter.textContent=`${Math.ceil((25000-t)/1000)}초 · ${index+1}/${count}번째`;bar.value=Math.max(0,remaining);if(!answered){cue.textContent=remaining>0?DIRS[pattern[index]]:'다음 준비';if(remaining<=0){answered=true;feedback.textContent='놓쳐도 괜찮아요. 다음 동작으로!';}}};}
-  function memory(){const length=[2,3,4][tier];const sequences=Array.from({length:3},()=>Array.from({length},()=>Math.floor(rand()*4)));let round=0,pos=0,points=0,roundPoints=0,showing=false,token=0;const meter=el('p','mini-meter'),cue=el('div','mini-direction'),trail=el('p','mini-memory-trail');body.append(meter,cue,trail);const feedback=say();function show(){if(showing)return;showing=true;pos=0;roundPoints=0;trail.textContent='';const id=++token;meter.textContent=`${round+1}/3번째 안무 · 순서를 보아요`;sequences[round].forEach((d,i)=>{schedule(i*950,()=>{if(token===id){cue.textContent=DIRS[d];sound(392+d*70);}});schedule(i*950+700,()=>{if(token===id)cue.textContent='·';});});schedule(length*950,()=>{if(token===id){showing=false;cue.textContent='내 차례!';meter.textContent=`${round+1}/3번째 안무 · 천천히 따라 해요`;}});}
-    function answer(d){if(showing)return;const correct=d===sequences[round][pos];if(correct)roundPoints++;trail.textContent+=`${DIRS[d]}${correct?'✓':'♡'}  `;feedback.textContent=correct?'순서를 잘 기억했어요!':'괜찮아요. 남은 동작도 이어서 해요!';pos++;if(pos===length){points+=roundPoints;showing=true;const next=button(round===2?'연습 마치기':'다음 안무 보기',()=>{next.remove();if(round===2)result(points/(3*length)*100,'안무 기억 완료!');else{round++;showing=false;show();}},'mini-primary');body.append(next);}}
+  function begin(){if(beginning||started||dead)return;beginning=true;if(type==='direction'){started=true;body.replaceChildren();direction();return;}body.replaceChildren();const count=el('div','mini-countdown','3');body.append(count);sound(392);schedule(700,()=>{count.textContent='2';sound(440);});schedule(1400,()=>{count.textContent='1';sound(494);});schedule(2100,()=>{started=true;body.replaceChildren();const builtins={rhythm,direction,memory,makeup,compose};if(builtins[type])builtins[type]();else mountExtraMinigame(type,{body,el,button,schedule,sound,result,finish,rand,tier,o,now:()=>elapsed,setTick:fn=>tick=fn,setInput:fn=>input=fn,setKeyUp:fn=>keyUp=fn,setPause:fn=>onPause=fn,listen:(node,name,fn)=>node.addEventListener(name,e=>{if(!dead&&!paused&&started)fn(e);},{signal:events.signal})});});}
+  body.append(el('div',`mini-intro-icon${type==='exercise'?' mini-exercise-icon':''}`,{rhythm:'♫',direction:'✧',memory:'↗',acting:'🎬',variety:'✿',makeup:'✦',compose:'♬',exercise:'🏃',beauty:'',meal:'🍱',rest:'☁',play:'🃏',gaming:'⭐',snack:'🍓',vacation:'🏖️'}[type]),el('p','mini-guide',GUIDES[type]),el('p','mini-muted',o.easy?'더 편하게 · 넉넉한 도움으로 함께해요':'틀려도 괜찮아요. 끝까지 하면 연습이 돼요!'),button('준비됐어요 · 시작',begin,'mini-primary'));
+  if(type==='beauty')body.querySelector('.mini-intro-icon').innerHTML=BUBBLES_ICON;
+  function rhythm(){
+    const chart=vocalChart(tier),start=elapsed,total=RHYTHM_DURATION_MS,names=['도','레','미','파','솔'];
+    rhythmMusic=o.startRhythm?.(chart.map(n=>n.at),{pitches:chart.map(n=>VOCAL_PITCHES[n.pitch])})||null;
+    const songTime=()=>rhythmMusic?rhythmMusic.position():elapsed-start;
+    let points=0,hits=0,pitch=2,lastPitchTime=0,lastTone=-1;const held=new Map();
+    const meter=el('p','mini-meter'),lane=el('div','mini-lane'),panel=el('div','mini-pitch-panel'),pitchLabel=el('p','mini-pitch-label'),gauge=el('div','mini-pitch-gauge'),target=el('div','mini-pitch-target'),marker=el('div','mini-pitch-marker','내 음정');
+    gauge.setAttribute('role','meter');gauge.setAttribute('aria-label','내 음정');gauge.setAttribute('aria-valuemin','0');gauge.setAttribute('aria-valuemax','4');
+    gauge.append(target,marker);panel.append(pitchLabel,gauge);lane.append(el('span','mini-hitline','☆'));
+    const notes=chart.map(n=>({...n,done:false,node:el('span','mini-note',names[n.pitch])}));notes.forEach(n=>lane.append(n.node));body.append(meter,panel,lane);
+    const feedback=say();
+    function updatePitch(t){const direction=Math.sign([...held.values()].reduce((a,b)=>a+b,0));pitch=movePitch(pitch,direction,t-lastPitchTime);lastPitchTime=t;const rounded=Math.round(pitch);if(direction&&rounded!==lastTone){sound(VOCAL_PITCHES[rounded],.18);lastTone=rounded;}}
+    function paintPitch(){const next=notes.find(n=>!n.done);marker.style.left=(pitch/4*80+10)+'%';gauge.setAttribute('aria-valuenow',pitch.toFixed(2));gauge.setAttribute('aria-valuetext',names[Math.round(pitch)]);target.hidden=!next;if(next){target.style.left=(next.pitch/4*80+10)+'%';pitchLabel.textContent='다음 음정: '+names[next.pitch]+' · 내 음정: '+names[Math.round(pitch)];target.className='mini-pitch-target'+(Math.abs(pitch-next.pitch)<=.65?' matched':'');}}
+    function judgmentSound(success){sound(success?784:196,success?.09:.18);if(success)schedule(90,()=>sound(1046.5,.12));}
+    function hit(){const t=songTime();updatePitch(t);const n=notes.filter(n=>!n.done).sort((a,b)=>Math.abs(a.at-t)-Math.abs(b.at-t))[0];if(!n)return;const timing=rhythmScore(t-n.at,o.easy);if(!timing){judgmentSound(false);feedback.textContent='음표가 가운데 별에 올 때 박자를 눌러요!';return;}const score=vocalScore(timing,pitch,n.pitch);if(!score){judgmentSound(false);feedback.textContent='음정을 '+names[n.pitch]+'에 맞춰요! '+(pitch<n.pitch?'→ 높여요':'← 낮춰요');return;}n.done=true;n.node.hidden=true;n.node.remove();points+=score;hits++;judgmentSound(true);feedback.textContent='✓ 음정과 박자를 함께 맞췄어요!';paintPitch();}
+    const controls=el('div','mini-pitch-controls');
+    for(const [direction,label] of [[-1,'← 음정 낮추기'],[1,'→ 음정 높이기']]){
+      const control=button(label,()=>{});control.setAttribute('aria-label',label+' · 누르고 있기');
+      control.addEventListener('pointerdown',e=>{e.preventDefault();if(dead||paused||!started)return;updatePitch(songTime());control.setPointerCapture?.(e.pointerId);held.set('pointer'+e.pointerId,direction);},{signal:events.signal});
+      const release=e=>{updatePitch(songTime());held.delete('pointer'+e.pointerId);};
+      for(const event of ['pointerup','pointercancel','lostpointercapture'])control.addEventListener(event,release,{signal:events.signal});
+      control.addEventListener('click',e=>{if(e.detail===0&&!dead&&!paused){pitch=Math.max(0,Math.min(4,pitch+direction*.5));sound(VOCAL_PITCHES[Math.round(pitch)],.18);paintPitch();}},{signal:events.signal});controls.append(control);
+    }
+    body.append(controls,pad('♫ 박자 맞추기 · Space',hit,'mini-tap'));
+    input=e=>{updatePitch(songTime());if(e.code==='Space')hit();else if(e.key==='ArrowRight'||e.key==='ArrowLeft')held.set(e.key,e.key==='ArrowRight'?1:-1);};
+    keyUp=e=>{updatePitch(songTime());held.delete(e.key);};onPause=()=>held.clear();
+    tick=()=>{const t=songTime();updatePitch(t);lane.style.setProperty('--beat-glow',String(Math.max(0,1-(t%RHYTHM_BEAT_MS)/160)));meter.textContent=Math.max(0,Math.ceil((total-t)/1000))+'초 · 음정 + 박자 '+hits+'/'+notes.length+'개';notes.forEach(n=>{n.node.style.left=(50+(n.at-t)/(o.easy?4500:3200)*50)+'%';if(!n.done&&t-n.at>(o.easy?450:320)){n.done=true;n.node.hidden=true;judgmentSound(false);feedback.textContent='다음 음표의 음정을 준비해요!';}});paintPitch();if(t>=total){held.clear();result(points/notes.length,'노래 연습 완료!');}};paintPitch();
+  }
+  function direction(){
+    let run,start=elapsed,hits=0;const meter=el('p','mini-meter'),arena=el('div','mini-dance-fall'),order=[3,2,0,1],cards=[];
+    arena.setAttribute('aria-label','왼쪽 아래 위 오른쪽 네 레인 · 화살표가 초록 구간에 오면 누르세요');
+    const zone=el('div','mini-dance-zone');arena.append(zone);
+    order.forEach((d,i)=>{const receptor=el('span','mini-dance-receptor',DIRS[d]);receptor.innerHTML=arrowIcon(d);receptor.style.left=(12.5+i*25)+'%';arena.append(receptor);});body.append(meter,el('p','mini-guide','화살표가 초록 구간에 오면 같은 방향키! 10번 성공하면 완료해요.'),arena);const feedback=say();
+    const songTime=()=>rhythmMusic?rhythmMusic.position():elapsed-start;
+    function nextChart(){rhythmMusic?.stop();start=elapsed;run=createDanceRun(danceChart(tier,rand),o.easy);for(const card of cards)card.node.remove();cards.length=0;run.notes.forEach(n=>{const node=el('span','mini-dance-drop',DIRS[n.direction]);node.innerHTML=arrowIcon(n.direction);node.style.left=(12.5+order.indexOf(n.direction)*25)+'%';node.setAttribute('aria-label',['위','오른쪽','아래','왼쪽'][n.direction]);arena.append(node);cards.push({n,node});});rhythmMusic=o.startRhythm?.(run.notes.map(n=>n.at),{beatMs:DANCE_BEAT_MS,durationMs:DANCE_DURATION_MS,drums:true})||null;}
+    function paint(t){run.advance(t);meter.textContent='성공 '+hits+'/10번';zone.style.height=(run.window/3000*156)+'%';cards.forEach(({n,node})=>{node.hidden=n.status!=='pending'||n.at-t>3300;node.style.top=(78-(n.at-t)/3000*78)+'%';node.className='mini-dance-drop'+(Math.abs(t-n.at)<=run.window?' ready':'');});}
+    function answer(d){const t=songTime(),note=run.press(d,t);if(note){hits++;sound(700,.08);feedback.textContent='✓ 좋아요! '+hits+'/10번 성공';}else feedback.textContent='같은 화살표가 초록 구간에 왔을 때 눌러요!';paint(t);if(hits>=10)result(100,'댄스 연습 완료! 10번 성공했어요!');}
+    const controls=el('div','mini-arrows');order.forEach(d=>{const control=pad(DIRS[d],()=>answer(d));control.innerHTML=arrowIcon(d);control.setAttribute('aria-label',['위','오른쪽','아래','왼쪽'][d]);controls.append(control);});body.append(controls);input=e=>{const d=KEYS.indexOf(e.key);if(d>=0)answer(d);};
+    tick=()=>{let t=songTime();if(t>=DANCE_DURATION_MS){nextChart();t=0;}paint(t);};nextChart();paint(0);
+  }
+  function memory(){const sequences=memorySequences(rand),total=sequences.flat().length;let round=0,pos=0,points=0,roundPoints=0,showing=false,token=0;const meter=el('p','mini-meter'),cue=el('div','mini-direction'),trail=el('p','mini-memory-trail');body.append(meter,cue,trail);const feedback=say();function show(){if(showing)return;showing=true;pos=0;roundPoints=0;trail.textContent='';const id=++token,length=sequences[round].length;meter.textContent=`${round+1}/3번째 안무 · ${length}개 방향을 기억해요`;sequences[round].forEach((d,i)=>{schedule(i*950,()=>{if(token===id){cue.innerHTML=arrowIcon(d);cue.setAttribute('aria-label',['위','오른쪽','아래','왼쪽'][d]);sound(392+d*70);}});schedule(i*950+700,()=>{if(token===id)cue.textContent='·';});});schedule(length*950,()=>{if(token===id){showing=false;cue.textContent='내 차례!';meter.textContent=`${round+1}/3번째 안무 · 천천히 따라 해요`;}});}
+    function answer(d){if(showing)return;const correct=d===sequences[round][pos];if(correct)roundPoints++;trail.textContent+=`${DIRS[d]}${correct?'✓':'♡'}  `;feedback.textContent=correct?'순서를 잘 기억했어요!':'괜찮아요. 남은 동작도 이어서 해요!';pos++;if(pos===sequences[round].length){points+=roundPoints;showing=true;const next=button(round===2?'연습 마치기':'다음 안무 보기',()=>{next.remove();if(round===2)result(points/total*100,'안무 기억 완료!');else{round++;showing=false;show();}},'mini-primary');body.append(next);}}
     arrows(answer);body.append(button('↻ 순서 다시 보기',()=>{if(!showing){feedback.textContent='순서를 다시 보고 처음 동작부터 해요.';show();}}));input=e=>{const d=KEYS.indexOf(e.key);if(d>=0)answer(d);};show();}
-  function makeup(){const initial={blush:'#efa5b5',lip:'#d98096',sparkle:false,...(o.appearance?.makeup||{})};let value={...initial};const history=[];const preview=el('div','mini-character');body.append(el('p','mini-guide','오늘 내 마음에 드는 색을 골라요. 외모 점수는 없어요.'),preview);function update(){if(o.renderCharacter)preview.innerHTML=o.renderCharacter({...o.appearance,makeup:value});else preview.textContent='✦ 나만의 반짝이는 모습 ✦';body.querySelectorAll('[data-color]').forEach(b=>b.setAttribute('aria-pressed',String(value[b.dataset.part]===b.dataset.color)));sparkle.setAttribute('aria-pressed',String(value.sparkle));}for(const [part,label]of [['blush','볼터치'],['lip','입술']]){const group=el('div','mini-palette');group.append(el('h3','',label));[['장미','#efa5b5'],['복숭아','#f4af8c'],['라벤더','#bd9adb'],['코랄','#d98096'],['없음','none']].forEach(([name,color])=>{const b=button(name,()=>{history.push({...value});value[part]=color;update();},'mini-swatch');b.dataset.color=color;b.dataset.part=part;b.style.setProperty('--swatch',color==='none'?'#fff':color);group.append(b);});body.append(group);}const sparkle=button('✦ 반짝이 켜기 / 끄기',()=>{history.push({...value});value.sparkle=!value.sparkle;update();});body.append(sparkle,button('↶ 한 번 되돌리기',()=>{if(history.length){value=history.pop();update();}}),button('처음 모습으로',()=>{history.push({...value});value={...initial};update();}),button('이 모습으로 완성!',()=>finish(80,{makeup:{...value}}),'mini-primary'));update();}
+  function makeup(){const initial={eyeshadow:'none',eyeliner:'none',brow:'none',blush:'#efa5b5',lip:'#d98096',sparkle:false,...(o.appearance?.makeup||{})};let value={...initial};const history=[];const preview=el('div','mini-character');body.append(el('p','mini-guide','오늘 내 마음에 드는 색을 골라요. 외모 점수는 없어요.'),preview);function update(){if(o.renderCharacter)preview.innerHTML=o.renderCharacter({...o.appearance,makeup:value});else preview.textContent='✦ 나만의 반짝이는 모습 ✦';body.querySelectorAll('[data-color]').forEach(b=>b.setAttribute('aria-pressed',String(value[b.dataset.part]===b.dataset.color)));sparkle.setAttribute('aria-pressed',String(value.sparkle));}for(const [part,label]of [['blush','볼터치'],['lip','입술'],['eyeshadow','눈두덩 섀도'],['eyeliner','아이라인'],['brow','눈썹']]){const group=el('div','mini-palette');group.append(el('h3','',label));[['장미','#efa5b5'],['복숭아','#f4af8c'],['라벤더','#bd9adb'],['코랄','#d98096'],['브라운','#795548'],['차콜','#494252'],['없음','none']].forEach(([name,color])=>{const b=button(name,()=>{history.push({...value});value[part]=color;update();},'mini-swatch');b.dataset.color=color;b.dataset.part=part;b.style.setProperty('--swatch',color==='none'?'#fff':color);group.append(b);});body.append(group);}const sparkle=button('✦ 반짝이 켜기 / 끄기',()=>{history.push({...value});value.sparkle=!value.sparkle;update();});body.append(sparkle,button('↶ 한 번 되돌리기',()=>{if(history.length){value=history.pop();update();}}),button('처음 모습으로',()=>{history.push({...value});value={...initial};update();}),button('이 모습으로 완성!',()=>finish(80,{makeup:{...value}}),'mini-primary'));update();}
   function compose(){const notes=[{name:'도',f:261.63},{name:'레',f:293.66},{name:'미',f:329.63},{name:'솔',f:392},{name:'라',f:440}];let melody=[0,2,3,0],instrument='피아노',played=false,playing=false;const score=el('div','mini-score');body.append(el('p','mini-guide','각 마디의 음을 눌러 바꿔요. 어떤 멜로디든 좋아요!'),score);const cols=[];melody.forEach((_,i)=>{const col=el('div','mini-measure');col.append(el('strong','',`${i+1}마디`));notes.forEach((n,j)=>{const b=button(n.name,()=>{if(playing)return;melody[i]=j;played=false;done.disabled=true;paint();sound(n.f,.18);});b.dataset.note=j;col.append(b);});score.append(col);cols.push(col);});function paint(){cols.forEach((c,i)=>c.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.note)===melody[i]))));}const instruments=el('div','mini-instruments');['피아노','오르골','베이스'].forEach(name=>instruments.append(button(name,()=>{if(playing)return;instrument=name;played=false;done.disabled=true;paintInstruments();})));function paintInstruments(){instruments.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.textContent===instrument)));}const status=el('p','mini-feedback','완성 전에 한 번 끝까지 들어 보아요.');const play=button('▶ 내 노래 듣기',()=>{if(playing)return;playing=true;play.disabled=true;done.disabled=true;for(let i=0;i<4;i++)schedule(i*600,()=>{cols.forEach((c,j)=>c.classList.toggle('mini-playing',j===i));sound(notes[melody[i]].f*(instrument==='오르골'?2:instrument==='베이스'?.5:1),.35);status.textContent=`♫ ${i+1}마디 · ${notes[melody[i]].name}`;});schedule(2500,()=>{playing=false;played=true;play.disabled=false;done.disabled=false;cols.forEach(c=>c.classList.remove('mini-playing'));status.textContent='✦ 내 노래 완성! 다시 듣거나 음을 바꿀 수 있어요.';});},'mini-primary');const done=button('이 노래로 완성!',()=>{if(played&&!playing)finish(80,{melody:melody.map(n=>notes[n].name),instrument});},'mini-primary');done.disabled=true;body.append(instruments,status,play,done);input=e=>{if(/^[1-4]$/.test(e.key)&&!playing){const i=Number(e.key)-1;melody[i]=(melody[i]+1)%notes.length;played=false;done.disabled=true;paint();sound(notes[melody[i]].f,.18);}};paint();paintInstruments();}
   return {pause,resume,destroy};
 }
@@ -550,6 +659,8 @@ return Object.freeze({SLOT_COUNT, createStore});
 
 // ---- src/main.js ----
 modules["main.js"] = (() => {
+const { BUBBLES_ICON, PAUSE_ICON, SAVE_ICON } = modules["icons.js"];
+
 const game = modules["core.js"];
 
 const { SKILLS, STAGES, PERSONALITIES, ACTIVITIES, ITEMS, SCALE_NAMES, MEMBER_STORIES, PERSONALITY_LINES, APPEARANCE_OPTIONS, APPEARANCE_DEFAULTS, MINI_NAMES } = modules["data.js"];
@@ -606,7 +717,7 @@ async function mutate(fn,{kind='recovery',redraw=true}={}){
 }
 async function unlock(){await audio.unlock();if(state){audio.setVolume(state.settings.music,state.settings.sfx);audio.start(place);}else audio.start('practice');}
 
-function topbar(){return `<header class="topbar"><button class="brand" data-action="title" aria-label="아이돌 키우기 시작 화면"><span class="brand-star">✦</span><span><strong>아이돌 키우기</strong><small>OUR LITTLE STAR STORY</small></span></button><div class="top-actions"><span class="offline-dot">${isLocalFile?'로컬 파일로 실행 중':offlineReady?'오프라인 준비 완료':'작은 꿈, 커다란 무대'}</span>${state?'<button class="text-button" data-action="save"><span>▣</span> 저장하기</button>':''}<button class="icon-button" data-action="slots" aria-label="저장 기록">▤</button><button class="icon-button" data-action="settings" aria-label="소리와 도움말 설정">⚙</button></div></header>`;}
+function topbar(){return `<header class="topbar"><button class="brand" data-action="title" aria-label="아이돌 키우기 시작 화면"><span class="brand-star">✦</span><span><strong>아이돌 키우기</strong><small>OUR LITTLE STAR STORY</small></span></button><div class="top-actions"><span class="offline-dot">${isLocalFile?'로컬 파일로 실행 중':offlineReady?'오프라인 준비 완료':'작은 꿈, 커다란 무대'}</span>${state?'<button class="text-button" data-action="save">'+SAVE_ICON+' 저장하기</button>':''}<button class="icon-button" data-action="slots" aria-label="저장 기록">▤</button><button class="icon-button" data-action="settings" aria-label="소리와 도움말 설정">⚙</button></div></header>`;}
 function scene(s,room=place){const members=[s.members[0],s.members[1],{name:s.name,appearance:s.appearance,leader:true},s.members[2],s.members[3]];return `<div class="scene"><div class="scene-bg">${backgroundSVG(room)}</div><div class="scene-top"><div class="scene-tag">${places[room][1]}<small>${room==='agency'&&s.agency?'오로라 엔터':'구름다락 기획사'}</small></div><div class="speech">${esc(room==='home'?'오늘도 수고했어. 우리 같이 쉬자!':s.stage===0?(PERSONALITY_LINES[s.personality]||'언젠가 우리 목소리가 세상에 닿을 거야!'):`${s.groupName}, 오늘 무대도 함께하자!`)}</div></div><div class="scene-sparkle">✧</div><div class="group-characters">${members.map(m=>`<div class="group-member ${m.leader?'leader':''}">${character(m.appearance,room==='home'?'rest':room==='stage'?'sing':'idle')}<span class="name-tag">${m.leader?'<small>LEADER</small>':''}${esc(m.name)}</span></div>`).join('')}</div><span class="scene-note">FIVE DREAMS, ONE STAGE</span></div>`;}
 function render(){
   document.documentElement.classList.toggle('reduced-motion',!!state?.settings.reducedMotion);
@@ -619,7 +730,7 @@ function bindCommon(){
   app.querySelectorAll('[data-action]').forEach(b=>b.onclick=async()=>{await unlock();const a=b.dataset.action;if(a==='new')openSlots('new');if(a==='slots')openSlots('load');if(a==='settings')openSettings();if(a==='save')await saveManual();if(a==='saveas')openSlots('save');if(a==='title'){if(state)confirmDialog('시작 화면으로 갈까요?','최근 진행은 이 기기의 복구 기록에 남아 있어요.',()=>{state=null;page='today';render();},'시작 화면으로');else render();}});
   app.querySelectorAll('[data-nav]').forEach(b=>b.onclick=()=>{const n=b.dataset.nav;if(n==='practice'||n==='home'){page='today';place=n;}else page=n;audio.start(place);render();window.scrollTo({top:0,behavior:'smooth'});});
 }
-function dashboard(){return `<div class="page-heading"><div><span class="eyebrow">${esc(state.groupName.toUpperCase())} · OUR DREAM DIARY</span><h1>${esc(state.name)}의 반짝이는 하루 <span style="color:#d6b96c">✦</span></h1><p>작은 연습이 모여, 커다란 무대가 될 거야.</p></div><div class="date-chip"><span>DAY ${String(state.day).padStart(2,'0')}</span><strong>${esc(game.formatDay(state.day))}</strong></div></div><div class="dashboard"><div><div>${scene(state)}</div><section class="panel daily"><div class="daily-header"><div><h2>오늘의 일곱 걸음</h2><p>${state.used===7?'오늘도 잘했어! 내일은 또 어떤 일이 생길까?':`${7-state.used}칸 남았어요. 하고 싶은 일을 하나씩 골라 봐.`}</p></div><button class="text-button mint-button" data-action-day>오늘 마치기 ☾</button></div><div class="day-slots">${Array.from({length:7},(_,i)=>`<div class="day-slot ${i<state.used?'done':i===state.used?'current':''}" aria-label="${i+1}번째 일정 ${i<state.used?'완료':'남음'}">${i<state.used?'✓':i===state.used?'✦':String(i+1).padStart(2,'0')}</div>`).join('')}</div></section>${state.event?`<section class="event-card"><span class="event-icon">✉</span><div><h3>${esc(state.event.title)}</h3><p>우리에게 작은 소식이 도착했어.</p></div><button class="text-button" id="open-event">읽어 보기 →</button></section>`:''}<div class="activities-heading"><div><h2>오늘은 무엇을 해볼까?</h2><p>${places[place][2]}</p></div><span class="pill">일곱 일정 모두 · 미니게임 선택</span></div><div class="place-tabs" role="group" aria-label="장소 선택">${Object.entries(places).map(([id,p])=>`<button class="place-tab ${place===id?'active':''}" data-place="${id}">${p[0]} ${p[1]}</button>`).join('')}</div><div class="activity-grid">${ACTIVITIES.filter(a=>a.place===place).map(a=>{const v=game.activityView(state,a.id,{city:0});return `<button class="activity-card ${!v.available?'locked':''}" data-activity="${a.id}"><span class="activity-icon">${a.icon}</span><span class="arrow">${v.available?'↗':'⌑'}</span><strong>${esc(a.name)}</strong><p>${!v.available?esc(v.reason):esc(activityHint(a))}</p><span class="cost">${v.energy>0?`⚡ ${v.energy}`:`♡ 에너지 +${-v.energy}`} ${v.cost?` · ${fmt(v.cost)}코인`:' · 무료'}</span>${v.mini?'<span class="mini-badge">미니게임</span>':''}</button>`;}).join('')}</div></div><aside class="sidebar"><section class="panel leader-card"><div class="panel-heading"><h3>나의 빛나는 가능성</h3><span class="level-badge">Lv. ${state.level}</span></div><div class="skills">${Object.entries(SKILLS).map(([k,label])=>`<div class="skill-row"><span>${skillIcons[k]} ${label}</span><span class="bar"><i style="width:${state.skills[k]}%"></i></span><strong>${state.skills[k]}</strong></div>`).join('')}</div><div class="xp-caption">다음 레벨까지 ${fmt(game.levelNeed(state.level)-state.xp)} XP<div class="bar"><i style="width:${state.xp/game.levelNeed(state.level)*100}%"></i></div></div><div class="resources">${[['⚡ 에너지',`${state.energy} / ${game.energyMax(state)}`],['☁ 그룹 스트레스',`${state.stress} / 100`],['◉ 우리 코인',fmt(state.money)],['♡ 그룹 팬',short(state.fans)],['♧ 내 SNS',short(state.followers)],['✦ 인지도',`${state.fame} / 100`]].map(([label,value])=>`<div class="resource"><span>${label}</span><strong>${value}</strong></div>`).join('')}</div></section><section class="panel goal-card"><span class="eyebrow">NEXT LITTLE DREAM</span><h3 style="margin-top:9px">다음 꿈을 향해서</h3><p>${esc(game.nextGoal(state))}</p><button id="show-goals">성장 여정 보기 →</button></section></aside></div>`;}
+function dashboard(){return `<div class="page-heading"><div><span class="eyebrow">${esc(state.groupName.toUpperCase())} · OUR DREAM DIARY</span><h1>${esc(state.name)}의 반짝이는 하루 <span style="color:#d6b96c">✦</span></h1><p>작은 연습이 모여, 커다란 무대가 될 거야.</p></div><div class="date-chip"><span>DAY ${String(state.day).padStart(2,'0')}</span><strong>${esc(game.formatDay(state.day))}</strong></div></div><div class="dashboard"><div><div>${scene(state)}</div><section class="panel daily"><div class="daily-header"><div><h2>오늘의 일곱 걸음</h2><p>${state.used===7?'오늘도 잘했어! 내일은 또 어떤 일이 생길까?':`${7-state.used}칸 남았어요. 하고 싶은 일을 하나씩 골라 봐.`}</p></div><button class="text-button mint-button" data-action-day>오늘 마치기 ☾</button></div><div class="day-slots">${Array.from({length:7},(_,i)=>`<div class="day-slot ${i<state.used?'done':i===state.used?'current':''}" aria-label="${i+1}번째 일정 ${i<state.used?'완료':'남음'}">${i<state.used?'✓':i===state.used?'✦':String(i+1).padStart(2,'0')}</div>`).join('')}</div></section>${state.event?`<section class="event-card"><span class="event-icon">✉</span><div><h3>${esc(state.event.title)}</h3><p>우리에게 작은 소식이 도착했어.</p></div><button class="text-button" id="open-event">읽어 보기 →</button></section>`:''}<div class="activities-heading"><div><h2>오늘은 무엇을 해볼까?</h2><p>${places[place][2]}</p></div><span class="pill">일곱 일정 모두 · 미니게임 선택</span></div><div class="place-tabs" role="group" aria-label="장소 선택">${Object.entries(places).map(([id,p])=>`<button class="place-tab ${place===id?'active':''}" data-place="${id}">${p[0]} ${p[1]}</button>`).join('')}</div><div class="activity-grid">${ACTIVITIES.filter(a=>a.place===place).map(a=>{const v=game.activityView(state,a.id,{city:0});return `<button class="activity-card ${!v.available?'locked':''}" data-activity="${a.id}"><span class="activity-icon">${a.icon==='bubbles'?BUBBLES_ICON:a.icon}</span><span class="arrow">${v.available?'↗':'⌑'}</span><strong>${esc(a.name)}</strong><p>${!v.available?esc(v.reason):esc(activityHint(a))}</p><span class="cost">${v.energy>0?`⚡ ${v.energy}`:`♡ 에너지 +${-v.energy}`} ${v.cost?` · ${fmt(v.cost)}코인`:' · 무료'}</span>${v.mini?'<span class="mini-badge">미니게임</span>':''}</button>`;}).join('')}</div></div><aside class="sidebar"><section class="panel leader-card"><div class="panel-heading"><h3>나의 빛나는 가능성</h3><span class="level-badge">Lv. ${state.level}</span></div><div class="skills">${Object.entries(SKILLS).map(([k,label])=>`<div class="skill-row"><span>${skillIcons[k]} ${label}</span><span class="bar"><i style="width:${state.skills[k]}%"></i></span><strong>${state.skills[k]}</strong></div>`).join('')}</div><div class="xp-caption">다음 레벨까지 ${fmt(game.levelNeed(state.level)-state.xp)} XP<div class="bar"><i style="width:${state.xp/game.levelNeed(state.level)*100}%"></i></div></div><div class="resources">${[['⚡ 에너지',`${state.energy} / ${game.energyMax(state)}`],['☁ 그룹 스트레스',`${state.stress} / 100`],['◉ 우리 코인',fmt(state.money)],['♡ 그룹 팬',short(state.fans)],['♧ 내 SNS',short(state.followers)],['✦ 인지도',`${state.fame} / 100`]].map(([label,value])=>`<div class="resource"><span>${label}</span><strong>${value}</strong></div>`).join('')}</div></section><section class="panel goal-card"><span class="eyebrow">NEXT LITTLE DREAM</span><h3 style="margin-top:9px">다음 꿈을 향해서</h3><p>${esc(game.nextGoal(state))}</p><button id="show-goals">성장 여정 보기 →</button></section></aside></div>`;}
 function activityHint(a){if(state.projects[a.id])return `${state.projects[a.id].scores.length}/${a.project}회차 완료 · 함께 작품을 이어 만들어요`;return {vocal:'숨을 고르고, 나만의 목소리로',dance:'음악에 맞춰 가볍게 한 걸음',acting:'대사에 내 마음을 담아 보자',variety:'웃음이 피어나는 이야기 연습',choreo:'차근차근 동작을 기억해요',lesson:'조금 더 깊이 배우는 시간',exercise:'몸도 마음도 가볍게 쭉쭉',beauty:'보송보송, 오늘의 나를 돌보기',makeup:'내 마음대로 색을 골라요',rest:'구름처럼 편안하게 쉬어 가기',play:'다섯 친구의 작은 놀이 시간',gaming:'친구들과 웃으며 게임 한 판',meal:'알록달록 든든한 한 끼',snack:'함께 나누면 더 맛있는 간식',vacation:'남은 일정은 쉬고 내일 만나요',audition:'우리의 첫 무대, 함께 도전!',agency:'더 넓은 세상으로 한 걸음',stream:'팬들에게 오늘의 이야기를',concert:'응원 소리 가득한 우리의 무대',movie:'카메라 앞에서 이야기를 펼쳐요',album:'나만의 목소리를 음원에 담기',song:'네 마디로 시작하는 나의 노래',casting:'마음에 드는 영화에 도전해요'}[a.id]||a.description;}
 function bindDashboard(){app.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>{place=b.dataset.place;audio.start(place);render();});app.querySelectorAll('[data-activity]').forEach(b=>b.onclick=()=>previewActivity(b.dataset.activity));$('[data-action-day]').onclick=()=>{if(state.used<7)confirmDialog('오늘은 여기까지 할까요?',`${7-state.used}칸을 남겨 두고 쉬어도 괜찮아요. 에너지를 가득 채워 내일 만나요.`,finishDay,'오늘 마치기');else finishDay();};$('#open-event')?.addEventListener('click',openEvent);$('#show-goals').onclick=()=>{page='records';render();};}
 
@@ -638,10 +749,10 @@ function openRun(){
   $('#run-cancel').onclick=cancelRun;$('#run-normal').onclick=startRegular;$('#run-mini')?.addEventListener('click',()=>launchMini(run));
 }
 function launchMini(run){modal('함께 해보자!', '<div class="mini-host" id="minigame"></div>',{close:false});audio.stop();mini=startMinigame($('#minigame'),{type:run.mini,level:state.level,easy:state.settings.easy,seed:run.seed,appearance:state.appearance,tone:audio.tone,startRhythm:audio.startRhythm,renderCharacter:a=>character(a),onComplete:(score,extras)=>completeRun(run.id,score,extras),onCancel:cancelRun,onFallback:()=>startRegular()});}
-function startRegular(){const run=state.activeAction,a=ACTIVITIES.find(a=>a.id===run.activityId);modal(a.name,`<div class="regular-stage">${character(state.appearance,a.skill==='dance'?'dance':a.place==='home'?'rest':a.skill==='vocal'?'sing':'act')}<h3>${esc(activityHint(a))}</h3><p id="regular-message">함께 천천히 세 번 해 볼까요?</p><div class="progress-dots"><i></i><i></i><i></i></div><button class="primary" id="regular-tap">${a.energy<0?'편안하게 쉬기 ☁':'한 걸음 연습하기 ✦'}</button><button class="secondary" id="regular-mini">미니게임으로 바꾸기 ♫</button><button class="text-button" id="regular-pause">잠깐 쉬기 Ⅱ</button><button class="text-button" id="regular-cancel">취소 · 비용 돌려받기</button></div>`,{close:false});
+function startRegular(){const run=state.activeAction,a=ACTIVITIES.find(a=>a.id===run.activityId);modal(a.name,`<div class="regular-stage">${character(state.appearance,a.skill==='dance'?'dance':a.place==='home'?'rest':a.skill==='vocal'?'sing':'act')}<h3>${esc(activityHint(a))}</h3><p id="regular-message">함께 천천히 세 번 해 볼까요?</p><div class="progress-dots"><i></i><i></i><i></i></div><button class="primary" id="regular-tap">${a.energy<0?'편안하게 쉬기 ☁':'한 걸음 연습하기 ✦'}</button><button class="secondary" id="regular-mini">미니게임으로 바꾸기 ♫</button><button class="text-button" id="regular-pause">${PAUSE_ICON} 잠깐 쉬기</button><button class="text-button" id="regular-cancel">취소 · 비용 돌려받기</button></div>`,{close:false});
   let count=0,paused=false;const hidden=()=>{if(document.hidden)pause();};function pause(){paused=true;$('#regular-message').textContent='잠깐 멈췄어요. 준비되면 이어 해요.';$('#regular-tap').disabled=true;$('#regular-pause').textContent='이어 하기 ▶';}
   regular={pause,destroy(){document.removeEventListener('visibilitychange',hidden);}};document.addEventListener('visibilitychange',hidden);
-  $('#regular-mini').onclick=()=>{if(!busy)launchMini(state.activeAction);};$('#regular-pause').onclick=()=>{if(paused){paused=false;$('#regular-tap').disabled=false;$('#regular-message').textContent='우리의 연습을 이어 가요.';$('#regular-pause').textContent='잠깐 쉬기 Ⅱ';}else pause();};
+  $('#regular-mini').onclick=()=>{if(!busy)launchMini(state.activeAction);};$('#regular-pause').onclick=()=>{if(paused){paused=false;$('#regular-tap').disabled=false;$('#regular-message').textContent='우리의 연습을 이어 가요.';$('#regular-pause').innerHTML=PAUSE_ICON+' 잠깐 쉬기';}else pause();};
   $('#regular-tap').onclick=async()=>{if(paused||busy)return;count++;audio.tone(392+count*80,.14);$$('.progress-dots i').forEach((el,i)=>el.classList.toggle('on',i<count));if(count>=3){$('#regular-tap').disabled=true;await completeRun(run.id,run.preparation);}else $('#regular-message').textContent=['','좋아! 내 마음을 담아서 한 번 더.','조금씩 자신감이 생겨요. 마지막 한 번!'][count];};$('#regular-cancel').onclick=cancelRun;
 }
 const $$=s=>[...document.querySelectorAll(s)];

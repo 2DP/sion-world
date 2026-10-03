@@ -3,7 +3,7 @@ import {pathToFileURL} from 'node:url';
 
 // Like splash-club, ship a classic script for file:// launches. Each source
 // module keeps its own scope so private names never collide when bundled.
-const sources = ['data.js', 'core.js', 'character.js', 'rhythm.js', 'audio.js', 'extra-minigames.js', 'minigames.js', 'storage.js', 'main.js'];
+const sources = ['icons.js', 'data.js', 'core.js', 'character.js', 'rhythm.js', 'audio.js', 'extra-minigames.js', 'minigames.js', 'storage.js', 'main.js'];
 export async function buildBundle() {
   const parts = [], available = new Set();
   for (const file of sources) {
