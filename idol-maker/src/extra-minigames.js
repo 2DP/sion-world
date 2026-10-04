@@ -12,6 +12,15 @@ export function mountExtraMinigame(type,k){
   const stories=[
    {title:'길 잃은 강아지를 가족에게 데려다줘요',frames:[['🐶','공원에서 강아지를 만나요'],['🔎','목걸이의 이름표를 살펴봐요'],['☎️','가족에게 연락해요'],['🏡','강아지가 가족과 다시 만나요']]},
    {title:'씨앗이 꽃이 되는 이야기를 만들어요',frames:[['🌱','화분에 씨앗을 심어요'],['💧','매일 물을 줘요'],['🌿','초록 잎이 자라나요'],['🌼','꽃이 활짝 피었어요']]},
+   {title:'숲속 보물을 찾아요',frames:[['🗺️','오래된 보물 지도를 발견해요'],['🌳','지도 속 큰 나무를 찾아가요'],['⛏️','나무 아래 흙을 파요'],['💎','보물 상자를 열어요']]},
+   {title:'우주에서 친구를 구해요',frames:[['📡','우주선에서 구조 신호를 받아요'],['🚀','신호가 온 달로 출발해요'],['👩‍🚀','길 잃은 우주인을 찾아요'],['🌍','함께 지구로 돌아와요']]},
+   {title:'비 오는 날의 우정',frames:[['🌧️','하굣길에 갑자기 비가 와요'],['😟','우산 없는 친구를 발견해요'],['☂️','친구에게 우산을 씌워 줘요'],['🏠','함께 집에 도착해요']]},
+   {title:'탐정의 사라진 케이크 사건',frames:[['🍽️','케이크가 사라진 접시를 봐요'],['🔍','바닥의 크림 발자국을 따라가요'],['🐱','크림 묻은 고양이를 찾아요'],['🧁','친구들과 새 케이크를 만들어요']]},
+   {title:'바다 친구의 구조 작전',frames:[['🐢','그물에 걸린 거북을 발견해요'],['📞','구조대에 도움을 요청해요'],['✂️','구조대가 그물을 잘라요'],['🌊','거북이 바다로 돌아가요']]},
+   {title:'용과 함께하는 동화',frames:[['🐉','동굴에서 우는 용을 만나요'],['🦷','용의 아픈 이를 발견해요'],['🧑‍⚕️','마을 치과 선생님을 불러요'],['😊','용이 환하게 웃으며 고마워해요']]},
+   {title:'두근두근 요리 대회',frames:[['📋','대회에 낼 요리법을 정해요'],['🥕','시장에서 재료를 사요'],['🍳','재료를 손질해 요리해요'],['🏅','완성한 요리로 상을 받아요']]},
+   {title:'운동회에서 다시 일어나요',frames:[['🏁','출발 신호에 달리기 시작해요'],['🪨','돌에 걸려 넘어져요'],['🤝','친구의 손을 잡고 일어나요'],['🎉','함께 결승선을 통과해요']]},
+   {title:'눈사람에게 선물을 줘요',frames:[['❄️','밤새 내린 눈을 발견해요'],['⛄','눈을 뭉쳐 눈사람을 만들어요'],['🧣','눈사람에게 목도리를 둘러 줘요'],['📷','완성한 눈사람과 사진을 찍어요']]},
    {title:'친구들과 첫 공연을 준비해요',frames:[['📝','멤버들과 곡을 골라요'],['🎤','연습실에서 함께 연습해요'],['🎫','팬들을 공연에 초대해요'],['🌟','무대에서 노래를 들려줘요']]}
   ];
   const story=stories[Math.floor(rand()*stories.length)],frames=tier===0?story.frames.filter((_,i)=>i!==2):story.frames;
@@ -39,31 +48,35 @@ export function mountExtraMinigame(type,k){
 
  function exercise(){
   const status=meter(),arena=board('장애물 달리기 운동장','mini-run-field'),runner=el('div','mini-runner','🏃');arena.append(runner);
-  body.append(el('p','mini-guide','Space 또는 점프 버튼으로 장애물을 넘어요. 10개를 지나면 완주!'));
-  const hint=feedback(),duration=o.easy?1100:950,speed=o.easy?29:34+tier*3,total=10;
-  let jumpAt=null,last=now(),distance=0,passed=0,hits=0,ended=false;
-  let nextObstacle=110;
-  const obstacles=Array.from({length:total},(_,i)=>{const node=el('div','mini-run-obstacle');node.setAttribute('aria-label',(i+1)+'번 장애물');arena.append(node);const x=nextObstacle;nextObstacle+=(o.easy?52:48)+rand()*38;return {node,x,hit:false,done:false};});
-  function height(t){if(jumpAt===null)return 0;const p=(t-jumpAt)/duration;return p>=1?0:Math.max(0,Math.sin(p*Math.PI)*105);}
-  function jump(){if(ended||(jumpAt!==null&&now()-jumpAt<duration))return;jumpAt=now();sound(560,.1);hint.textContent='훌쩍! 장애물을 뛰어넘어요.';}
-  const control=button('점프 · Space',jump,'mini-primary mini-tap');body.append(control);
+  body.append(el('p','mini-guide','낮은 벽은 점프, 높은 벽은 공중에서 한 번 더 점프! 천장 아래는 ↓를 누르고 있거나 숙이기 버튼을 눌러 지나가요.'));
+  const hint=feedback(),speed=o.easy?29:34+tier*3,total=10;
+  let y=0,velocity=0,jumps=0,duck=false,last=now(),distance=0,passed=0,hits=0,ended=false,nextObstacle=110;
+  const kinds=['low','overhead','high',...shuffled(['low','high','overhead','low','overhead','high','low'])];
+  const labels={low:'점프',high:'2단 점프',overhead:'숙이기'};
+  const obstacles=kinds.map((kind,i)=>{const node=el('div','mini-run-obstacle');node.setAttribute('data-kind',kind);node.setAttribute('aria-label',(i+1)+'번 '+labels[kind]+' 장애물');node.append(el('span','mini-obstacle-label',labels[kind]));arena.append(node);const x=nextObstacle;nextObstacle+=(o.easy?52:48)+rand()*38;return {node,kind,x,hit:false,done:false};});
+  function crouch(value){duck=value;duckControl.setAttribute('aria-pressed',String(duck));duckControl.textContent=duck?'일어서기 · ↓':'숙이기 · ↓';}
+  function jump(){if(ended||jumps>=2)return;crouch(false);velocity=390;jumps++;sound(jumps===2?760:560,.1);hint.textContent=jumps===2?'한 번 더! 2단 점프!':'훌쩍! 공중에서 한 번 더 누르면 2단 점프예요.';}
+  const control=button('점프 · Space',()=>{},'mini-primary mini-tap'),duckControl=button('숙이기 · ↓',()=>crouch(!duck),'mini-tap');
+  const controls=el('div','mini-run-controls');controls.append(control,duckControl);body.append(controls);crouch(false);
   listen(control,'pointerdown',e=>{e.preventDefault();jump();});
-  setInput(e=>{if(e.code==='Space')jump();});
+  listen(control,'click',e=>{if(e.detail===0)jump();});
+  setInput(e=>{if(e.code==='Space')jump();else if(e.key==='ArrowDown')crouch(true);});
+  setKeyUp(e=>{if(e.key==='ArrowDown')crouch(false);});setPause(()=>crouch(false));
   setTick(()=>{
    const t=now(),dt=t-last;last=t;
-   // Small steps prevent a slow frame from skipping a collision.
-   for(let step=0;step<dt;){const ms=Math.min(16,dt-step);step+=ms;distance+=speed*ms/1000;const y=height(t-dt+step);
-    for(const obstacle of obstacles){if(obstacle.done)continue;const x=obstacle.x-distance;
-     if(!obstacle.hit&&x<24&&x+6>16&&y<38){obstacle.hit=true;hits++;obstacle.node.classList.add('hit');hint.textContent='괜찮아요! 다음 장애물을 준비해요.';sound(220,.1);}
-     if(x+6<16){obstacle.done=true;passed++;if(!obstacle.hit){sound(720,.08);hint.textContent='좋아요! 장애물을 넘었어요.';}}
+   for(let step=0;step<dt;){const ms=Math.min(8,dt-step),seconds=ms/1000;step+=ms;distance+=speed*seconds;
+    if(jumps){y+=velocity*seconds-450*seconds*seconds;velocity-=900*seconds;if(y<=0){y=0;velocity=0;jumps=0;}}
+    const runnerTop=y+(duck?26:54);
+    for(const obstacle of obstacles){if(obstacle.done)continue;const x=obstacle.x-distance,bottom=obstacle.kind==='overhead'?32:0,top=obstacle.kind==='overhead'?240:obstacle.kind==='high'?112:36;
+     if(!obstacle.hit&&x<24&&x+6>16&&y<top&&runnerTop>bottom){obstacle.hit=true;hits++;obstacle.node.classList.add('hit');hint.textContent='괜찮아요! 다음은 '+labels[obstacle.kind]+'로 피해 봐요.';sound(220,.1);}
+     if(x+6<16){obstacle.done=true;passed++;if(!obstacle.hit){sound(720,.08);hint.textContent='좋아요! 장애물을 피했어요.';}}
     }
    }
-   runner.style.bottom=(38+height(t))+'px';
-   runner.style.transform='scaleX(-1) rotate('+(height(t)>0?-8:Math.sin(distance)*4)+'deg)';
+   runner.style.bottom=(38+y)+'px';runner.style.transform='scaleX(-1) scaleY('+(duck?.45:1)+') rotate('+(y>0?-8:Math.sin(distance)*4)+'deg)';
    arena.style.backgroundPosition=(-distance*4)+'px 0';
    for(const obstacle of obstacles){obstacle.node.style.left=(obstacle.x-distance)+'%';obstacle.node.hidden=obstacle.done;}
-   status.textContent='장애물 '+passed+'/'+total+'개 · 성공 '+obstacles.filter(obstacle=>obstacle.done&&!obstacle.hit).length+'개';
-   if(passed===total){ended=true;control.disabled=true;result((total-hits)/total*100,'장애물 달리기 완주!');}
+   status.textContent='장애물 '+passed+'/'+total+'개 · 성공 '+(passed-obstacles.filter(obstacle=>obstacle.done&&obstacle.hit).length)+'개';
+   if(passed===total){ended=true;control.disabled=duckControl.disabled=true;result((total-hits)/total*100,'장애물 달리기 완주!');}
   });
  }
 
@@ -85,9 +98,20 @@ export function mountExtraMinigame(type,k){
  }
 
  function rest(){
-  const status=meter(),garden=board('구름 쉼터','mini-breath-garden'),cloud=el('div','mini-breath-cloud','☁');garden.append(cloud);const hint=feedback();hint.textContent='구름을 부풀렸다 줄이며 천천히 쉬어 가요.';
-  let phase=0,active=false,start=0,round=0;const control=button('☁ 구름 키우기',()=>{if(active)return;active=true;start=now();control.disabled=true;},'mini-primary');body.append(control);
-  setTick(()=>{status.textContent=`함께 쉬기 ${round}/3번`;if(!active)return;const progress=clamp((now()-start)/20)/100;cloud.style.transform=`scale(${phase===0?.65+progress*.65:1.3-progress*.65})`;if(progress===1){active=false;phase=1-phase;if(phase===0)round++;if(round===3){status.textContent='함께 쉬기 3/3번';finish(80);return;}control.disabled=false;control.textContent=phase?'☁ 구름 살며시 줄이기':'☁ 구름 다시 키우기';}});
+  const status=meter(),garden=board('구름 쉼터','mini-breath-garden'),cloud=el('div','mini-breath-cloud','☁');garden.append(cloud);
+  const hint=feedback();hint.textContent='키우기를 누르면 계속 커져요. 100%에서 펑! 그 전에 줄이기를 눌러요. 크게 키워 안전하게 줄일수록 보상이 커져요.';
+  let phase='ready',size=0,peak=0,round=0,points=0,bursts=0,last=now();
+  const control=button('☁ 구름 키우기',()=>{if(phase==='ready'){phase='grow';control.textContent='☁ 지금 줄이기';}else if(phase==='grow'){phase='shrink';control.disabled=true;hint.textContent='최대 '+Math.floor(peak)+'%까지 키웠어요. 안전하게 줄이는 중!';}},'mini-primary');body.append(control);
+  function completeRound(burst){phase='waiting';round++;const earned=burst?5:Math.round(20+peak*.8);points+=earned;if(burst)bursts++;control.disabled=true;
+   cloud.textContent=burst?'💥':'☁';hint.textContent=burst?'펑! 너무 커져 터졌어요. 이번 보상 점수는 5점이에요.':'안전하게 줄였어요! 이번 보상 점수 '+earned+'점';sound(burst?160:720,.15);
+   schedule(900,()=>{if(round===3){result(points/3,'구름 놀이 완료! 안전한 구름 '+(3-bursts)+'개 · 터진 구름 '+bursts+'개');return;}size=peak=0;phase='ready';cloud.textContent='☁';control.disabled=false;control.textContent='☁ 구름 다시 키우기';});
+  }
+  setTick(()=>{const t=now(),dt=(t-last)/1000;last=t;
+   if(phase==='grow'){size=Math.min(100,size+dt*(o.easy?16:22));peak=size;if(size>=100)completeRound(true);}
+   else if(phase==='shrink'){size=Math.max(0,size-dt*45);if(size===0)completeRound(false);}
+   cloud.style.transform='scale('+(.65+size/100*.9)+')';cloud.style.color=size>=80?'#ffd0d9':'#fff';
+   status.textContent='구름 '+Math.min(round+1,3)+'/3 · 크기 '+Math.floor(size)+'% / 100% · 모은 점수 '+points;
+  });
  }
 
  function play(){

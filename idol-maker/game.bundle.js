@@ -118,7 +118,7 @@ function finishActivity(s,id,directScore=80,extras={}){const r=s.activeAction;if
  if(a.id==='casting'&&success)s.projects.movie={scale:r.scale,scores:[],melody:null};
  if(a.project){const p=s.projects[a.id]||{scale:r.scale,scores:[],melody:null};p.scores.push(score);if(a.id==='song'&&Array.isArray(extras.melody))p.melody=copy(extras.melody).slice(0,64);s.projects[a.id]=p;description=`${p.scores.length}/${a.project}회차 완료. 천천히 이어 가요.`;if(p.scores.length>=a.project){score=Math.round(p.scores.reduce((x,y)=>x+y,0)/p.scores.length);success=score>=60;published=true;const work={id:r.id,type:a.id,name:`${a.id==='movie'?'별빛 영화':a.id==='song'?'우리의 멜로디':'구름 음원'} ${s.serial}`,score,scale:p.scale,day:s.day,melody:p.melody};s.works.unshift(work);s.works=s.works.slice(0,100);delete s.projects[a.id];description=`${work.name} 발표!`;if(a.id==='movie'){s.records.movies++;s.annual.movies++;s.annual.movieScores.push(score);s.annual.movieScores=s.annual.movieScores.sort((a,b)=>b-a).slice(0,3);if(success&&!s.badges.includes('첫 연기 도전상')){s.badges.push('첫 연기 도전상');unlocks.push('첫 연기 도전상');}}if(a.id==='song'&&success)s.records.songs++;}}
  if(published){const mult=[1,1,5,50,100][r.scale]*(a.id==='song'?1.5:1);for(const k of ['money','fans','followers'])rewards[k]+=Math.round(ranged(a[k],score)*mult);const countMult=[1,1,5,20,50][r.scale]*(a.id==='song'?1.5:1);for(const k of ['audience','streams']){const n=Math.round(ranged(a[k],score)*countMult);s.records[k]+=n;if(k==='audience')s.annual.audience+=n;}s.records.public++;s.fame=clamp(s.fame+(score>=85?2:1));if(s.personality==='sparkle')rewards.xp+=2;if(success){let category=null;if(['concert','tour','broadcast','eventshow'].includes(a.id))category='stage';if(['varietyshow','interview'].includes(a.id)){s.records.variety++;category='variety';if(score>=85&&!s.seenEvents.viral&&!s.event)s.event={id:'viral',title:'인터뷰 한마디가 화제',text:'따뜻한 한마디가 많은 사람에게 닿았어요.',choices:[{text:'짧은 후속 영상',effect:'팔로워 +100 · 스트레스 +2',followers:100,stress:2},{text:'멤버들과 감사 인사',effect:'팬 +80 · 스트레스 −5',fans:80,stress:-5}]};}if(['song','album'].includes(a.id))category='creation';if(category){s.annual[category].count++;s.annual[category].sum+=score;}if(['concert','tour'].includes(a.id))s.records.concerts++;if(a.id==='tour'&&!s.records.tour.includes(r.city))s.records.tour.push(r.city);}if(a.id==='overseas')s.records.overseas=true;}
- if(a.id==='makeup'&&extras.makeup)updateAppearance(s,{makeup:extras.makeup});for(const [k,n]of Object.entries(rewards.skills))skillGain(s,k,n);xpGain(s,rewards.xp);for(const k of ['money','fans','followers'])s[k]+=rewards[k];const oldStress=s.stress;s.stress=clamp(s.stress+a.stress-(s.personality==='kind'&&a.energy<0?2:0));rewards.energy=s.energy-r.before.energy;rewards.stress=s.stress-oldStress;s.activeAction=null;unlocks.push(...checkMilestones(s));const practice=!!a.training||['exercise','beauty','makeup'].includes(a.id),relaxation=a.energy<0;if(practice||relaxation||a.id==='overseas')success=true;const result={id:r.id,title,score,success,practice,relaxation,description,rewards,unlocks,endDay:a.id==='vacation',fanReaction:published?(['오늘 모습이 오래 기억날 것 같아요!','우리도 함께 따라 불렀어요. 다음 무대가 기다려져요!','한 걸음씩 자라는 모습을 응원하고 있어요.','다섯 친구가 함께하니 더 즐거워요!'][s.serial%4]):null};s.history.unshift({day:s.day,...copy(result)});s.history=s.history.slice(0,100);return{ok:true,result};}
+ if(a.id==='rest'){score=Math.round(clamp(directScore));const factor=.2+score/100;s.energy=clamp(r.before.energy+Math.round(-r.energy*factor),0,energyMax(s));rewards.xp=Math.max(1,Math.round(5*factor));description='구름을 안전하게 키운 만큼 휴식 보상을 받았어요.';} if(a.id==='makeup'&&extras.makeup)updateAppearance(s,{makeup:extras.makeup});for(const [k,n]of Object.entries(rewards.skills))skillGain(s,k,n);xpGain(s,rewards.xp);for(const k of ['money','fans','followers'])s[k]+=rewards[k];const oldStress=s.stress;s.stress=clamp(s.stress+(a.id==='rest'?Math.round(a.stress*(.2+score/100)):a.stress)-(s.personality==='kind'&&a.energy<0?2:0));rewards.energy=s.energy-r.before.energy;rewards.stress=s.stress-oldStress;s.activeAction=null;unlocks.push(...checkMilestones(s));const practice=!!a.training||['exercise','beauty','makeup'].includes(a.id),relaxation=a.energy<0;if(practice||relaxation||a.id==='overseas')success=true;const result={id:r.id,title,score,success,practice,relaxation,description,rewards,unlocks,endDay:a.id==='vacation',fanReaction:published?(['오늘 모습이 오래 기억날 것 같아요!','우리도 함께 따라 불렀어요. 다음 무대가 기다려져요!','한 걸음씩 자라는 모습을 응원하고 있어요.','다섯 친구가 함께하니 더 즐거워요!'][s.serial%4]):null};s.history.unshift({day:s.day,...copy(result)});s.history=s.history.slice(0,100);return{ok:true,result};}
 function progression(s){const r=s.records,k=s.skills;return[{name:'데뷔',description:'레벨 3 · 노래/춤 15 · 오디션 합격',done:s.stage>=1},{name:'인기 아이돌',description:'레벨 8 · 팬 3천 · 인지도 20 · 공개 10회',done:s.stage>=2},{name:'톱스타',description:'레벨 15 · 팬 5만 · 인지도 55 · 경력 중간 목표',done:s.stage>=3},{name:'월드스타',description:'레벨 25 · 팬 100만 · 인지도 90 · 최고 목표와 해외 소개',done:s.stage>=4},...['무대','배우','예능','싱어송라이터'].map((name,i)=>({name:`${name} 경력`,description:[`노래/춤 45→80 · 콘서트 3→15 · 투어 ${r.tour.length}/3도시`,`연기 45→80 · 영화 3→10 · 관객 30만→500만`,`예능감 45→80 · 방송 10→40 · 팔로워 100만`,`노래 45→80 · 자작곡 3→10 · 재생 10만→300만`][i],done:career(s,true)[i],middle:career(s,false)[i]}))];}
 const nextGoal=s=>progression(s).find(g=>!g.done)?.description||'새 작품과 전문가 별 기록을 모아 보세요.';
 function endDay(s){if(s.activeAction)return{ok:false,reason:'진행 중인 활동을 먼저 끝내 주세요.'};const awards=[];if(s.day%84===0){const y=Math.ceil(s.day/84),a=s.annual;if(a.movies>=3&&a.movieScores.length===3&&a.movieScores.reduce((x,y)=>x+y,0)/3>=85&&a.audience>=1000000)awards.push(`${y}년 연기 대상`);for(const [k,n]of [['stage','무대'],['variety','예능'],['creation','창작']])if(a[k].count>=10&&a[k].sum/a[k].count>=85)awards.push(`${y}년 ${n} 대상`);s.badges.push(...awards);s.annual=annual();}const top=Math.max(...Object.values(s.skills));for(const m of s.members){m.level=s.level;for(const k of keys)m.skills[k]=k===m.specialty?Math.min(top,Math.max(10,Math.round(top*.9))+3):Math.max(10,Math.round(top*.9));}const summary={day:s.day,date:formatDay(s.day),activities:s.used,awards,members:s.members.map(m=>`${m.name}: 오늘도 함께 자랐어요!`)};s.day++;s.used=0;s.energy=energyMax(s);s.stress=clamp(s.stress-15);s.miniCount=0;s.miniOffers=0;s.retry=null;if(s.pendingPersonality){s.personality=s.pendingPersonality;s.pendingPersonality=null;}if(!s.event)queueEvent(s);return{ok:true,summary};}
@@ -391,6 +391,15 @@ function mountExtraMinigame(type,k){
   const stories=[
    {title:'길 잃은 강아지를 가족에게 데려다줘요',frames:[['🐶','공원에서 강아지를 만나요'],['🔎','목걸이의 이름표를 살펴봐요'],['☎️','가족에게 연락해요'],['🏡','강아지가 가족과 다시 만나요']]},
    {title:'씨앗이 꽃이 되는 이야기를 만들어요',frames:[['🌱','화분에 씨앗을 심어요'],['💧','매일 물을 줘요'],['🌿','초록 잎이 자라나요'],['🌼','꽃이 활짝 피었어요']]},
+   {title:'숲속 보물을 찾아요',frames:[['🗺️','오래된 보물 지도를 발견해요'],['🌳','지도 속 큰 나무를 찾아가요'],['⛏️','나무 아래 흙을 파요'],['💎','보물 상자를 열어요']]},
+   {title:'우주에서 친구를 구해요',frames:[['📡','우주선에서 구조 신호를 받아요'],['🚀','신호가 온 달로 출발해요'],['👩‍🚀','길 잃은 우주인을 찾아요'],['🌍','함께 지구로 돌아와요']]},
+   {title:'비 오는 날의 우정',frames:[['🌧️','하굣길에 갑자기 비가 와요'],['😟','우산 없는 친구를 발견해요'],['☂️','친구에게 우산을 씌워 줘요'],['🏠','함께 집에 도착해요']]},
+   {title:'탐정의 사라진 케이크 사건',frames:[['🍽️','케이크가 사라진 접시를 봐요'],['🔍','바닥의 크림 발자국을 따라가요'],['🐱','크림 묻은 고양이를 찾아요'],['🧁','친구들과 새 케이크를 만들어요']]},
+   {title:'바다 친구의 구조 작전',frames:[['🐢','그물에 걸린 거북을 발견해요'],['📞','구조대에 도움을 요청해요'],['✂️','구조대가 그물을 잘라요'],['🌊','거북이 바다로 돌아가요']]},
+   {title:'용과 함께하는 동화',frames:[['🐉','동굴에서 우는 용을 만나요'],['🦷','용의 아픈 이를 발견해요'],['🧑‍⚕️','마을 치과 선생님을 불러요'],['😊','용이 환하게 웃으며 고마워해요']]},
+   {title:'두근두근 요리 대회',frames:[['📋','대회에 낼 요리법을 정해요'],['🥕','시장에서 재료를 사요'],['🍳','재료를 손질해 요리해요'],['🏅','완성한 요리로 상을 받아요']]},
+   {title:'운동회에서 다시 일어나요',frames:[['🏁','출발 신호에 달리기 시작해요'],['🪨','돌에 걸려 넘어져요'],['🤝','친구의 손을 잡고 일어나요'],['🎉','함께 결승선을 통과해요']]},
+   {title:'눈사람에게 선물을 줘요',frames:[['❄️','밤새 내린 눈을 발견해요'],['⛄','눈을 뭉쳐 눈사람을 만들어요'],['🧣','눈사람에게 목도리를 둘러 줘요'],['📷','완성한 눈사람과 사진을 찍어요']]},
    {title:'친구들과 첫 공연을 준비해요',frames:[['📝','멤버들과 곡을 골라요'],['🎤','연습실에서 함께 연습해요'],['🎫','팬들을 공연에 초대해요'],['🌟','무대에서 노래를 들려줘요']]}
   ];
   const story=stories[Math.floor(rand()*stories.length)],frames=tier===0?story.frames.filter((_,i)=>i!==2):story.frames;
@@ -418,31 +427,35 @@ function mountExtraMinigame(type,k){
 
  function exercise(){
   const status=meter(),arena=board('장애물 달리기 운동장','mini-run-field'),runner=el('div','mini-runner','🏃');arena.append(runner);
-  body.append(el('p','mini-guide','Space 또는 점프 버튼으로 장애물을 넘어요. 10개를 지나면 완주!'));
-  const hint=feedback(),duration=o.easy?1100:950,speed=o.easy?29:34+tier*3,total=10;
-  let jumpAt=null,last=now(),distance=0,passed=0,hits=0,ended=false;
-  let nextObstacle=110;
-  const obstacles=Array.from({length:total},(_,i)=>{const node=el('div','mini-run-obstacle');node.setAttribute('aria-label',(i+1)+'번 장애물');arena.append(node);const x=nextObstacle;nextObstacle+=(o.easy?52:48)+rand()*38;return {node,x,hit:false,done:false};});
-  function height(t){if(jumpAt===null)return 0;const p=(t-jumpAt)/duration;return p>=1?0:Math.max(0,Math.sin(p*Math.PI)*105);}
-  function jump(){if(ended||(jumpAt!==null&&now()-jumpAt<duration))return;jumpAt=now();sound(560,.1);hint.textContent='훌쩍! 장애물을 뛰어넘어요.';}
-  const control=button('점프 · Space',jump,'mini-primary mini-tap');body.append(control);
+  body.append(el('p','mini-guide','낮은 벽은 점프, 높은 벽은 공중에서 한 번 더 점프! 천장 아래는 ↓를 누르고 있거나 숙이기 버튼을 눌러 지나가요.'));
+  const hint=feedback(),speed=o.easy?29:34+tier*3,total=10;
+  let y=0,velocity=0,jumps=0,duck=false,last=now(),distance=0,passed=0,hits=0,ended=false,nextObstacle=110;
+  const kinds=['low','overhead','high',...shuffled(['low','high','overhead','low','overhead','high','low'])];
+  const labels={low:'점프',high:'2단 점프',overhead:'숙이기'};
+  const obstacles=kinds.map((kind,i)=>{const node=el('div','mini-run-obstacle');node.setAttribute('data-kind',kind);node.setAttribute('aria-label',(i+1)+'번 '+labels[kind]+' 장애물');node.append(el('span','mini-obstacle-label',labels[kind]));arena.append(node);const x=nextObstacle;nextObstacle+=(o.easy?52:48)+rand()*38;return {node,kind,x,hit:false,done:false};});
+  function crouch(value){duck=value;duckControl.setAttribute('aria-pressed',String(duck));duckControl.textContent=duck?'일어서기 · ↓':'숙이기 · ↓';}
+  function jump(){if(ended||jumps>=2)return;crouch(false);velocity=390;jumps++;sound(jumps===2?760:560,.1);hint.textContent=jumps===2?'한 번 더! 2단 점프!':'훌쩍! 공중에서 한 번 더 누르면 2단 점프예요.';}
+  const control=button('점프 · Space',()=>{},'mini-primary mini-tap'),duckControl=button('숙이기 · ↓',()=>crouch(!duck),'mini-tap');
+  const controls=el('div','mini-run-controls');controls.append(control,duckControl);body.append(controls);crouch(false);
   listen(control,'pointerdown',e=>{e.preventDefault();jump();});
-  setInput(e=>{if(e.code==='Space')jump();});
+  listen(control,'click',e=>{if(e.detail===0)jump();});
+  setInput(e=>{if(e.code==='Space')jump();else if(e.key==='ArrowDown')crouch(true);});
+  setKeyUp(e=>{if(e.key==='ArrowDown')crouch(false);});setPause(()=>crouch(false));
   setTick(()=>{
    const t=now(),dt=t-last;last=t;
-   // Small steps prevent a slow frame from skipping a collision.
-   for(let step=0;step<dt;){const ms=Math.min(16,dt-step);step+=ms;distance+=speed*ms/1000;const y=height(t-dt+step);
-    for(const obstacle of obstacles){if(obstacle.done)continue;const x=obstacle.x-distance;
-     if(!obstacle.hit&&x<24&&x+6>16&&y<38){obstacle.hit=true;hits++;obstacle.node.classList.add('hit');hint.textContent='괜찮아요! 다음 장애물을 준비해요.';sound(220,.1);}
-     if(x+6<16){obstacle.done=true;passed++;if(!obstacle.hit){sound(720,.08);hint.textContent='좋아요! 장애물을 넘었어요.';}}
+   for(let step=0;step<dt;){const ms=Math.min(8,dt-step),seconds=ms/1000;step+=ms;distance+=speed*seconds;
+    if(jumps){y+=velocity*seconds-450*seconds*seconds;velocity-=900*seconds;if(y<=0){y=0;velocity=0;jumps=0;}}
+    const runnerTop=y+(duck?26:54);
+    for(const obstacle of obstacles){if(obstacle.done)continue;const x=obstacle.x-distance,bottom=obstacle.kind==='overhead'?32:0,top=obstacle.kind==='overhead'?240:obstacle.kind==='high'?112:36;
+     if(!obstacle.hit&&x<24&&x+6>16&&y<top&&runnerTop>bottom){obstacle.hit=true;hits++;obstacle.node.classList.add('hit');hint.textContent='괜찮아요! 다음은 '+labels[obstacle.kind]+'로 피해 봐요.';sound(220,.1);}
+     if(x+6<16){obstacle.done=true;passed++;if(!obstacle.hit){sound(720,.08);hint.textContent='좋아요! 장애물을 피했어요.';}}
     }
    }
-   runner.style.bottom=(38+height(t))+'px';
-   runner.style.transform='scaleX(-1) rotate('+(height(t)>0?-8:Math.sin(distance)*4)+'deg)';
+   runner.style.bottom=(38+y)+'px';runner.style.transform='scaleX(-1) scaleY('+(duck?.45:1)+') rotate('+(y>0?-8:Math.sin(distance)*4)+'deg)';
    arena.style.backgroundPosition=(-distance*4)+'px 0';
    for(const obstacle of obstacles){obstacle.node.style.left=(obstacle.x-distance)+'%';obstacle.node.hidden=obstacle.done;}
-   status.textContent='장애물 '+passed+'/'+total+'개 · 성공 '+obstacles.filter(obstacle=>obstacle.done&&!obstacle.hit).length+'개';
-   if(passed===total){ended=true;control.disabled=true;result((total-hits)/total*100,'장애물 달리기 완주!');}
+   status.textContent='장애물 '+passed+'/'+total+'개 · 성공 '+(passed-obstacles.filter(obstacle=>obstacle.done&&obstacle.hit).length)+'개';
+   if(passed===total){ended=true;control.disabled=duckControl.disabled=true;result((total-hits)/total*100,'장애물 달리기 완주!');}
   });
  }
 
@@ -464,9 +477,20 @@ function mountExtraMinigame(type,k){
  }
 
  function rest(){
-  const status=meter(),garden=board('구름 쉼터','mini-breath-garden'),cloud=el('div','mini-breath-cloud','☁');garden.append(cloud);const hint=feedback();hint.textContent='구름을 부풀렸다 줄이며 천천히 쉬어 가요.';
-  let phase=0,active=false,start=0,round=0;const control=button('☁ 구름 키우기',()=>{if(active)return;active=true;start=now();control.disabled=true;},'mini-primary');body.append(control);
-  setTick(()=>{status.textContent=`함께 쉬기 ${round}/3번`;if(!active)return;const progress=clamp((now()-start)/20)/100;cloud.style.transform=`scale(${phase===0?.65+progress*.65:1.3-progress*.65})`;if(progress===1){active=false;phase=1-phase;if(phase===0)round++;if(round===3){status.textContent='함께 쉬기 3/3번';finish(80);return;}control.disabled=false;control.textContent=phase?'☁ 구름 살며시 줄이기':'☁ 구름 다시 키우기';}});
+  const status=meter(),garden=board('구름 쉼터','mini-breath-garden'),cloud=el('div','mini-breath-cloud','☁');garden.append(cloud);
+  const hint=feedback();hint.textContent='키우기를 누르면 계속 커져요. 100%에서 펑! 그 전에 줄이기를 눌러요. 크게 키워 안전하게 줄일수록 보상이 커져요.';
+  let phase='ready',size=0,peak=0,round=0,points=0,bursts=0,last=now();
+  const control=button('☁ 구름 키우기',()=>{if(phase==='ready'){phase='grow';control.textContent='☁ 지금 줄이기';}else if(phase==='grow'){phase='shrink';control.disabled=true;hint.textContent='최대 '+Math.floor(peak)+'%까지 키웠어요. 안전하게 줄이는 중!';}},'mini-primary');body.append(control);
+  function completeRound(burst){phase='waiting';round++;const earned=burst?5:Math.round(20+peak*.8);points+=earned;if(burst)bursts++;control.disabled=true;
+   cloud.textContent=burst?'💥':'☁';hint.textContent=burst?'펑! 너무 커져 터졌어요. 이번 보상 점수는 5점이에요.':'안전하게 줄였어요! 이번 보상 점수 '+earned+'점';sound(burst?160:720,.15);
+   schedule(900,()=>{if(round===3){result(points/3,'구름 놀이 완료! 안전한 구름 '+(3-bursts)+'개 · 터진 구름 '+bursts+'개');return;}size=peak=0;phase='ready';cloud.textContent='☁';control.disabled=false;control.textContent='☁ 구름 다시 키우기';});
+  }
+  setTick(()=>{const t=now(),dt=(t-last)/1000;last=t;
+   if(phase==='grow'){size=Math.min(100,size+dt*(o.easy?16:22));peak=size;if(size>=100)completeRound(true);}
+   else if(phase==='shrink'){size=Math.max(0,size-dt*45);if(size===0)completeRound(false);}
+   cloud.style.transform='scale('+(.65+size/100*.9)+')';cloud.style.color=size>=80?'#ffd0d9':'#fff';
+   status.textContent='구름 '+Math.min(round+1,3)+'/3 · 크기 '+Math.floor(size)+'% / 100% · 모은 점수 '+points;
+  });
  }
 
  function play(){
@@ -526,7 +550,7 @@ const TITLES = MINI_NAMES;
 const GUIDES = {
  rhythm:'→ 높이기 · ← 낮추기를 누르고 있으면 내 음정이 움직여요. 다음 음표의 음정에 맞추고, 음표가 가운데 별에 오면 Space 또는 박자 버튼을 눌러요. 음정과 박자를 함께 맞춰요!',direction:'위에서 내려오는 화살표가 아래 초록 판정 구간에 오면 같은 방향키를 눌러요. 총 10번 맞추면 완료! 조금 빠르거나 늦어도 괜찮아요. 아래 화살표 버튼으로도 할 수 있어요.',memory:'매번 무작위로 정해지는 4~6개 방향을 기억하고 따라 해요. 세 번의 안무에 도전해요. 다시 보기도 가능해요.',
  acting:'섞인 영화 장면을 필름 칸에 넣어 이야기를 완성해요. 장면 선택 후 칸을 누르거나 드래그해요.',variety:'제시어에 맞는 단어 세 개를 찾아요! 동물, 과일, 악기 주제가 바뀌어요. 숫자 1~9도 사용할 수 있어요.',makeup:'볼, 입술, 눈두덩, 아이라인, 눈썹 색과 반짝이를 자유롭게 꾸며요. 외모는 채점하지 않아요.',compose:'네 마디의 음과 악기를 골라 나만의 노래를 만들어요. 끝까지 들어 보고 완성해요.',
- exercise:'자동으로 달리는 동안 Space 또는 점프 버튼을 눌러 장애물을 뛰어넘어요. 장애물 10개를 지나면 완주! 부딪혀도 계속 달릴 수 있어요.',beauty:'얼굴의 거품을 손가락으로 문질러 닦아요. 하나씩 클릭하거나 Tab·Enter로 눌러도 돼요.',meal:'곡물·단백질·채소를 골라 도시락 세 칸을 채워요. 마음에 드는 조합이면 모두 좋아요.',rest:'구름을 키우고 줄이는 느긋한 놀이예요. 세 번 함께 쉬면 완료! 점수 경쟁은 없어요.',play:'뒤집은 카드의 그림을 기억해 같은 친구 두 장을 찾아요. 시간 제한이 없어요.',gaming:'바구니를 좌우로 움직여 떨어지는 별을 받아요. 구름은 피해 봐요! 터치·드래그·방향키로 조작해요.',snack:'좌우로 움직이는 과일을 아래 과일 위에 쌓아요. 버튼이나 Space로 다섯 번 내려놓아요.',vacation:'해변 지도에서 조개·별·게·산호를 찾아 여행 엽서를 만들어요. 시간 제한 없이 쉬어 가요.'
+ exercise:'Space로 점프, 공중에서 한 번 더 누르면 2단 점프! ↓를 누르고 있거나 숙이기 버튼으로 천장을 피해요. 장애물 10개를 지나면 완주!',beauty:'얼굴의 거품을 손가락으로 문질러 닦아요. 하나씩 클릭하거나 Tab·Enter로 눌러도 돼요.',meal:'곡물·단백질·채소를 골라 도시락 세 칸을 채워요. 마음에 드는 조합이면 모두 좋아요.',rest:'구름을 크게 키운 뒤 100%가 되기 전에 줄여요. 크게 키워 안전하게 줄일수록 보상이 커지고, 터지면 보상이 줄어요. 구름 세 개에 도전해요!',play:'뒤집은 카드의 그림을 기억해 같은 친구 두 장을 찾아요. 시간 제한이 없어요.',gaming:'바구니를 좌우로 움직여 떨어지는 별을 받아요. 구름은 피해 봐요! 터치·드래그·방향키로 조작해요.',snack:'좌우로 움직이는 과일을 아래 과일 위에 쌓아요. 버튼이나 Space로 다섯 번 내려놓아요.',vacation:'해변 지도에서 조개·별·게·산호를 찾아 여행 엽서를 만들어요. 시간 제한 없이 쉬어 가요.'
 };
 const rhythmScore = (delta,easy=false) => Math.abs(delta) <= (easy?250:180) ? 100 : Math.abs(delta) <= (easy?450:320) ? 70 : 0;
 function startMinigame(container, options) {
@@ -554,8 +578,8 @@ function startMinigame(container, options) {
   function pause(){if(dead||paused)return;paused=true;rhythmMusic?.pause();onPause();root.classList.add('mini-paused');overlay.replaceChildren(el('div','mini-pause-icon','☁'),el('h3','','잠깐 쉬어 가요'),el('p','','돌아오면 이어서 할 수 있어요.'),button('▶ 이어 하기',resume,'mini-primary'));overlay.hidden=false;body.inert=true;overlay.querySelector('button').focus();}
   function resume(){if(dead||!paused||document.hidden)return;paused=false;rhythmMusic?.resume();root.classList.remove('mini-paused');last=performance.now();overlay.hidden=true;body.inert=false;}
   document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();},{signal:events.signal});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();paused?resume():pause();return;}if(dead||paused||!started)return;if(e.target?.matches?.('input,textarea,select,[contenteditable=true]'))return;const gameKey=(KEYS.includes(e.key)&&['direction','memory','gaming'].includes(type))||(type==='rhythm'&&['ArrowLeft','ArrowRight'].includes(e.key))||(e.code==='Space'&&['rhythm','exercise','snack'].includes(type))||(/^[1-9]$/.test(e.key)&&['acting','variety','compose'].includes(type));if(gameKey){e.preventDefault();if(!e.repeat)input(e);}}, {signal:events.signal});
-  document.addEventListener('keyup',e=>{if(!dead&&!paused&&started&&((type==='exercise'&&e.code==='Space')||(type==='rhythm'&&['ArrowLeft','ArrowRight'].includes(e.key)))){e.preventDefault();keyUp(e);}}, {signal:events.signal});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();paused?resume():pause();return;}if(dead||paused||!started)return;if(e.target?.matches?.('input,textarea,select,[contenteditable=true]'))return;const gameKey=(KEYS.includes(e.key)&&['direction','memory','gaming'].includes(type))||(type==='exercise'&&e.key==='ArrowDown')||(type==='rhythm'&&['ArrowLeft','ArrowRight'].includes(e.key))||(e.code==='Space'&&['rhythm','exercise','snack'].includes(type))||(/^[1-9]$/.test(e.key)&&['acting','variety','compose'].includes(type));if(gameKey){e.preventDefault();if(!e.repeat)input(e);}}, {signal:events.signal});
+  document.addEventListener('keyup',e=>{if(!dead&&!paused&&started&&((type==='exercise'&&(e.code==='Space'||e.key==='ArrowDown'))||(type==='rhythm'&&['ArrowLeft','ArrowRight'].includes(e.key)))){e.preventDefault();keyUp(e);}}, {signal:events.signal});
   function frame(now){if(dead)return;if(!last)last=now;if(!paused){elapsed+=Math.min(now-last,100);const ready=jobs.filter(j=>j.at<=elapsed);jobs=jobs.filter(j=>j.at>elapsed);ready.forEach(j=>{if(!dead)j.fn();});if(!dead)tick(elapsed);}last=now;if(!dead)raf=requestAnimationFrame(frame);}
   raf=requestAnimationFrame(frame);
   function pad(label,fn,cls=''){const b=button(label,()=>{},cls);b.addEventListener('pointerdown',e=>{e.preventDefault();if(!paused&&started&&!dead)fn();});b.addEventListener('click',e=>{if(e.detail===0&&!paused&&started&&!dead)fn();});return b;}

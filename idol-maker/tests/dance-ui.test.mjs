@@ -63,7 +63,7 @@ test('matching game has twenty cards',()=>harness('play',h=>{
  assert.equal(h.find(n=>n.className==='mini-pairs').children.length,20);
  assert.match(h.find(n=>n.className==='mini-meter').textContent,/0\/10쌍/);
 }));
-test('runner jumps, prevents double jumps, pauses and completes',()=>harness('exercise',h=>{
+test('runner jumps, pauses and completes',()=>harness('exercise',h=>{
  const runner=h.find(n=>n.className==='mini-runner');
  h.event(h.doc,'keydown',{code:'Space',repeat:false});h.step();const rising=parseFloat(runner.style.bottom);assert.ok(rising>38);
  h.event(h.doc,'keydown',{code:'Space',repeat:false});h.step();assert.ok(parseFloat(runner.style.bottom)>rising);
@@ -95,3 +95,48 @@ test('vocal feedback distinguishes hits, wrong pitch, bad timing and missed note
  h.setTime(h.cues[1]);press();assert.equal(h.tones.at(-1),196);
  h.tones.length=0;h.setTime(h.cues[1]+321);assert.deepEqual(h.tones,[196]);h.step();assert.deepEqual(h.tones,[196]);
 }));
+
+test('runner supports two jumps, rejects a third, lands and clears crouch on pause',()=>harness('exercise',h=>{
+ const runner=h.find(n=>n.className==='mini-runner');
+ h.event(h.doc,'keydown',{code:'Space'});for(let i=0;i<4;i++)h.step();
+ h.event(h.doc,'keydown',{code:'Space'});for(let i=0;i<4;i++)h.step();
+ const top=parseFloat(runner.style.bottom);assert.ok(top>150,'double jump clears the tall wall');
+ h.event(h.doc,'keydown',{code:'Space'});for(let i=0;i<4;i++)h.step();
+ assert.ok(parseFloat(runner.style.bottom)<top,'third jump cannot reset ascent');
+ for(let i=0;i<10;i++)h.step();assert.equal(parseFloat(runner.style.bottom),38);
+ h.event(h.doc,'keydown',{key:'ArrowDown'});h.step();assert.match(runner.style.transform,/scaleY\(0.45\)/);
+ h.event(h.doc,'keyup',{key:'ArrowDown'});h.step();assert.match(runner.style.transform,/scaleY\(1\)/);
+ h.event(h.button('숙이기 · ↓'),'click');h.step();assert.match(runner.style.transform,/0.45/);
+ h.event(h.button('잠깐 쉬기'),'click');h.event(h.button('▶ 이어 하기'),'click');h.step();assert.match(runner.style.transform,/scaleY\(1\)/);
+}));
+
+test('runner obstacles require distinct jump, crouch and double jump actions',()=>harness('exercise',h=>{
+ const obstacles=h.find(n=>n.className==='mini-arena mini-run-field').children.filter(n=>n.className==='mini-run-obstacle');
+ assert.deepEqual(obstacles.slice(0,3).map(n=>n.attrs['data-kind']),['low','overhead','high']);
+ let first=false,second=false,third=0;
+ for(let i=0;i<110;i++){
+  const x=obstacles.map(n=>parseFloat(n.style.left));
+  if(!first&&x[0]<36){h.event(h.doc,'keydown',{code:'Space'});first=true;}
+  if(!second&&x[1]<32){h.event(h.doc,'keydown',{key:'ArrowDown'});second=true;}
+  if(second&&x[1]<8)h.event(h.doc,'keyup',{key:'ArrowDown'});
+  if(!third&&x[2]<46){h.event(h.doc,'keydown',{code:'Space'});third=1;}
+  else if(third===1&&x[2]<34){h.event(h.doc,'keydown',{code:'Space'});third=2;}
+  h.step();
+  if(obstacles[2].hidden)break;
+ }
+ assert.ok(obstacles[2].hidden);assert.match(h.find(n=>n.className==='mini-meter').textContent,/장애물 3\/10개 · 성공 3개/);
+}));
+
+test('clouds burst when overgrown, while larger safely deflated clouds earn more',()=>{
+ function playCloud(ticks,burst){let score;
+  harness('rest',h=>{for(let round=0;round<3;round++){
+   h.event(h.button(round?'☁ 구름 다시 키우기':'☁ 구름 키우기'),'click');
+   for(let i=0;i<ticks;i++)h.step();
+   if(!burst)h.event(h.button('☁ 지금 줄이기'),'click');
+   for(let i=0;i<40;i++)h.step();
+  }
+  const text=h.find(n=>n.textContent.startsWith('연습 점수 ')).textContent;score=Number(text.match(/점수 (\d+)/)[1]);});return score;
+ }
+ const small=playCloud(10,false),large=playCloud(40,false),burst=playCloud(46,true);
+ assert.equal(burst,5);assert.ok(large>small);assert.ok(small>burst);
+});

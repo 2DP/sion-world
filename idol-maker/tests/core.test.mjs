@@ -27,3 +27,17 @@ test('agency unlocks top equipment and owned tiers never stack or charge twice',
  s.agency=true;assert.ok(buyItem(s,'vocal-equipment-3').ok);assert.ok(buyItem(s,'vocal-equipment-1').ok);assert.equal(s.equipment.vocal,3);
  const before=s.money;assert.equal(buyItem(s,'vocal-equipment-3').ok,false);assert.equal(s.money,before);
 });
+
+test('cloud performance changes actual recovery and XP, and rewards cannot be claimed twice',()=>{
+ const outcomes=[5,40,95].map(score=>{
+  const s=newGame();s.energy=0;s.stress=80;
+  const {run}=startActivity(s,'rest');const outcome=finishActivity(s,run.id,score);
+  assert.equal(outcome.ok,true);assert.equal(finishActivity(s,run.id,100).ok,false);
+  return outcome.result.rewards;
+ });
+ for(let i=1;i<outcomes.length;i++){
+  assert.ok(outcomes[i].energy>outcomes[i-1].energy);
+  assert.ok(outcomes[i].xp>outcomes[i-1].xp);
+  assert.ok(outcomes[i].stress<outcomes[i-1].stress);
+ }
+});
