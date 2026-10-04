@@ -5,7 +5,7 @@ import {rhythmChart,RHYTHM_BEAT_MS,danceChart,DANCE_BEAT_MS,DANCE_DURATION_MS} f
 
 test('every difficulty puts playable notes exactly on a soundtrack beat',()=>{
  for(let tier=0;tier<3;tier++){
-  const chart=rhythmChart(tier);assert.equal(chart.length,[8,12,16][tier]);
+  const chart=rhythmChart(tier);assert.equal(chart.length,[8,10,12][tier]);
   assert.equal(chart[0],2000);assert.equal(chart.at(-1),28000);
   assert.equal(new Set(chart).size,chart.length);
   for(const at of chart)assert.equal(at%RHYTHM_BEAT_MS,0);

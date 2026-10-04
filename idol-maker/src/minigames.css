@@ -33,3 +33,5 @@
 .mini-exercise-icon{transform:scaleX(-1)}
 
 .mini-run-field{height:330px}.mini-runner{transform-origin:center bottom}.mini-run-obstacle[data-kind="high"]{height:112px;background:repeating-linear-gradient(135deg,#bca4e2 0 8px,#ede1ff 8px 16px);border-color:#8162a8}.mini-run-obstacle[data-kind="overhead"]{bottom:70px;height:240px;background:repeating-linear-gradient(135deg,#7bbcb6 0 8px,#d5f3e9 8px 16px);border-color:#478b83}.mini-obstacle-label{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;font-size:12px;font-weight:700;background:#fff9ec;padding:3px 6px;border-radius:8px}.mini-run-obstacle[data-kind="overhead"] .mini-obstacle-label{top:55%;bottom:auto}.mini-run-controls{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}.mini-run-controls .mini-button{flex:1;touch-action:manipulation}.mini-run-controls [aria-pressed="true"]{background:#ccecdf}
+
+.mini-film{flex-wrap:wrap}.mini-film-slot{flex:1 1 100px}

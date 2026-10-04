@@ -16,13 +16,14 @@ test('dance allows early and late hits, rejects wrong directions and never count
   const other=createDanceRun(danceChart(0,()=>0),easy);assert.equal(other.press(0,at+delta),null);
  }
 });
-test('memory sequence lengths include both 4 and 6 regardless of level',()=>{
- assert.deepEqual(memorySequences(()=>0).map(a=>a.length),[4,4,4]);
- assert.deepEqual(memorySequences(()=>.999).map(a=>a.length),[6,6,6]);
- let seed=1;const random=()=>((seed=Math.imul(seed,1664525)+1013904223>>>0)/2**32);
- const lengths=new Set();for(let i=0;i<30;i++)for(const sequence of memorySequences(random)){lengths.add(sequence.length);assert.ok(sequence.every(d=>d>=0&&d<4));}
- assert.deepEqual([...lengths].sort(),[4,5,6]);
+test('memory sequences grow gently from four to six moves across tiers',()=>{
+ for(const [tier,min,max] of [[0,4,4],[1,4,5],[2,5,6]]){
+  assert.deepEqual(memorySequences(()=>0,tier).map(a=>a.length),[min,min,min]);
+  assert.deepEqual(memorySequences(()=>.999,tier).map(a=>a.length),[max,max,max]);
+  assert.ok(memorySequences(()=>.5,tier).flat().every(d=>d>=0&&d<4));
+ }
 });
+
 test('pitch changes continuously, clamps to range, and both rhythm and pitch are required',()=>{
  assert.equal(movePitch(4,1,100),4);assert.equal(movePitch(0,-1,100),0);
  assert.ok(movePitch(2,1,100)>2);assert.ok(movePitch(2,-1,100)<2);

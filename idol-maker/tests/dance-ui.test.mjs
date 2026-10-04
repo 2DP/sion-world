@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {startMinigame} from '../src/minigames.js';
-function harness(type,fn){
+function harness(type,fn,options={}){
  class Node extends EventTarget{
   constructor(tag=''){super();this.tag=tag;this.children=[];this.className='';this.textContent='';this.attrs={};this.style={setProperty(){}};this.classList={add(){},remove(){}};}
   append(...nodes){for(const n of nodes)n.parent=this;this.children.push(...nodes);}
@@ -10,7 +10,7 @@ function harness(type,fn){
   setAttribute(k,v){this.attrs[k]=v;}
   contains(n){return this===n||this.children.some(c=>c.contains(n));}
   get isConnected(){return host.contains(this);}
-  querySelector(selector){return find(this,n=>selector==='button'&&n.tag==='button');}
+  querySelector(selector){return find(this,n=>selector.startsWith('.')?n.className.split(' ').includes(selector.slice(1)):n.tag===selector);}
   focus(){}
  }
  function find(node,predicate){if(predicate(node))return node;for(const child of node.children){const found=find(child,predicate);if(found)return found;}}
@@ -22,7 +22,7 @@ function harness(type,fn){
  const button=label=>find(host,n=>n.tag==='button'&&n.textContent===label);
  const step=()=>{time+=100;frame(time);};let game;
  try{
-  game=startMinigame(host,{type,seed:42,tone:(f)=>tones.push(f),startRhythm:chart=>{cues=chart;return {position:()=>position,pause:()=>pauseCalls++,resume:()=>resumeCalls++,stop:()=>stopCalls++};}});
+  game=startMinigame(host,{type,seed:42,...options,tone:(f)=>tones.push(f),startRhythm:chart=>{cues=chart;return {position:()=>position,pause:()=>pauseCalls++,resume:()=>resumeCalls++,stop:()=>stopCalls++};}});
   event(button('준비됐어요 · 시작'),'click');for(let i=0;i<23;i++)step();
   fn({tones,event,doc,button,find:pred=>find(host,pred),step,setTime:t=>{position=t;step();},get cues(){return cues;},get pauses(){return pauseCalls;},get resumes(){return resumeCalls;},get stops(){return stopCalls;}});
  }finally{game?.destroy();Object.assign(globalThis,original);}
@@ -59,9 +59,9 @@ test('vocal UI holds pitch buttons, requires pitch and rhythm together, and clea
  assert.match(h.find(n=>n.className==='mini-meter').textContent,/1\/8/);
 }));
 
-test('matching game has twenty cards',()=>harness('play',h=>{
- assert.equal(h.find(n=>n.className==='mini-pairs').children.length,20);
- assert.match(h.find(n=>n.className==='mini-meter').textContent,/0\/10쌍/);
+test('beginner matching game has twelve cards',()=>harness('play',h=>{
+ assert.equal(h.find(n=>n.className==='mini-pairs').children.length,12);
+ assert.match(h.find(n=>n.className==='mini-meter').textContent,/0\/6쌍/);
 }));
 test('runner jumps, pauses and completes',()=>harness('exercise',h=>{
  const runner=h.find(n=>n.className==='mini-runner');
@@ -139,4 +139,18 @@ test('clouds burst when overgrown, while larger safely deflated clouds earn more
  }
  const small=playCloud(10,false),large=playCloud(40,false),burst=playCloud(46,true);
  assert.equal(burst,5);assert.ok(large>small);assert.ok(small>burst);
+});
+
+for(const [level,tier] of [[1,0],[5,0],[6,1],[15,1],[16,2],[50,2]]){
+ test('level '+level+' adjusts puzzle size, search clutter and music workload',()=>{
+  const cases=[['play','mini-pairs',[12,16,20]],['acting','mini-film',[3,4,5]],['beauty','mini-arena mini-wash-face',[8,10,12]],['vacation','mini-arena mini-beach',[12,16,20]]];
+  for(const [type,cls,counts] of cases)harness(type,h=>assert.equal(h.find(n=>n.className===cls).children.length,counts[tier]),{level});
+  harness('rhythm',h=>assert.equal(h.cues.length,[8,10,12][tier]),{level});
+  harness('variety',h=>assert.match(h.find(n=>n.className==='mini-meter').textContent,new RegExp('^'+[34,31,28][tier]+'초')),{level});
+ });
+}
+test('comfortable mode keeps high-level puzzles at beginner size',()=>{
+ harness('play',h=>assert.equal(h.find(n=>n.className==='mini-pairs').children.length,12),{level:50,easy:true});
+ harness('acting',h=>assert.equal(h.find(n=>n.className==='mini-film').children.length,3),{level:50,easy:true});
+ harness('rhythm',h=>assert.equal(h.cues.length,8),{level:50,easy:true});
 });

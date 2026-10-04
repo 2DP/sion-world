@@ -2,6 +2,23 @@
 (function () {
 'use strict';
 const modules = Object.create(null);
+// ---- src/difficulty.js ----
+modules["difficulty.js"] = (() => {
+// Three gentle level bands; comfortable mode always uses the first band.
+function minigameDifficulty(level=1,easy=false){
+ const tier=easy?0:level>=16?2:level>=6?1:0;
+ return {tier,label:easy?'더 편하게':['기초 · Lv.1–5','성장 · Lv.6–15','도전 · Lv.16+'][tier],
+  vocalNotes:[8,10,12][tier],danceWindow:easy?700:[600,550,500][tier],
+  memoryMin:[4,4,5][tier],memoryRange:[1,2,2][tier],memoryBeat:easy?1100:[1000,950,900][tier],
+  actingFrames:[3,4,5][tier],quizDuration:easy?40000:[34000,31000,28000][tier],
+  runSpeed:easy?29:[34,37,40][tier],foamCount:[8,10,12][tier],
+  cloudGrowth:easy?16:[22,24,26][tier],pairs:[6,8,10][tier],
+  fallDuration:easy?3400:[2900,2650,2400][tier],fruitPeriod:easy?850:[700,640,580][tier],
+  beachObjects:[12,16,20][tier]};
+}
+return Object.freeze({minigameDifficulty});
+})();
+
 // ---- src/icons.js ----
 modules["icons.js"] = (() => {
 // Font-independent artwork for devices without newer emoji fonts.
@@ -272,11 +289,13 @@ return Object.freeze({escapeHTML, characterSVG, backgroundSVG});
 
 // ---- src/rhythm.js ----
 modules["rhythm.js"] = (() => {
+const {minigameDifficulty} = modules["difficulty.js"];
+
 // Music and falling notes share this 120 BPM score, in milliseconds.
 const RHYTHM_BEAT_MS=500;
 const RHYTHM_DURATION_MS=30000;
 function rhythmChart(tier=0){
- const count=[8,12,16][Math.max(0,Math.min(2,tier))];
+ const count=minigameDifficulty([1,6,16][Math.max(0,Math.min(2,tier))]).vocalNotes;
  return Array.from({length:count},(_,i)=>(4+Math.round(i*52/(count-1)))*RHYTHM_BEAT_MS);
 }
 
@@ -288,9 +307,9 @@ const DANCE_DURATION_MS=66000;
 function danceChart(tier=0,random=Math.random){
  return [Array.from({length:40},(_,step)=>({step,direction:Math.floor(random()*4),at:DANCE_PREVIEW_MS+step*DANCE_TURN_MS}))];
 }
-function createDanceRun(turns,easy=false){
+function createDanceRun(turns,easy=false,tier=0){
  const notes=turns.flat().map(note=>({...note,status:'pending',score:0}));
- const window=easy?700:600;let hits=0,combo=0,bestCombo=0;
+ const window=minigameDifficulty([1,6,16][tier],easy).danceWindow;let hits=0,combo=0,bestCombo=0;
  function advance(time){for(const n of notes)if(n.status==='pending'&&time-n.at>window){n.status='miss';combo=0;}}
  function press(direction,time){
   advance(time);
@@ -300,7 +319,7 @@ function createDanceRun(turns,easy=false){
  }
  return {notes,advance,press,window,get current(){return notes.find(n=>n.status==='pending');},get score(){return hits/notes.length*100;},get hits(){return hits;},get combo(){return combo;},get bestCombo(){return bestCombo;}};
 }
-function memorySequences(random=Math.random){return Array.from({length:3},()=>Array.from({length:4+Math.floor(random()*3)},()=>Math.floor(random()*4)));}
+function memorySequences(random=Math.random,tier=0){const d=minigameDifficulty([1,6,16][tier]);return Array.from({length:3},()=>Array.from({length:d.memoryMin+Math.floor(random()*d.memoryRange)},()=>Math.floor(random()*4)));}
 const VOCAL_PITCHES=[261.63,293.66,329.63,349.23,392];
 function vocalChart(tier=0){return rhythmChart(tier).map((at,i)=>({at,pitch:[2,3,1,2,4,3,2,0][i%8]}));}
 function movePitch(pitch,direction,dt){return Math.max(0,Math.min(4,pitch+direction*Math.max(0,Math.min(dt,100))/700));}
@@ -376,11 +395,14 @@ return Object.freeze({createAudio});
 
 // ---- src/extra-minigames.js ----
 modules["extra-minigames.js"] = (() => {
+const {minigameDifficulty} = modules["difficulty.js"];
+
 const { BUBBLES_ICON, BASKET_ICON, gameIconText } = modules["icons.js"];
 
 // Each activity has its own interaction. The host owns time, pause and cleanup.
 function mountExtraMinigame(type,k){
  const {body,el,button,schedule,sound,result,finish,rand,tier,o,now,setTick,setInput,setKeyUp,setPause,listen}=k;
+ const difficulty=minigameDifficulty([1,6,16][tier],o.easy);
  const clamp=(n,a=0,b=100)=>Math.max(a,Math.min(b,n));
  const shuffled=items=>{const a=[...items];for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
  const meter=()=>{const m=el('p','mini-meter');body.append(m);return m;};
@@ -402,7 +424,7 @@ function mountExtraMinigame(type,k){
    {title:'눈사람에게 선물을 줘요',frames:[['❄️','밤새 내린 눈을 발견해요'],['⛄','눈을 뭉쳐 눈사람을 만들어요'],['🧣','눈사람에게 목도리를 둘러 줘요'],['📷','완성한 눈사람과 사진을 찍어요']]},
    {title:'친구들과 첫 공연을 준비해요',frames:[['📝','멤버들과 곡을 골라요'],['🎤','연습실에서 함께 연습해요'],['🎫','팬들을 공연에 초대해요'],['🌟','무대에서 노래를 들려줘요']]}
   ];
-  const story=stories[Math.floor(rand()*stories.length)],frames=tier===0?story.frames.filter((_,i)=>i!==2):story.frames;
+  const story=stories[Math.floor(rand()*stories.length)],frames=difficulty.actingFrames===3?story.frames.filter((_,i)=>i!==2):difficulty.actingFrames===5?[...story.frames,['📖','모험을 마치고 오늘의 이야기를 일기에 기록해요']]:story.frames;
   let order=[],selected=null;const status=meter();body.append(el('h3','mini-scene-title',story.title),el('p','mini-guide','장면을 골라 빈 필름 칸에 넣어요. 넣은 장면을 누르면 다시 뺄 수 있어요. 드래그도 가능해요.'));
   const slots=el('div','mini-film'),bank=el('div','mini-film-bank');body.append(slots,bank);const hint=feedback();
   const done=button('🎬 이 순서로 상영하기',()=>{if(order.filter(x=>x!==null).length!==frames.length)return;const correct=order.filter((n,i)=>n===i).length;result(60+40*correct/frames.length,correct===frames.length?'이야기가 자연스럽게 이어져요!':'새로운 순서의 영화가 완성됐어요!');},'mini-primary');body.append(done);
@@ -417,7 +439,7 @@ function mountExtraMinigame(type,k){
 
  function variety(){
   const categories=[{name:'동물',words:['🐶 강아지','🐱 고양이','🐰 토끼']},{name:'과일',words:['🍎 사과','🍓 딸기','🍌 바나나']},{name:'악기',words:['🎸 기타','🎺 트럼펫','🥁 북']}];
-  const status=meter(),topic=el('h3','mini-scene-title'),grid=el('div','mini-quiz-grid');body.append(topic,grid);const hint=feedback();let round=0,hits=0,left=3,locked=false;const start=now(),duration=o.easy?36000:28000;
+  const status=meter(),topic=el('h3','mini-scene-title'),grid=el('div','mini-quiz-grid');body.append(topic,grid);const hint=feedback();let round=0,hits=0,left=3,locked=false;const start=now(),duration=difficulty.quizDuration;
   function next(){if(round===4){result(hits/12*100,'오늘의 퀴즈쇼를 마쳤어요!');return;}const cat=categories[round%3];round++;left=3;locked=false;topic.textContent=`제시어: ${cat.name} 세 개를 찾아요!`;grid.replaceChildren();
    const pool=shuffled(categories.flatMap(c=>c.words.map(word=>({word,good:c===cat}))));
    pool.forEach(({word,good},i)=>{const b=button(`${i+1}. ${word}`,()=>{if(locked||b.disabled)return;if(good){b.disabled=true;b.classList.add('found');hits++;left--;sound(660);hint.textContent='딱 맞는 단어예요!';if(!left){locked=true;schedule(500,next);}}else{b.disabled=true;hint.textContent=`이 단어는 ${cat.name}이 아니에요. 다른 단어를 찾아봐요.`;}},'mini-quiz-word');grid.append(b);});
@@ -428,7 +450,7 @@ function mountExtraMinigame(type,k){
  function exercise(){
   const status=meter(),arena=board('장애물 달리기 운동장','mini-run-field'),runner=el('div','mini-runner','🏃');arena.append(runner);
   body.append(el('p','mini-guide','낮은 벽은 점프, 높은 벽은 공중에서 한 번 더 점프! 천장 아래는 ↓를 누르고 있거나 숙이기 버튼을 눌러 지나가요.'));
-  const hint=feedback(),speed=o.easy?29:34+tier*3,total=10;
+  const hint=feedback(),speed=difficulty.runSpeed,total=10;
   let y=0,velocity=0,jumps=0,duck=false,last=now(),distance=0,passed=0,hits=0,ended=false,nextObstacle=110;
   const kinds=['low','overhead','high',...shuffled(['low','high','overhead','low','overhead','high','low'])];
   const labels={low:'점프',high:'2단 점프',overhead:'숙이기'};
@@ -461,7 +483,7 @@ function mountExtraMinigame(type,k){
 
  function beauty(){
   const status=meter(),arena=board('거품 세안 얼굴','mini-wash-face');if(o.renderCharacter){const portrait=el('div','mini-wash-portrait');portrait.innerHTML=o.renderCharacter(o.appearance);arena.append(portrait);}
-  const count=8+tier*2,spots=shuffled(Array.from({length:12},(_,i)=>({x:24+(i%4)*17,y:18+Math.floor(i/4)*17}))).slice(0,count),cleared=new Set(),bubbles=[];
+  const count=difficulty.foamCount,spots=shuffled(Array.from({length:12},(_,i)=>({x:24+(i%4)*17,y:18+Math.floor(i/4)*17}))).slice(0,count),cleared=new Set(),bubbles=[];
   const hint=feedback();hint.textContent='손가락으로 거품을 문지르거나 하나씩 눌러 주세요.';
   function clean(i){if(cleared.has(i))return;cleared.add(i);bubbles[i].classList.add('clean');bubbles[i].disabled=true;sound(650+i*25,.07);status.textContent=`보송보송 ${cleared.size}/${count}`;if(cleared.size===count)schedule(450,()=>finish(80));}
   spots.forEach((spot,i)=>{const b=button('',()=>clean(i),'mini-foam');b.innerHTML=BUBBLES_ICON;b.setAttribute('aria-label',`${i+1}번 거품 닦기`);b.style.left=`${spot.x}%`;b.style.top=`${spot.y}%`;bubbles.push(b);arena.append(b);});status.textContent=`보송보송 0/${count}`;
@@ -486,7 +508,7 @@ function mountExtraMinigame(type,k){
    schedule(900,()=>{if(round===3){result(points/3,'구름 놀이 완료! 안전한 구름 '+(3-bursts)+'개 · 터진 구름 '+bursts+'개');return;}size=peak=0;phase='ready';cloud.textContent='☁';control.disabled=false;control.textContent='☁ 구름 다시 키우기';});
   }
   setTick(()=>{const t=now(),dt=(t-last)/1000;last=t;
-   if(phase==='grow'){size=Math.min(100,size+dt*(o.easy?16:22));peak=size;if(size>=100)completeRound(true);}
+   if(phase==='grow'){size=Math.min(100,size+dt*difficulty.cloudGrowth);peak=size;if(size>=100)completeRound(true);}
    else if(phase==='shrink'){size=Math.max(0,size-dt*45);if(size===0)completeRound(false);}
    cloud.style.transform='scale('+(.65+size/100*.9)+')';cloud.style.color=size>=80?'#ffd0d9':'#fff';
    status.textContent='구름 '+Math.min(round+1,3)+'/3 · 크기 '+Math.floor(size)+'% / 100% · 모은 점수 '+points;
@@ -494,7 +516,7 @@ function mountExtraMinigame(type,k){
  }
 
  function play(){
-  const icons=['🐶','🐱','🐰','🦊','🐼','🐸','🐵','🐷','🐯','🐨'],deck=shuffled([...icons,...icons]),status=meter(),grid=el('div','mini-pairs');body.append(grid);const hint=feedback();let first=null,locked=false,matches=0,turns=0;const cards=[];
+  const icons=['🐶','🐱','🐰','🦊','🐼','🐸','🐵','🐷','🐯','🐨'].slice(0,difficulty.pairs),deck=shuffled([...icons,...icons]),status=meter(),grid=el('div','mini-pairs');body.append(grid);const hint=feedback();let first=null,locked=false,matches=0,turns=0;const cards=[];
   deck.forEach((icon,i)=>{const b=button('★',()=>flip(i),'mini-pair-card');b.setAttribute('aria-label',`${i+1}번 카드 뒤집기`);cards.push(b);grid.append(b);});
   function flip(i){if(locked||cards[i].disabled||i===first)return;cards[i].textContent=deck[i];cards[i].setAttribute('aria-label',`${i+1}번 카드 ${deck[i]}`);cards[i].classList.add('revealed');if(first===null){first=i;return;}const previous=first;first=null;turns++;locked=true;
    if(deck[previous]===deck[i]){matches++;cards[i].disabled=cards[previous].disabled=true;hint.textContent='같은 친구를 찾았어요!';sound(660);schedule(450,()=>{locked=false;if(matches===icons.length)result(Math.max(60,100-(turns-icons.length)*4),'친구 카드를 모두 모았어요!');});}
@@ -504,7 +526,7 @@ function mountExtraMinigame(type,k){
 
  function gaming(){
   const status=meter(),arena=board('떨어지는 별 받기','mini-catcher'),basket=el('div','mini-basket');basket.innerHTML=BASKET_ICON;basket.setAttribute('aria-label','빈 별 바구니');arena.append(basket);body.append(el('p','mini-guide','바구니를 움직여 별을 받아요. 회색 구름은 피하세요. 화살표·버튼·손가락 끌기로 움직여요.'));
-  const hint=feedback();let lane=3,hits=0,stars=0,next=0,drops=[];const start=now(),duration=22000,speed=o.easy?3400:2900-tier*300;
+  const hint=feedback();let lane=3,hits=0,stars=0,next=0,drops=[];const start=now(),duration=22000,speed=difficulty.fallDuration;
   function move(n){lane=clamp(n,0,6);basket.style.left=`${(lane+.5)/7*100}%`;}
   const controls=el('div','mini-catcher-controls');Array.from({length:7},(_,i)=>`${i+1}칸`).forEach((name,i)=>controls.append(button(name,()=>move(i))));body.append(controls);
   const movePointer=e=>{if(e.type==='pointermove'&&!e.buttons)return;const r=arena.getBoundingClientRect();move(Math.floor((e.clientX-r.left)/r.width*7));};listen(arena,'pointerdown',movePointer);listen(arena,'pointermove',movePointer);setInput(e=>{if(e.key==='ArrowLeft')move(lane-1);if(e.key==='ArrowRight')move(lane+1);});move(3);
@@ -518,14 +540,14 @@ function mountExtraMinigame(type,k){
   const drop=button('🍓 여기서 과일 놓기 · Space',put,'mini-primary');body.append(drop);
   function spawn(){fruit=el('div','mini-stack-fruit',fruits[count]);fruit.style.top='12px';arena.append(fruit);}
   function put(){if(locked||!fruit)return;locked=true;drop.disabled=true;points+=Math.max(20,100-Math.abs(x-base)*2);base=clamp(x,25,75);fruit.style.left=`${base}%`;fruit.style.top='auto';fruit.style.bottom=`${25+count*38}px`;count++;hint.textContent=Math.abs(x-50)<15?'안정적으로 쌓았어요!':'친구가 살짝 받쳐 줬어요. 다음 과일도 올려 봐요!';sound(440+count*80);fruit=null;schedule(450,()=>{if(count===5){result(points/5,'알록달록 과일 꼬치 완성!');return;}locked=false;drop.disabled=false;spawn();});}
-  setInput(e=>{if(e.code==='Space')put();});setTick(()=>{status.textContent=`과일 ${count}/5개 · 아래 과일 위를 노려요`;if(fruit&&!locked){x=50+Math.sin(now()/(o.easy?850:650-tier*90))*38;fruit.style.left=`${x}%`;}});spawn();
+  setInput(e=>{if(e.code==='Space')put();});setTick(()=>{status.textContent=`과일 ${count}/5개 · 아래 과일 위를 노려요`;if(fruit&&!locked){x=50+Math.sin(now()/difficulty.fruitPeriod)*38;fruit.style.left=`${x}%`;}});spawn();
  }
 
  function vacation(){
-  const status=meter(),arena=board('해변 보물 지도','mini-beach'),wanted=['🐚','⭐','🦀','🪸'],found=new Set();const guide=el('p','mini-guide');guide.innerHTML=gameIconText('찾을 보물: 조개 🐚 · 별 ⭐ · 게 🦀 · 산호 🪸');body.append(guide);const hint=feedback();const objects=shuffled([...wanted,'🌴','🌺','🌊','🪨','🐟','🍃','☀️','⛱️']);
+  const status=meter(),arena=board('해변 보물 지도','mini-beach'),wanted=['🐚','⭐','🦀','🪸'],found=new Set();const guide=el('p','mini-guide');guide.innerHTML=gameIconText('찾을 보물: 조개 🐚 · 별 ⭐ · 게 🦀 · 산호 🪸');body.append(guide);const hint=feedback();const scenery=['🌴','🌺','🌊','🪨','🐟','🍃','☀️','⛱️'];const objects=shuffled([...wanted,...Array.from({length:difficulty.beachObjects-wanted.length},(_,i)=>scenery[i%scenery.length])]);
   const names={'🐚':'조개','⭐':'별','🦀':'게','🪸':'산호','🌴':'야자수','🌺':'꽃','🌊':'파도','🪨':'바위','🐟':'물고기','🍃':'나뭇잎','☀️':'햇님','⛱️':'파라솔'};
   const done=button('📮 여행 엽서 완성하기',()=>{if(found.size===4)finish(80);},'mini-primary');done.disabled=true;body.append(done);
-  objects.forEach((icon,i)=>{const b=button(icon,()=>{if(wanted.includes(icon)){found.add(icon);b.disabled=true;b.classList.add('found');hint.textContent=`${names[icon]}를 찾았어요!`;sound(600);done.disabled=found.size!==4;}else hint.textContent=`${names[icon]}도 예쁘네요. 목록의 보물도 찾아봐요!`;status.textContent=`해변 보물 ${found.size}/4개`;},'mini-beach-object');b.innerHTML=gameIconText(icon);b.style.left=`${12+(i%4)*25}%`;b.style.top=`${20+Math.floor(i/4)*30}%`;b.setAttribute('aria-label',names[icon]);arena.append(b);});status.textContent='해변 보물 0/4개';
+  objects.forEach((icon,i)=>{const b=button(icon,()=>{if(wanted.includes(icon)){found.add(icon);b.disabled=true;b.classList.add('found');hint.textContent=`${names[icon]}를 찾았어요!`;sound(600);done.disabled=found.size!==4;}else hint.textContent=`${names[icon]}도 예쁘네요. 목록의 보물도 찾아봐요!`;status.textContent=`해변 보물 ${found.size}/4개`;},'mini-beach-object');b.innerHTML=gameIconText(icon);b.style.left=`${12+(i%4)*25}%`;b.style.top=`${16+Math.floor(i/4)*(68/(Math.ceil(objects.length/4)-1))}%`;b.setAttribute('aria-label',names[icon]);arena.append(b);});status.textContent='해변 보물 0/4개';
  }
  const games={acting,variety,exercise,beauty,meal,rest,play,gaming,snack,vacation};
  games[type]();
@@ -535,6 +557,8 @@ return Object.freeze({mountExtraMinigame});
 
 // ---- src/minigames.js ----
 modules["minigames.js"] = (() => {
+const {minigameDifficulty} = modules["difficulty.js"];
+
 const { BUBBLES_ICON, PAUSE_ICON } = modules["icons.js"];
 
 const {vocalChart,movePitch,vocalScore,VOCAL_PITCHES,memorySequences,danceChart,createDanceRun,DANCE_BEAT_MS,DANCE_DURATION_MS,RHYTHM_BEAT_MS,RHYTHM_DURATION_MS} = modules["rhythm.js"];
@@ -556,7 +580,7 @@ const rhythmScore = (delta,easy=false) => Math.abs(delta) <= (easy?250:180) ? 10
 function startMinigame(container, options) {
   const o = {level:1,easy:false,seed:1,tone:()=>{},onComplete:()=>{},onCancel:()=>{},onFallback:()=>{},...options};
   const type = TITLES[o.type] ? o.type : 'rhythm';
-  const tier = o.easy ? 0 : o.level >=16 ? 2 : o.level >=6 ? 1 : 0;
+  const difficulty=minigameDifficulty(o.level,o.easy),tier=difficulty.tier;
   let seed = (o.seed >>> 0)||1;
   const rand = () => {seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
   let dead=false,paused=false,beginning=false,started=false,elapsed=0,last=0,raf=0,jobs=[],tick=()=>{},input=()=>{},keyUp=()=>{},onPause=()=>{},finished=false,rhythmMusic=null;
@@ -586,7 +610,7 @@ function startMinigame(container, options) {
   function arrows(fn){const wrap=el('div','mini-arrows');DIRS.forEach((d,i)=>{const b=pad(d,()=>fn(i));b.innerHTML=arrowIcon(i);b.setAttribute('aria-label',['위','오른쪽','아래','왼쪽'][i]);wrap.append(b);});body.append(wrap);}
   function result(score,message,extras={}){rhythmMusic?.stop();tick=()=>{};input=()=>{};keyUp=()=>{};jobs=[];body.replaceChildren(el('div','mini-result-icon','✦'),el('h3','',message),el('p','',`연습 점수 ${Math.round(score)}점 · 오늘도 한 걸음 자랐어요!`),button('활동 완료하기',()=>finish(score,extras),'mini-primary'));}
   function begin(){if(beginning||started||dead)return;beginning=true;if(type==='direction'){started=true;body.replaceChildren();direction();return;}body.replaceChildren();const count=el('div','mini-countdown','3');body.append(count);sound(392);schedule(700,()=>{count.textContent='2';sound(440);});schedule(1400,()=>{count.textContent='1';sound(494);});schedule(2100,()=>{started=true;body.replaceChildren();const builtins={rhythm,direction,memory,makeup,compose};if(builtins[type])builtins[type]();else mountExtraMinigame(type,{body,el,button,schedule,sound,result,finish,rand,tier,o,now:()=>elapsed,setTick:fn=>tick=fn,setInput:fn=>input=fn,setKeyUp:fn=>keyUp=fn,setPause:fn=>onPause=fn,listen:(node,name,fn)=>node.addEventListener(name,e=>{if(!dead&&!paused&&started)fn(e);},{signal:events.signal})});});}
-  body.append(el('div',`mini-intro-icon${type==='exercise'?' mini-exercise-icon':''}`,{rhythm:'♫',direction:'✧',memory:'↗',acting:'🎬',variety:'✿',makeup:'✦',compose:'♬',exercise:'🏃',beauty:'',meal:'🍱',rest:'☁',play:'🃏',gaming:'⭐',snack:'🍓',vacation:'🏖️'}[type]),el('p','mini-guide',GUIDES[type]),el('p','mini-muted',o.easy?'더 편하게 · 넉넉한 도움으로 함께해요':'틀려도 괜찮아요. 끝까지 하면 연습이 돼요!'),button('준비됐어요 · 시작',begin,'mini-primary'));
+  body.append(el('div',`mini-intro-icon${type==='exercise'?' mini-exercise-icon':''}`,{rhythm:'♫',direction:'✧',memory:'↗',acting:'🎬',variety:'✿',makeup:'✦',compose:'♬',exercise:'🏃',beauty:'',meal:'🍱',rest:'☁',play:'🃏',gaming:'⭐',snack:'🍓',vacation:'🏖️'}[type]),el('p','mini-guide',GUIDES[type]),el('p','mini-muted',['makeup','compose','meal'].includes(type)?'자유 활동 · 레벨과 관계없이 편하게 즐겨요':difficulty.label+' · 레벨에 맞춰 조금씩 도전해요'),button('준비됐어요 · 시작',begin,'mini-primary'));
   if(type==='beauty')body.querySelector('.mini-intro-icon').innerHTML=BUBBLES_ICON;
   function rhythm(){
     const chart=vocalChart(tier),start=elapsed,total=RHYTHM_DURATION_MS,names=['도','레','미','파','솔'];
@@ -621,13 +645,13 @@ function startMinigame(container, options) {
     const zone=el('div','mini-dance-zone');arena.append(zone);
     order.forEach((d,i)=>{const receptor=el('span','mini-dance-receptor',DIRS[d]);receptor.innerHTML=arrowIcon(d);receptor.style.left=(12.5+i*25)+'%';arena.append(receptor);});body.append(meter,el('p','mini-guide','화살표가 초록 구간에 오면 같은 방향키! 10번 성공하면 완료해요.'),arena);const feedback=say();
     const songTime=()=>rhythmMusic?rhythmMusic.position():elapsed-start;
-    function nextChart(){rhythmMusic?.stop();start=elapsed;run=createDanceRun(danceChart(tier,rand),o.easy);for(const card of cards)card.node.remove();cards.length=0;run.notes.forEach(n=>{const node=el('span','mini-dance-drop',DIRS[n.direction]);node.innerHTML=arrowIcon(n.direction);node.style.left=(12.5+order.indexOf(n.direction)*25)+'%';node.setAttribute('aria-label',['위','오른쪽','아래','왼쪽'][n.direction]);arena.append(node);cards.push({n,node});});rhythmMusic=o.startRhythm?.(run.notes.map(n=>n.at),{beatMs:DANCE_BEAT_MS,durationMs:DANCE_DURATION_MS,drums:true})||null;}
+    function nextChart(){rhythmMusic?.stop();start=elapsed;run=createDanceRun(danceChart(tier,rand),o.easy,tier);for(const card of cards)card.node.remove();cards.length=0;run.notes.forEach(n=>{const node=el('span','mini-dance-drop',DIRS[n.direction]);node.innerHTML=arrowIcon(n.direction);node.style.left=(12.5+order.indexOf(n.direction)*25)+'%';node.setAttribute('aria-label',['위','오른쪽','아래','왼쪽'][n.direction]);arena.append(node);cards.push({n,node});});rhythmMusic=o.startRhythm?.(run.notes.map(n=>n.at),{beatMs:DANCE_BEAT_MS,durationMs:DANCE_DURATION_MS,drums:true})||null;}
     function paint(t){run.advance(t);meter.textContent='성공 '+hits+'/10번';zone.style.height=(run.window/3000*156)+'%';cards.forEach(({n,node})=>{node.hidden=n.status!=='pending'||n.at-t>3300;node.style.top=(78-(n.at-t)/3000*78)+'%';node.className='mini-dance-drop'+(Math.abs(t-n.at)<=run.window?' ready':'');});}
     function answer(d){const t=songTime(),note=run.press(d,t);if(note){hits++;sound(700,.08);feedback.textContent='✓ 좋아요! '+hits+'/10번 성공';}else feedback.textContent='같은 화살표가 초록 구간에 왔을 때 눌러요!';paint(t);if(hits>=10)result(100,'댄스 연습 완료! 10번 성공했어요!');}
     const controls=el('div','mini-arrows');order.forEach(d=>{const control=pad(DIRS[d],()=>answer(d));control.innerHTML=arrowIcon(d);control.setAttribute('aria-label',['위','오른쪽','아래','왼쪽'][d]);controls.append(control);});body.append(controls);input=e=>{const d=KEYS.indexOf(e.key);if(d>=0)answer(d);};
     tick=()=>{let t=songTime();if(t>=DANCE_DURATION_MS){nextChart();t=0;}paint(t);};nextChart();paint(0);
   }
-  function memory(){const sequences=memorySequences(rand),total=sequences.flat().length;let round=0,pos=0,points=0,roundPoints=0,showing=false,token=0;const meter=el('p','mini-meter'),cue=el('div','mini-direction'),trail=el('p','mini-memory-trail');body.append(meter,cue,trail);const feedback=say();function show(){if(showing)return;showing=true;pos=0;roundPoints=0;trail.textContent='';const id=++token,length=sequences[round].length;meter.textContent=`${round+1}/3번째 안무 · ${length}개 방향을 기억해요`;sequences[round].forEach((d,i)=>{schedule(i*950,()=>{if(token===id){cue.innerHTML=arrowIcon(d);cue.setAttribute('aria-label',['위','오른쪽','아래','왼쪽'][d]);sound(392+d*70);}});schedule(i*950+700,()=>{if(token===id)cue.textContent='·';});});schedule(length*950,()=>{if(token===id){showing=false;cue.textContent='내 차례!';meter.textContent=`${round+1}/3번째 안무 · 천천히 따라 해요`;}});}
+  function memory(){const sequences=memorySequences(rand,tier),total=sequences.flat().length;let round=0,pos=0,points=0,roundPoints=0,showing=false,token=0;const meter=el('p','mini-meter'),cue=el('div','mini-direction'),trail=el('p','mini-memory-trail');body.append(meter,cue,trail);const feedback=say();function show(){if(showing)return;showing=true;pos=0;roundPoints=0;trail.textContent='';const id=++token,length=sequences[round].length;meter.textContent=`${round+1}/3번째 안무 · ${length}개 방향을 기억해요`;sequences[round].forEach((d,i)=>{schedule(i*difficulty.memoryBeat,()=>{if(token===id){cue.innerHTML=arrowIcon(d);cue.setAttribute('aria-label',['위','오른쪽','아래','왼쪽'][d]);sound(392+d*70);}});schedule(i*difficulty.memoryBeat+difficulty.memoryBeat*.74,()=>{if(token===id)cue.textContent='·';});});schedule(length*difficulty.memoryBeat,()=>{if(token===id){showing=false;cue.textContent='내 차례!';meter.textContent=`${round+1}/3번째 안무 · 천천히 따라 해요`;}});}
     function answer(d){if(showing)return;const correct=d===sequences[round][pos];if(correct)roundPoints++;trail.textContent+=`${DIRS[d]}${correct?'✓':'♡'}  `;feedback.textContent=correct?'순서를 잘 기억했어요!':'괜찮아요. 남은 동작도 이어서 해요!';pos++;if(pos===sequences[round].length){points+=roundPoints;showing=true;const next=button(round===2?'연습 마치기':'다음 안무 보기',()=>{next.remove();if(round===2)result(points/total*100,'안무 기억 완료!');else{round++;showing=false;show();}},'mini-primary');body.append(next);}}
     arrows(answer);body.append(button('↻ 순서 다시 보기',()=>{if(!showing){feedback.textContent='순서를 다시 보고 처음 동작부터 해요.';show();}}));input=e=>{const d=KEYS.indexOf(e.key);if(d>=0)answer(d);};show();}
   function makeup(){const initial={eyeshadow:'none',eyeliner:'none',brow:'none',blush:'#efa5b5',lip:'#d98096',sparkle:false,...(o.appearance?.makeup||{})};let value={...initial};const history=[];const preview=el('div','mini-character');body.append(el('p','mini-guide','오늘 내 마음에 드는 색을 골라요. 외모 점수는 없어요.'),preview);function update(){if(o.renderCharacter)preview.innerHTML=o.renderCharacter({...o.appearance,makeup:value});else preview.textContent='✦ 나만의 반짝이는 모습 ✦';body.querySelectorAll('[data-color]').forEach(b=>b.setAttribute('aria-pressed',String(value[b.dataset.part]===b.dataset.color)));sparkle.setAttribute('aria-pressed',String(value.sparkle));}for(const [part,label]of [['blush','볼터치'],['lip','입술'],['eyeshadow','눈두덩 섀도'],['eyeliner','아이라인'],['brow','눈썹']]){const group=el('div','mini-palette');group.append(el('h3','',label));[['장미','#efa5b5'],['복숭아','#f4af8c'],['라벤더','#bd9adb'],['코랄','#d98096'],['브라운','#795548'],['차콜','#494252'],['없음','none']].forEach(([name,color])=>{const b=button(name,()=>{history.push({...value});value[part]=color;update();},'mini-swatch');b.dataset.color=color;b.dataset.part=part;b.style.setProperty('--swatch',color==='none'?'#fff':color);group.append(b);});body.append(group);}const sparkle=button('✦ 반짝이 켜기 / 끄기',()=>{history.push({...value});value.sparkle=!value.sparkle;update();});body.append(sparkle,button('↶ 한 번 되돌리기',()=>{if(history.length){value=history.pop();update();}}),button('처음 모습으로',()=>{history.push({...value});value={...initial};update();}),button('이 모습으로 완성!',()=>finish(80,{makeup:{...value}}),'mini-primary'));update();}
