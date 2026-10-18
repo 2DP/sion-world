@@ -17,7 +17,7 @@
         if (raw && raw.version === 1) {
           this.data.settings = settings(raw.settings, reduced); this.data.tutorial = raw.tutorial === true;
           for (const [key, value] of Object.entries(raw.records || {})) {
-            if (!/^(stroll|jump|festival)-(easy|normal)$/.test(key) || !value || typeof value !== 'object') continue;
+            if (!/^(stroll|jump|festival|neon|comet)-(easy|normal)(-holds)?$/.test(key) || !value || typeof value !== 'object') continue;
             this.data.records[key] = { score: clamp(value.score, 0, 1000000, 0), accuracy: clamp(value.accuracy, 0, 100, 0), maxCombo: clamp(value.maxCombo, 0, 10000, 0), fullCombo: value.fullCombo === true, allPerfect: value.allPerfect === true };
           }
         }

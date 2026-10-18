@@ -21,3 +21,12 @@ test('loaded values are validated and unknown keys ignored', () => {
   assert.equal(store.data.settings.music, 100); assert.equal(store.data.settings.speed, 1.8); assert.equal(store.data.settings.offset, -250); assert.equal(store.data.settings.reduced, true);
   assert.equal(store.data.records['stroll-easy'].score, 0); assert.equal(store.data.records.arbitrary, undefined);
 });
+
+test('new songs and revised hold charts keep separate persistent records', () => {
+ const backing=memory(null), store=new Store(backing);
+ const result={score:500000,accuracy:50,maxCombo:10,fullCombo:false,allPerfect:false};
+ for(const key of ['neon-easy-holds','comet-normal-holds','stroll-easy-holds'])store.record(key,result);
+ const restored=new Store(backing);
+ for(const key of ['neon-easy-holds','comet-normal-holds','stroll-easy-holds'])assert.equal(restored.data.records[key].score,500000);
+ assert.equal(restored.data.records['stroll-easy'],undefined);
+});

@@ -1,0 +1,10 @@
+'use strict';
+const test = require('node:test'), assert = require('node:assert/strict');
+const { Engine } = require('../engine.js');
+const chart = [{lane:0,time:1000,endTime:2000},{lane:1,time:1400}];
+test('hold scores once at its tail and supports simultaneous taps',()=>{const e=new Engine(chart);e.hit(0,1000);assert.equal(e.processed,0);e.hit(1,1400);e.update(1999);assert.equal(e.processed,1);e.release(0,2000);assert.equal(e.score,1000000);assert.equal(e.maxCombo,2);e.release(0,2100);e.update(3000);assert.equal(e.processed,2);});
+test('early release breaks hold and cannot be repaired by pressing again',()=>{const e=new Engine(chart);e.hit(0,1000);e.release(0,1600);assert.equal(e.notes[0].result,'Miss');assert.equal(e.hit(0,1700),null);e.update(3000);assert.equal(e.counts.Miss,2);});
+test('hold preserves head judgment and applies calibration to tail',()=>{const e=new Engine([{lane:0,time:1000,endTime:2000}],40);e.hit(0,1120);e.update(2039);assert.equal(e.processed,0);e.release(0,2040);assert.equal(e.counts.Great,1);assert.equal(e.score,800000);});
+test('held tail completes on a skipped frame without requiring exact release',()=>{const e=new Engine([{lane:0,time:1000,endTime:2000}]);e.hit(0,1000);e.update(2200);assert.equal(e.counts.Perfect,1);});
+test('paused song time does not consume a hold; unheld resume fails it',()=>{const e=new Engine([{lane:0,time:1000,endTime:2000}]);e.hit(0,1000);for(let i=0;i<100;i++)e.update(1500);assert.equal(e.processed,0);e.release(0,1500);assert.equal(e.counts.Miss,1);});
+test('holding one key cannot collect a later note automatically',()=>{const e=new Engine([{lane:0,time:1000,endTime:2000},{lane:0,time:2500}]);e.hit(0,1000);e.update(3000);assert.equal(e.counts.Perfect,1);assert.equal(e.counts.Miss,1);});

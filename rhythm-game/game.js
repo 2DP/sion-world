@@ -31,14 +31,14 @@
     window.scrollTo(0, 0);
   }
   function renderMenu() {
-    const record = store.data.records[`${selected.id}-${difficulty}`];
-    $('song-list').innerHTML = S.songs.map((song, i) => `<button class="song-card ${selected.id === song.id ? 'active' : ''}" data-song="${song.id}" aria-pressed="${selected.id === song.id}"><span class="song-art ${song.art}" aria-hidden="true">${['☾', '☁', '♄'][i]}</span><span class="song-card-copy"><small>${song.genre}</small><strong>${song.title}</strong><p>${song.bpm} BPM <span> · </span> ${clock(song.bars * 240 / song.bpm)}</p></span><span class="song-card-index">${selected.id === song.id ? '♫' : `0${i + 1}`}</span></button>`).join('');
+    const record = store.data.records[`${selected.id}-${difficulty}-holds`];
+    $('song-list').innerHTML = S.songs.map((song, i) => `<button class="song-card ${selected.id === song.id ? 'active' : ''}" data-song="${song.id}" aria-pressed="${selected.id === song.id}"><span class="song-art ${song.art}" aria-hidden="true">${['☾', '☁', '♄', '✧', '☄'][i]}</span><span class="song-card-copy"><small>${song.genre}</small><strong>${song.title}</strong><p>${song.bpm} BPM <span> · </span> ${clock(song.bars * 240 / song.bpm)}</p></span><span class="song-card-index">${selected.id === song.id ? '♫' : `0${i + 1}`}</span></button>`).join('');
     $('song-title').textContent = selected.title; $('song-subtitle').textContent = selected.subtitle;
     $('song-genre').textContent = selected.genre; $('album-tag').textContent = selected.genre;
     $('album').dataset.art = selected.art;
     document.querySelector('.album-number').textContent = `SIDE A · 0${selected.index + 1}`;
     $('song-meta').textContent = `${selected.bpm} BPM · ${clock(selected.bars * 240 / selected.bpm)}`;
-    $('note-count').textContent = `${S.makeChart(selected, difficulty).length}개의 작은 별`;
+    const chart = S.makeChart(selected, difficulty); $('note-count').textContent = `${chart.length}개의 작은 별 · 롱노트 ${chart.filter(n => n.endTime).length}개`;
     $('best-score').textContent = record ? `${fmt(record.score)} · ${record.accuracy.toFixed(1)}%` : '아직 만나지 않은 별';
     $('record-badge').textContent = record?.allPerfect ? 'AP' : record?.fullCombo ? 'FC' : '';
     document.querySelectorAll('[data-difficulty]').forEach(button => { const on = button.dataset.difficulty === difficulty; button.classList.toggle('active', on); button.setAttribute('aria-pressed', String(on)); });
@@ -69,7 +69,7 @@
       $('judgment').classList.remove('show'); $('combo').classList.remove('show');
       $('play-title').textContent = song.title;
       $('play-difficulty').textContent = isTutorial ? 'TUTORIAL · D F J K 순서대로 눌러요' : `${difficulty === 'easy' ? 'EASY' : 'NORMAL'} · ${song.bpm} BPM`;
-      $('lumi-message').innerHTML = isTutorial ? '처음엔 D부터!<br>음표와 선이 만날 때 톡.' : '준비됐나요?<br>우리 같이 반짝여요.';
+      $('lumi-message').innerHTML = isTutorial ? '처음엔 D부터!<br>긴 바는 꼬리까지 꾹.' : '준비됐나요?<br>우리 같이 반짝여요.';
       closeDialogs(); screen('play-screen'); resize();
       lastCount = null; audio.play(-4 * 60 / song.bpm); state = 'countdown';
       updateHud(); $('pause').focus({ preventScroll: true });
@@ -101,7 +101,7 @@
     if (!engine || !isRunning()) return;
     audio.stop(); state = 'result'; releaseInputs(); $('countdown').hidden = true;
     const result = engine.result();
-    const previous = tutorialAfter ? { score: 0 } : store.record(`${activeSong.id}-${difficulty}`, result);
+    const previous = tutorialAfter ? { score: 0 } : store.record(`${activeSong.id}-${difficulty}-holds`, result);
     if (tutorialAfter) { store.data.tutorial = true; store.save(); }
     $('result-title').textContent = tutorialAfter ? '첫 연주, 잘했어요!' : '또 하나의 별이 빛나요';
     $('result-song').textContent = `${activeSong.title} · ${tutorialAfter ? '연습' : difficulty === 'easy' ? '쉬움' : '보통'}`;
@@ -131,6 +131,15 @@
     const result = engine.hit(lane, audio.time() * 1000 - lag);
     if (result) audio.hit(lane);
     engine.drainEvents().forEach(feedback); updateHud();
+  }
+  const laneDown = lane => pressedKeys.has(keys[lane]) || [...pointers.values()].includes(lane);
+  function releaseLane(lane, event) {
+    if (laneDown(lane)) return;
+    document.querySelector(`[data-lane="${lane}"]`).classList.remove('pressed');
+    if (state === 'playing' && engine) {
+      const lag = event?.timeStamp ? Math.min(100, Math.max(0, performance.now() - event.timeStamp)) : 0;
+      engine.release(lane, audio.time() * 1000 - lag); engine.drainEvents().forEach(feedback); updateHud();
+    }
   }
   function updateHud() {
     if (!engine) return;
@@ -172,9 +181,15 @@
     }
     if (engine) for (const note of engine.notes) {
       if (note.result) continue;
-      const y = line - (note.time + settings().visual - time) / (settings().speed * 1000) * (line + 12);
-      if (y < -20 || y > height + 20) continue;
+      const y = note.holding ? line : line - (note.time + settings().visual - time) / (settings().speed * 1000) * (line + 12);
+      if (y < -20 || (!note.endTime && y > height + 20)) continue;
       const x = note.lane * laneWidth + 10; const color = colors[note.lane];
+      if (note.endTime) {
+        const tail = line - (note.endTime + settings().visual - time) / (settings().speed * 1000) * (line + 12);
+        ctx.fillStyle = color; ctx.globalAlpha = note.holding ? .85 : .38;
+        ctx.fillRect(x + 8, Math.max(-20, tail), laneWidth - 36, Math.max(0, y - Math.max(-20, tail)));
+        ctx.globalAlpha = 1; ctx.fillStyle = '#fff'; ctx.fillRect(x + 8, tail - 2, laneWidth - 36, 4);
+      }
       ctx.shadowColor = color; ctx.shadowBlur = settings().reduced ? 0 : 12;
       ctx.fillStyle = color; ctx.beginPath(); ctx.roundRect(x, y - 8, laneWidth - 20, 16, 5); ctx.fill(); ctx.shadowBlur = 0;
       ctx.fillStyle = '#fff9'; ctx.fillRect(x + 7, y - 5, laneWidth - 34, 2);
@@ -198,7 +213,7 @@
       let time = audio.time();
       if (state === 'resuming') {
         const left = resumeAt - audio.ctx.currentTime;
-        if (left > 0) count(Math.ceil(left)); else { state = time < 0 ? 'countdown' : 'playing'; lastCount = null; }
+        if (left > 0) count(Math.ceil(left)); else { for (const lane of [...engine.held]) if (!laneDown(lane)) engine.release(lane, time * 1000); state = time < 0 ? 'countdown' : 'playing'; lastCount = null; }
       }
       if (state === 'countdown') {
         if (time < 0) count(Math.ceil(-time / (60 / activeSong.bpm)));
@@ -269,11 +284,11 @@
     event.preventDefault(); if (event.repeat || pressedKeys.has(event.code)) return;
     pressedKeys.add(event.code); document.querySelector(`[data-lane="${lane}"]`).classList.add('pressed'); hit(lane, event);
   });
-  document.addEventListener('keyup', event => { pressedKeys.delete(event.code); const lane = keys.indexOf(event.code); if (lane >= 0 && ![...pointers.values()].includes(lane)) document.querySelector(`[data-lane="${lane}"]`).classList.remove('pressed'); });
+  document.addEventListener('keyup', event => { pressedKeys.delete(event.code); const lane = keys.indexOf(event.code); if (lane >= 0) releaseLane(lane, event); });
   document.querySelectorAll('[data-lane]').forEach(button => {
     const lane = Number(button.dataset.lane);
     button.addEventListener('pointerdown', event => { event.preventDefault(); if (!isRunning()) return; if (event.pointerType === 'mouse' && event.button !== 0) return; button.setPointerCapture(event.pointerId); pointers.set(event.pointerId, lane); button.classList.add('pressed'); hit(lane, event); });
-    const release = event => { pointers.delete(event.pointerId); if (![...pointers.values()].includes(lane) && !pressedKeys.has(keys[lane])) button.classList.remove('pressed'); };
+    const release = event => { pointers.delete(event.pointerId); releaseLane(lane, event); };
     button.addEventListener('pointerup', release); button.addEventListener('pointercancel', release); button.addEventListener('lostpointercapture', release);
     button.addEventListener('contextmenu', event => event.preventDefault());
   });

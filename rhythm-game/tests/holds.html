@@ -1,0 +1,24 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>롱노트 브라우저 검사</title><style>body{background:#151529;color:white;font:16px system-ui}iframe{width:100%;height:800px;border:0}pre{white-space:pre-wrap}</style><h1>롱노트 입력 검증</h1><button id="run">키보드·터치·일시정지 검사</button><pre id="results"></pre><iframe id="game"></iframe><script>
+const frame=document.querySelector('#game'), output=document.querySelector('#results');
+const check=(condition,name)=>{output.textContent+=(condition?'PASS ':'FAIL ')+name+'\n';if(!condition)throw Error(name);};
+const waitFrame=()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+document.querySelector('#run').onclick=async()=>{document.querySelector('#run').disabled=true;try{
+ const html=await (await fetch('/index.html')).text();
+ await new Promise(resolve=>{frame.onload=resolve;frame.srcdoc=html.replace('<head>','<head><base href="/">').replace('src="./audio.js"','src="/tests/audio-fixture.js"');});
+ const w=frame.contentWindow,d=w.document;
+ const key=(type,lane)=>d.dispatchEvent(new w.KeyboardEvent(type,{code:['KeyD','KeyF','KeyJ','KeyK'][lane],bubbles:true}));
+ const time=async ms=>{w.qaTime=ms/1000;await waitFrame();};
+ const start=async()=>{d.querySelector('#play').click();await waitFrame();await time(0);};
+ const menu=()=>{d.querySelector('#pause').click();d.querySelector('#pause-back').click();};
+ const hold=w.Starbeat.makeChart(w.Starbeat.songs[0],'easy').find(n=>n.endTime);
+ await start();await time(hold.time);key('keydown',hold.lane);await time(hold.endTime);key('keyup',hold.lane);check(Number(d.querySelector('#score').textContent)>0,'키보드 롱노트 완주');
+ menu();await start();await time(hold.time);key('keydown',hold.lane);await time(hold.time+100);key('keyup',hold.lane);await time(hold.endTime);check(Number(d.querySelector('#score').textContent)===0,'중간에 놓으면 점수 없음');
+ menu();await start();await time(hold.time);const pad=d.querySelector('[data-lane="'+hold.lane+'"]');
+ // Synthetic pointers have no native capture; keep event handling identical apart from capture.
+ pad.setPointerCapture=()=>{};pad.dispatchEvent(new w.PointerEvent('pointerdown',{pointerId:11,pointerType:'touch',bubbles:true}));await time(hold.endTime);pad.dispatchEvent(new w.PointerEvent('pointerup',{pointerId:11,pointerType:'touch',bubbles:true}));check(Number(d.querySelector('#score').textContent)>0,'터치 패드 롱노트 완주');
+ menu();await start();await time(hold.time);key('keydown',hold.lane);await time(hold.time+100);d.querySelector('#pause').click();d.querySelector('#resume').click();await waitFrame();key('keydown',hold.lane);w.qaClock+=4;await waitFrame();await time(hold.endTime);key('keyup',hold.lane);check(Number(d.querySelector('#score').textContent)>0,'일시정지 후 다시 누르고 이어서 완주');
+ menu();await start();await time(hold.time);key('keydown',hold.lane);await time(hold.time+100);d.querySelector('#pause').click();d.querySelector('#resume').click();await waitFrame();w.qaClock+=4;await waitFrame();await time(hold.endTime);check(Number(d.querySelector('#score').textContent)===0,'재개할 때 누르지 않으면 Miss');
+ menu();await start();await time(hold.time-700);
+ output.textContent+='완료 — 실제 게임 DOM과 입력 핸들러, 가상 음악 시계 사용';
+ }catch(e){output.textContent+='ERROR '+e.message;}finally{document.querySelector('#run').disabled=false;}};
+</script></html>
