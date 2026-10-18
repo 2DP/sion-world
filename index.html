@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#fff8e8" />
     <title>SION WORLD - 게임 놀이터</title>
-    <meta name="description" content="SION WORLD의 알록달록 게임 놀이터! 별빛 비트, 파스텔 스텝, 첨벙클럽, 아이돌 키우기, 블록 봄버를 플레이하세요." />
+    <meta name="description" content="SION WORLD의 알록달록 게임 놀이터! 버블 팡, 별빛 땅따먹기, 별빛 비트, 파스텔 스텝, 첨벙클럽, 아이돌 키우기, 블록 봄버를 플레이하세요." />
     <style>
       * { box-sizing: border-box; }
       :root { color-scheme: light; --ink: #343653; }
@@ -114,6 +114,12 @@
       .bomber h3 { display: flex; align-items: center; gap: 10px; color: #326d5e; }
       .bomber .play { background: #e1ecd5; color: #326d5e; }
       .bomber-preview { width: 100%; height: 100%; object-fit: cover; }
+      .arcade-preview { width: 100%; height: 100%; object-fit: cover; }
+      .pang h3, .territory h3 { display: flex; align-items: center; gap: 10px; }
+      .pang h3 { color: #995d72; }
+      .pang .play { background: #fde3e7; color: #8c4862; }
+      .territory h3 { color: #36776c; }
+      .territory .play { background: #dff1e6; color: #346c60; }
       .description { margin: 0 0 22px; color: #626278; line-height: 1.7; font-size: 15px; word-break: keep-all; }
       .play { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding: 14px 18px; border-radius: 15px; background: #fce0eb; color: #833959; font-size: 17px; font-weight: 800; }
       .swim .play { background: #d9efff; color: #245d87; }
@@ -144,9 +150,33 @@
       <nav aria-labelledby="games-heading">
         <div class="section-heading">
           <h2 id="games-heading">나의 게임 놀이터</h2>
-          <span class="count">게임 5개</span>
+          <span class="count">게임 7개</span>
         </div>
         <ul class="games">
+          <li>
+            <a class="game pang" href="./pang/" aria-labelledby="pang-title" aria-describedby="pang-description">
+              <div class="scene">
+                <img class="arcade-preview" src="./pang/assets/preview.svg" alt="파스텔 하늘 아래 별빛 줄로 알록달록 버블을 터뜨리는 놀이터" width="800" height="400" />
+              </div>
+              <div class="game-info">
+                <h3 id="pang-title"><img class="idol-icon" src="./pang/assets/icon.svg" alt="" width="38" height="38" />버블 팡</h3>
+                <p class="description" id="pang-description">통통 튀는 버블을 톡!<br />세 가지 별빛 줄과 함께 열 번의 버블 모험.</p>
+                <span class="play">버블 터뜨리러 가기 <span class="arrow" aria-hidden="true">→</span></span>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a class="game territory" href="./territory/" aria-labelledby="territory-title" aria-describedby="territory-description">
+              <div class="scene">
+                <img class="arcade-preview" src="./territory/assets/preview.svg" alt="별빛으로 길을 이어 민트색과 라벤더색 정원을 넓히는 게임판" width="800" height="400" />
+              </div>
+              <div class="game-info">
+                <h3 id="territory-title"><img class="idol-icon" src="./territory/assets/icon.svg" alt="" width="38" height="38" />별빛 땅따먹기</h3>
+                <p class="description" id="territory-description">별빛으로 선을 잇고, 정원을 넓혀요!<br />구름 친구를 피해 완성하는 여섯 개의 별밭.</p>
+                <span class="play">정원 넓히러 가기 <span class="arrow" aria-hidden="true">→</span></span>
+              </div>
+            </a>
+          </li>
           <li>
             <a class="game rhythm" href="./rhythm-game/" aria-labelledby="rhythm-title" aria-describedby="rhythm-description">
               <div class="scene"><img src="./rhythm-game/cover.svg" alt="보랏빛 밤하늘의 초승달과 반짝이는 별" /></div>
