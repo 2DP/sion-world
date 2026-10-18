@@ -43,7 +43,7 @@ test('shield cannot stack, and pause preserves its post-hit grace', () => {
   E.resume(s); ticks(s, 24); assert.equal(a.alive, true); assert.equal(a.shield, 0);
 });
 test('CPU gains the same range and shield effects; stage creation resets both', () => {
-  const s = world(), cpu = s.actors[1]; get(s, cpu, 'superfire'); assert.equal(cpu.range, 4);
+  const s = world(), cpu = s.actors[1]; s.stage = 5; get(s, cpu, 'superfire'); assert.equal(cpu.range, 4);
   get(s, cpu, 'shield'); flame(s, cpu); E.step(s); assert.equal(cpu.alive, true); assert.equal(cpu.shield, 0);
   const fresh = E.create({ stage: 2 }); assert.ok(fresh.actors.every(a => a.range === 2 && a.shield === 0 && a.protectedUntil === 0));
 });
@@ -52,7 +52,7 @@ test('shield collection cannot rescue an already fatal same-frame hit', () => {
 });
 test('AI seeks visible shield and super fire and keeps checking escapes with extended range', () => {
   for (const type of ['shield', 'superfire']) {
-    const s = world(), a = s.actors[1]; s.items[E.index(s, a.x - 1, a.y)] = type;
+    const s = world(), a = s.actors[1]; s.stage = 5; s.items[E.index(s, a.x - 1, a.y)] = type;
     const action = AI.input(s, a); assert.equal(action.dir, 'left');
     E.step(s, { 1: action }); assert.equal(a.collected, 1);
   }

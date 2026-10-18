@@ -112,3 +112,45 @@ test('shipped page references exist and the root card points to the real game an
   const listedGames = [...root.matchAll(/<a\s+class="game(?:\s|")/g)].length;
   assert.equal(Number(root.match(/class="count">게임 (\d+)개/)[1]), listedGames);
 });
+
+test('clear reward choice survives a retry, is replaced at the next clear, and resets at home', () => {
+  const ui = app(); ui.click('primary'); ui.advance(181);
+  ui.state().actors.slice(1).forEach(a => { a.alive = false; }); ui.advance(1);
+  assert.equal(ui.elements.get('reward-choice').hidden, false);
+  ui.elements.get('reward').value = 'bomb'; ui.click('primary');
+  assert.equal(ui.state().actors[0].capacity, 2); assert.equal(ui.state().actors[0].shield, 0);
+  ui.advance(181); ui.state().actors[0].alive = false; ui.advance(1); ui.click('primary');
+  assert.equal(ui.state().stage, 2); assert.equal(ui.state().actors[0].capacity, 2);
+  ui.advance(181); ui.state().actors.slice(1).forEach(a => { a.alive = false; }); ui.advance(1);
+  ui.elements.get('reward').value = 'shield'; ui.click('primary');
+  assert.equal(ui.state().actors[0].shield, 1); assert.equal(ui.state().actors[0].capacity, 1);
+  ui.click('pause'); ui.click('secondary'); ui.click('primary');
+  assert.equal(ui.state().actors[0].shield, 0); assert.equal(ui.state().actors[0].capacity, 1);
+});
+
+test('fatal hit reveals actual cause and path before presenting retry; simulation stays frozen', () => {
+  const ui = app(); ui.click('primary'); ui.advance(181);
+  const s = ui.state(), p = s.actors[0];
+  s.flames.push({ cells: new Set([Engine.index(s, p.x, p.y)]), owner: 0, until: s.time + .4 });
+  ui.advance(1); const time = s.time;
+  assert.equal(s.phase, 'defeat'); assert.equal(ui.elements.get('overlay').hidden, true);
+  assert.match(ui.elements.get('battle-notice').textContent, /내 폭탄/);
+  assert.equal(p.death.cells.length, 1);
+  ui.advance(100); assert.equal(s.time, time); assert.equal(ui.elements.get('overlay').hidden, false);
+  assert.match(ui.elements.get('overlay-copy').innerHTML, /내 폭탄/);
+});
+
+test('kill feedback and stage best times reflect actual kills and only improve on faster wins', () => {
+  const ui = app(); ui.click('primary'); ui.advance(181);
+  let s = ui.state(); s.stage = 2;
+  s.actors.push({ ...s.actors[1], id: 2, x: 7, y: 5, alive: true });
+  const victim = s.actors[1]; s.flames.push({ cells: new Set([Engine.index(s, victim.x, victim.y)]), owner: 0, until: s.time + .4 });
+  ui.advance(1); assert.match(ui.elements.get('toast').textContent, /CPU 1 처치/);
+  s.stage = 1; s.time = 20; s.actors[2].alive = false; ui.advance(1);
+  assert.match(ui.elements.get('result-stats').innerHTML, /직접 처치/);
+  let saved = JSON.parse([...ui.storage.values()][0]); const best = saved.bests.easy[1];
+  assert.ok(best >= 20 && best < 21);
+  ui.click('secondary'); ui.click('primary'); ui.advance(181); s = ui.state(); s.time = 30;
+  s.actors.slice(1).forEach(a => { a.alive = false; }); ui.advance(1);
+  saved = JSON.parse([...ui.storage.values()][0]); assert.equal(saved.bests.easy[1], best);
+});

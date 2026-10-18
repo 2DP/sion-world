@@ -4,7 +4,7 @@
   const canvas = $('board'), ctx = canvas.getContext('2d'), cell = 48;
   const storageKey = 'sion-world-block-bomber-v1';
   const difficulties = { easy: '쉬움', normal: '보통', hard: '어려움' };
-  const defaults = () => ({ unlocked: 1, difficulty: 'easy', muted: false, reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches, records: {} });
+  const defaults = () => ({ unlocked: 1, difficulty: 'easy', muted: false, reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches, records: {}, bests: {} });
   function load() {
     const data = defaults();
     try {
@@ -15,6 +15,11 @@
       if (typeof saved.muted === 'boolean') data.muted = saved.muted;
       if (typeof saved.reduced === 'boolean') data.reduced = saved.reduced;
       for (const d of Object.keys(difficulties)) {
+        data.bests[d] = {};
+        for (let stage = 1; stage <= 5; stage++) {
+          const best = saved.bests?.[d]?.[stage];
+          if (typeof best === 'number' && best > 0 && best <= 180) data.bests[d][stage] = best;
+        }
         const r = saved.records?.[d]; data.records[d] = {};
         for (const k of ['wins', 'losses', 'draws']) data.records[d][k] = Number.isSafeInteger(r?.[k]) && r[k] >= 0 ? r[k] : 0;
       }
@@ -27,6 +32,15 @@
   let last = performance.now(), accumulator = 0, queuedBomb = false, queuedMove = null, lastPhase = '', audio, toastUntil = 0, lastCount = '';
   const held = new Map(), particles = [];
   let heldOrder = 0;
+  let stageBonus = null, revealAt = 0, newBest = false, lastKillAt = -Infinity, combo = 0;
+  const stageHints = ['느긋한 연습 상대 · 아이템에 거의 관심이 없어요', '탐색 시작 · 가끔 아이템을 챙겨요', '본격 대결 · 공격과 수집이 활발해져요', '적극적인 라이벌 · 아이템을 먼저 차지하세요', '최종 대결 · 쉬지 않고 공격하고 수집해요'];
+  function deathCopy() {
+    const death = state.actors[0].death;
+    if (!death) return '다음에는 모퉁이 뒤로 피할 길을 찾아 보세요.';
+    if (death.cause === 'storm') return '좁아진 경기장 바깥에 있었어요. 경고 칸은 실드로 막을 수 없으니 중앙으로 피하세요.';
+    if (death.cause === 'self') return '내 폭탄의 불꽃에 닿았어요. 설치한 뒤 모퉁이 너머로 피하세요.';
+    return (death.killerId == null ? '폭탄' : 'CPU ' + death.killerId + '의 폭탄') + ' 불꽃에 닿았어요. 연쇄 폭발과 남은 불꽃도 조심하세요.';
+  }
   function text(id, value) { const element = $(id); if (element.textContent !== String(value)) element.textContent = value; }
   function clearInput() { held.clear(); queuedBomb = false; queuedMove = null; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); }
   function resize() {
@@ -59,13 +73,15 @@
     $('rivals').replaceChildren();
     for (const a of state.actors.slice(1)) {
       const el = document.createElement('div'); el.className = 'rival'; el.id = 'rival-' + a.id; el.style.setProperty('--cpu', a.color);
-      el.innerHTML = '<span></span>CPU ' + a.id; $('rivals').append(el);
+      el.innerHTML = '<span></span>CPU ' + a.id + ' · ' + E.PERSONALITIES[a.personality]; $('rivals').append(el);
     }
   }
   function overlay(mode) {
     const visible = !['playing', 'countdown'].includes(mode);
     $('overlay').hidden = !visible; $('board-wrap').classList.toggle('menu-open', visible);
     $('setup').hidden = mode !== 'ready'; $('result-stats').hidden = ['ready', 'paused'].includes(mode);
+    $('reward-choice').hidden = mode !== 'stage-clear';
+    if (mode === 'stage-clear') $('reward').value = 'shield';
     $('secondary').hidden = mode === 'ready'; $('pause').disabled = !['playing', 'countdown', 'paused'].includes(mode);
     $('pause').setAttribute('aria-label', mode === 'paused' ? '게임 재개' : '일시정지');
     $('pause').innerHTML = mode === 'paused' ? '▶ <span>이어서 하기</span>' : 'Ⅱ <span>잠깐 쉬기</span>';
@@ -77,17 +93,21 @@
       paused: '폭탄도, 컴퓨터도 잠깐 쉬고 있어요.<br>준비되면 다시 이어서 플레이하세요.',
       'stage-clear': '잘했어요! 다음 스테이지에는<br>컴퓨터 ' + (state.enemies + 1) + '명이 기다리고 있어요.',
       complete: '컴퓨터 5명과의 마지막 대결까지 성공!<br>다섯 놀이터를 모두 열었어요. 멋진 승리예요!',
-      defeat: '내 폭탄도 위험해요. 놓기 전에<br>모퉁이 뒤로 피할 길을 찾아 보세요.',
-      draw: state.actors[0].alive ? '시간이 다 되었어요.<br>같은 스테이지에서 다시 도전해 볼까요?' : '마지막 라이벌과 함께 펑!<br>다음에는 한 발 먼저 피할 수 있을 거예요.'
+      defeat: deathCopy(),
+      draw: state.actors[0].alive ? '시간이 다 되었어요.<br>같은 스테이지에서 다시 도전해 볼까요?' : deathCopy() + '<br>마지막 라이벌도 함께 탈락해 무승부예요.'
     };
     $('overlay-title').innerHTML = titles[mode]; $('overlay-copy').innerHTML = descriptions[mode];
     text('overlay-kicker', mode === 'ready' ? 'READY, SET, BOOM!' : mode === 'paused' ? 'TAKE A LITTLE BREAK' : win ? 'A LITTLE VICTORY, A BIG SMILE' : 'ONE MORE LITTLE ADVENTURE');
     $('primary').innerHTML = (mode === 'ready' ? '스테이지 ' + selected + ' 시작' : mode === 'paused' ? '이어서 하기' : mode === 'stage-clear' ? '다음 스테이지로' : mode === 'complete' ? '스테이지 1부터 다시' : '같은 스테이지 다시 도전') + '<span>→</span>';
     text('overlay-foot', mode === 'ready' ? '방향키로 이동 · SPACE로 폭탄' : mode === 'paused' ? 'ESC로도 다시 시작할 수 있어요' : difficulties[state.difficulty] + ' · STAGE 0' + state.stage);
     if (!['ready', 'paused'].includes(mode)) {
-      const p = state.actors[0]; $('result-stats').innerHTML = '<span><strong>' + Math.ceil(state.time) + '초</strong>플레이 시간</span><span><strong>' + p.blocks + '</strong>부순 블록</span><span><strong>' + p.collected + '</strong>얻은 아이템</span>';
+      const p = state.actors[0]; $('result-stats').innerHTML = '<span><strong>' + Math.ceil(state.time) + '초</strong>플레이 시간</span><span><strong>' + p.kills + '</strong>직접 처치</span><span><strong>' + p.blocks + '</strong>부순 블록</span><span><strong>' + p.collected + '</strong>얻은 아이템</span>';
+      if (newBest && win) text('overlay-foot', '새 최고 기록! ' + state.time.toFixed(1) + '초 · ' + difficulties[state.difficulty]);
     }
-    if (mode !== 'ready') $('primary').focus({ preventScroll: true });
+    if (mode !== 'ready') {
+      $('primary').focus({ preventScroll: true });
+      if (mode !== 'paused') $('board-wrap').scrollIntoView({ block: 'center', behavior: 'instant' });
+    }
   }
   function refresh() {
     stages(); rivals(); text('stage-label', 'STAGE 0' + selected); text('stage-name', E.STAGES[selected - 1].name);
@@ -95,13 +115,15 @@
     text('total', ' / ' + state.enemies); updateHUD();
   }
   function home() {
+    stageBonus = null; revealAt = 0; newBest = false;
     clearInput(); particles.length = 0; toastUntil = 0;
     state = E.create({ stage: selected, difficulty: prefs.difficulty, seed: 20261018 + selected });
     lastPhase = 'ready'; resize(); refresh(); overlay('ready');
   }
   function start() {
+    revealAt = 0; newBest = false; combo = 0; lastKillAt = -Infinity;
     initAudio(); clearInput(); particles.length = 0; toastUntil = 0;
-    state = E.create({ stage: selected, difficulty: prefs.difficulty, phase: 'countdown' });
+    state = E.create({ stage: selected, difficulty: prefs.difficulty, phase: 'countdown', bonus: stageBonus });
     lastPhase = 'countdown'; lastCount = ''; accumulator = 0; resize(); refresh(); overlay('countdown'); canvas.focus({ preventScroll: true });
     document.querySelector('.arena-card').scrollIntoView({ block: 'start', behavior: prefs.reduced ? 'instant' : 'smooth' });
   }
@@ -119,7 +141,7 @@
     if (!audio || prefs.muted || audio.state !== 'running') return;
     try {
       const o = audio.createOscillator(), g = audio.createGain(), now = audio.currentTime;
-      const notes = { place: [240, 130, .07, .018], explode: [105, 35, .18, .04], item: [600, 1100, .16, .035], shield: [950, 380, .25, .04], start: [520, 780, .15, .035], death: [300, 90, .22, .03], result: [440, 880, .35, .04] };
+      const notes = { kill: [660, 1320, .2, .04], combo: [880, 1760, .3, .04], place: [240, 130, .07, .018], explode: [105, 35, .18, .04], item: [600, 1100, .16, .035], shield: [950, 380, .25, .04], start: [520, 780, .15, .035], death: [300, 90, .22, .03], result: [440, 880, .35, .04] };
       const [from, to, duration, volume] = notes[type] || notes.place;
       o.type = type === 'explode' ? 'triangle' : 'sine'; o.frequency.setValueAtTime(from, now); o.frequency.exponentialRampToValueAtTime(to, now + duration);
       g.gain.setValueAtTime(.001, now); g.gain.linearRampToValueAtTime(volume, now + .01); g.gain.exponentialRampToValueAtTime(.001, now + duration);
@@ -138,6 +160,11 @@
         speed: '스피드 업! 발걸음이 가벼워요', shield: '실드 장착! 폭발을 한 번 막아요'
       }[ev.item] : E.ITEMS[ev.item].name + ' · 이미 최대예요');
       if (ev.type === 'shield' && ev.id === 0) showToast('실드가 막았어요! 지금 피하세요');
+      if (ev.type === 'death' && ev.killerId === 0) {
+        combo = state.time - lastKillAt <= 2 ? combo + 1 : 1; lastKillAt = state.time;
+        showToast(combo > 1 ? combo + '연속 처치! 멋진 폭발이에요!' : 'CPU ' + ev.id + ' 처치! 내 폭탄이 명중했어요');
+        sounds.add(combo > 1 ? 'combo' : 'kill');
+      }
       if (['block', 'death'].includes(ev.type) && !prefs.reduced) for (let i = 0; i < 5; i++) particles.push({ x: (ev.x + .5) * cell, y: (ev.y + .5) * cell, vx: (Math.random() - .5) * 95, vy: -25 - Math.random() * 75, at: state.time, color: ev.color || '#dd996b' });
     }
     sounds.forEach(tone);
@@ -145,14 +172,25 @@
       if (['stage-clear', 'complete', 'defeat', 'draw'].includes(state.phase)) {
         const r = prefs.records[state.difficulty] || (prefs.records[state.difficulty] = { wins: 0, losses: 0, draws: 0 });
         const kind = state.phase === 'defeat' ? 'losses' : state.phase === 'draw' ? 'draws' : 'wins'; r[kind]++;
-        if (kind === 'wins') prefs.unlocked = Math.max(prefs.unlocked, Math.min(5, selected + 1));
+        if (kind === 'wins') {
+          prefs.unlocked = Math.max(prefs.unlocked, Math.min(5, selected + 1));
+          const bests = prefs.bests[state.difficulty] || (prefs.bests[state.difficulty] = {});
+          newBest = !bests[selected] || state.time < bests[selected];
+          if (newBest) bests[selected] = state.time;
+        }
         save(); clearInput(); stages();
       }
-      lastPhase = state.phase; overlay(state.phase);
+      lastPhase = state.phase;
+      if (!state.actors[0].alive && state.actors[0].death) {
+        revealAt = performance.now() + 1600; overlay('playing'); $('pause').disabled = true;
+      } else overlay(state.phase);
     }
   }
   function updateHUD() {
     const p = state.actors[0], seconds = Math.max(0, Math.ceil(state.limit - state.time));
+    const border = E.storm(state), notice = $('battle-notice');
+    text('battle-notice', revealAt ? deathCopy() : border.warning ? '⚠ ' + Math.max(1, Math.ceil(border.due - state.time)) + '초 후 표시된 바닥이 위험해져요! 중앙으로 이동 · 실드 방어 불가' : border.ring ? '⚠ 바깥쪽은 위험해요! 중앙에서 승부를 끝내세요 · 실드 방어 불가' : stageHints[selected - 1]);
+    notice.classList.toggle('danger', !!revealAt || border.warning || border.ring > 0);
     text('alive', state.actors.filter(a => a.id && a.alive).length);
     text('timer', String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0'));
     $('timer').parentElement.classList.toggle('urgent', seconds <= 30);
@@ -164,7 +202,8 @@
     $('power-bomb').setAttribute('aria-label', '사용 가능한 폭탄 ' + (p.capacity - E.activeBombs(state, p)) + '개, 최대 ' + p.capacity + '개');
     for (const a of state.actors.slice(1)) { const el = $('rival-' + a.id); if (el) { el.classList.toggle('out', !a.alive); el.setAttribute('aria-label', a.name + (a.alive ? ' 생존' : ' 탈락')); } }
     const r = prefs.records[prefs.difficulty] || { wins: 0, losses: 0, draws: 0 };
-    text('record', difficulties[prefs.difficulty] + ' 전적 · ' + r.wins + '승 ' + r.losses + '패 ' + r.draws + '무 · 최고 해금 ' + prefs.unlocked + '단계');
+    const best = prefs.bests[prefs.difficulty]?.[selected];
+    text('record', difficulties[prefs.difficulty] + ' 전적 · ' + r.wins + '승 ' + r.losses + '패 ' + r.draws + '무 · 최고 해금 ' + prefs.unlocked + '단계' + (best ? ' · 이 단계 최고 ' + best.toFixed(1) + '초' : ''));
     $('toast').classList.toggle('visible', state.time < toastUntil && state.phase === 'playing');
     $('countdown').hidden = state.phase !== 'countdown';
     if (state.phase === 'countdown') { const count = String(Math.ceil(state.countdown)); text('countdown', count); if (lastCount !== count) { lastCount = count; tone('place'); } }
@@ -237,12 +276,25 @@
       }
     }
     for (const [i, type] of Object.entries(state.items)) drawItem(type, Number(i) % state.width * cell, Math.floor(Number(i) / state.width) * cell);
+    for (let y = 1; y < state.height - 1; y++) for (let x = 1; x < state.width - 1; x++) {
+      const due = E.stormDue(state, x, y), left = due - state.time;
+      if (E.tile(state, x, y) === 1 || left > 8) continue;
+      round(x * cell + 2, y * cell + 2, 44, 44, 7, left <= 1e-8 ? '#923b46dd' : '#eeaa4470');
+      label(left <= 1e-8 ? '×' : '!', x * cell + 24, y * cell + 24, 24, '#fff6db');
+    }
     for (const f of state.flames) for (const i of f.cells) {
       const x = i % state.width * cell, y = Math.floor(i / state.width) * cell;
       round(x + 1, y + 1, 46, 46, 10, '#edaa4b'); round(x + 8, y + 5, 32, 38, 12, '#ffd781'); star(x + 24, y + 24, prefs.reduced ? 16 : 15 + Math.sin(state.time * 25 + i) * 3, '#fff7ce');
     }
     state.bombs.forEach(drawBomb);
     state.actors.slice().sort((a, b) => a.y - b.y || a.id - b.id).forEach(drawActor);
+    const death = state.actors[0].death;
+    if (revealAt && death) {
+      ctx.strokeStyle = '#fff7ed'; ctx.lineWidth = 3;
+      for (const i of death.cells) ctx.strokeRect(i % state.width * cell + 3, Math.floor(i / state.width) * cell + 3, 42, 42);
+      circle(death.x * cell + 24, death.y * cell + 24, 17, '#963f4c');
+      label('나 ×', death.x * cell + 24, death.y * cell + 24, 13, '#fff');
+    }
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i], t = state.time - p.at; if (t > .65) { particles.splice(i, 1); continue; }
       ctx.globalAlpha = Math.max(0, 1 - t / .65); round(p.x + p.vx * t, p.y + p.vy * t + t * t * 110, 5, 5, 1, p.color); ctx.globalAlpha = 1;
@@ -268,8 +320,8 @@
   $('bomb-button').addEventListener('contextmenu', ev => ev.preventDefault());
   $('primary').addEventListener('click', () => {
     if (state.phase === 'paused') { initAudio(); togglePause(); return; }
-    if (state.phase === 'stage-clear') selected++;
-    else if (state.phase === 'complete') selected = 1;
+    if (state.phase === 'stage-clear') { stageBonus = $('reward').value === 'bomb' ? 'bomb' : 'shield'; selected++; }
+    else if (state.phase === 'complete') { selected = 1; stageBonus = null; }
     start();
   });
   $('secondary').addEventListener('click', home);
@@ -292,6 +344,7 @@
       if (bomb && state.phase === 'playing' && !state.events.some(e => e.type === 'place' && e.id === 0) && E.activeBombs(state, state.actors[0]) >= state.actors[0].capacity) showToast('폭탄이 터지면 다시 놓을 수 있어요');
       events(); accumulator -= 1 / 60;
     }
+    if (revealAt && now >= revealAt) { revealAt = 0; overlay(state.phase); }
     updateHUD(); draw(); requestAnimationFrame(frame);
   }
   settings(); resize(); refresh(); overlay('ready'); lastPhase = 'ready'; requestAnimationFrame(frame);

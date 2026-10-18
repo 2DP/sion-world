@@ -3,12 +3,18 @@
   'use strict';
   const E = typeof module !== 'undefined' && module.exports ? require('./engine.js') : root.BlockBomber;
   const cadence = { easy: .4, normal: .25, hard: .12 };
+  function profile(s) { return E.CPU_LEVELS[s.stage - 1]; }
   function forecast(s, extra) {
     const bombs = extra ? [...s.bombs, extra] : s.bombs.slice();
     const due = new Map(bombs.map(b => [b.id, b.due]));
     const hazards = new Map();
     const add = (i, from, to) => { if (!hazards.has(i)) hazards.set(i, []); hazards.get(i).push([from, to]); };
     for (const f of s.flames) for (const i of f.cells) add(i, s.time, f.until);
+    const border = E.storm(s);
+    for (let y = 1; y < s.height - 1; y++) for (let x = 1; x < s.width - 1; x++) {
+      const dueAt = E.stormDue(s, x, y);
+      if (Number.isFinite(dueAt)) add(E.index(s, x, y), dueAt, Infinity);
+    }
     // Simulate chronological batches: an earlier blast may remove a block
     // and expose a much longer lane for a later bomb. Same-time blasts all
     // see the same pre-destruction terrain, matching the engine.
@@ -27,7 +33,7 @@
       for (const i of destroyed) sim.tiles[i] = 0;
       remaining = remaining.filter(b => !done.has(b.id));
     }
-    return { bombs, due, hazards, until: Math.max(s.time + .6, ...bombs.map(b => due.get(b.id) + .5), ...s.flames.map(f => f.until + .1)) };
+    return { bombs, due, hazards, until: Math.max(s.time + .6, border.due - s.time <= 4 ? border.due + .1 : 0, ...bombs.map(b => due.get(b.id) + .5), ...s.flames.map(f => f.until + .1)) };
   }
   function safe(s, f, x, y, from, to) {
     return !E.tile(s, x, y) && !(f.hazards.get(E.index(s, x, y)) || []).some(([a, b]) => from < b - 1e-8 && to >= a - 1e-8);
@@ -60,6 +66,7 @@
     return item === 'speed' && a.speed < 6;
   }
   function choose(s, a, f) {
+    const level = profile(s), personality = a.personality;
     const rivals = s.actors.filter(p => p.alive && p.id !== a.id);
     const queue = [{ x: a.x, y: a.y, depth: 0, dir: null }], seen = new Set([E.index(s, a.x, a.y)]);
     let best = -Infinity, direction = null;
@@ -70,7 +77,12 @@
         const crates = Object.values(E.DIRS).filter(([dx, dy]) => E.tile(s, p.x + dx, p.y + dy) === 2).length;
         const exits = Object.values(E.DIRS).filter(([dx, dy]) => !E.tile(s, p.x + dx, p.y + dy)).length;
         const item = s.items[i], repeats = a.memory.filter(v => v === i).length;
-        const score = (useful(a, item) ? 14 : 0) + crates * 2.6 - near * .65 - p.depth * .5 - repeats * .8 + exits * .2 + s.rng() * .25;
+        const loot = useful(a, item) && E.wantsItem(s, a, i);
+        const trap = personality === 'trapper' && near <= 3 ? (4 - exits) * 1.2 : 0;
+        const score = (loot ? (personality === 'collector' ? 22 : 14) * level.itemInterest : 0)
+          + crates * (personality === 'collector' ? 3.2 : 2.6)
+          - near * level.attack * (personality === 'attacker' ? 1.2 : .65)
+          + trap - p.depth * .5 - repeats * .8 + exits * .2 + s.rng() * .25;
         if (score > best) { best = score; direction = p.dir; }
       }
       if (p.depth >= 14) continue;
@@ -83,6 +95,14 @@
     return direction;
   }
   function input(s, a) {
+    const level = profile(s), delay = cadence[s.difficulty] + level.delay;
+    // Hesitation applies only while safe: novices still try to escape bombs and the border.
+    const resting = ((s.time + a.id * .7) % 5) / 5 >= level.activity;
+    if (resting) {
+      const f = forecast(s);
+      if (safe(s, f, a.x, a.y, s.time, f.until)) { a.ai.dir = null; a.ai.next = s.time; return {}; }
+      a.ai.evading = true; a.ai.dir = escape(s, a, f).dir; return { dir: a.ai.dir };
+    }
     if (s.time + 1e-8 < a.ai.next) {
       // Execute an already chosen escape route at movement speed, including
       // turns; a slower strategic decision interval must not repeat one turn.
@@ -96,7 +116,7 @@
       }
       return { dir: a.ai.dir };
     }
-    a.ai.next = s.time + cadence[s.difficulty];
+    a.ai.next = s.time + delay;
     a.ai.evading = false;
     const f = forecast(s), retreat = escape(s, a, f);
     if (!safe(s, f, a.x, a.y, s.time, f.until)) {
@@ -106,12 +126,12 @@
       const test = { id: -1, x: a.x, y: a.y, range: a.range, due: s.time + 2 }, cells = E.blast(s, test);
       const crates = cells.some(i => s.tiles[i] === 2);
       const attack = s.actors.some(r => r.id !== a.id && r.alive && (cells.includes(E.index(s, r.x, r.y)) ||
-        (s.difficulty === 'hard' && E.DIRS[r.dir] && cells.includes(E.index(s, r.x + E.DIRS[r.dir][0], r.y + E.DIRS[r.dir][1])))));
-      if ((crates || attack) && (s.difficulty !== 'easy' || crates || s.rng() < .55)) {
+        (s.stage >= 4 && s.difficulty === 'hard' && E.DIRS[r.dir] && cells.includes(E.index(s, r.x + E.DIRS[r.dir][0], r.y + E.DIRS[r.dir][1])))));
+      if ((crates || attack) && s.rng() < (crates ? .45 + level.activity * .55 : level.attack * (s.difficulty === 'easy' ? .55 : 1))) {
         // Account for the full reaction delay after planting, not just instantaneous movement.
-        const delayed = { ...a, nextMove: Math.max(a.nextMove, s.time + cadence[s.difficulty] + 1 / 60) };
+        const delayed = { ...a, nextMove: Math.max(a.nextMove, s.time + delay + 1 / 60) };
         if (escape(s, delayed, forecast(s, test)).safe) {
-          a.ai.dir = null; a.ai.nextBomb = s.time + .85; return { bomb: true };
+          a.ai.dir = null; a.ai.nextBomb = s.time + level.cooldown; return { bomb: true };
         }
       }
     }

@@ -16,6 +16,25 @@
     superfire: { name: '슈퍼 불꽃', weight: 10 }
   });
   const MAX_RANGE = 6, SHIELD_GRACE = .8;
+  const CPU_LEVELS = [
+    { activity: .35, itemInterest: .1, attack: .2, cooldown: 3.2, delay: .55 },
+    { activity: .5, itemInterest: .3, attack: .4, cooldown: 2.5, delay: .4 },
+    { activity: .7, itemInterest: .55, attack: .65, cooldown: 1.8, delay: .25 },
+    { activity: .85, itemInterest: .8, attack: .85, cooldown: 1.2, delay: .1 },
+    { activity: 1, itemInterest: 1, attack: 1, cooldown: .85, delay: 0 }
+  ];
+  const PERSONALITIES = { attacker: '공격형', collector: '수집형', trapper: '함정형' };
+  // The outer floor turns dangerous, rather than adding walls that split the maze.
+  function stormDue(s, x, y) {
+    const depth = Math.min(x, y, s.width - 1 - x, s.height - 1 - y);
+    return depth > 0 && depth <= Math.floor(Math.min(s.width, s.height) / 2) - 2 ? 120 + (depth - 1) * 12 : Infinity;
+  }
+  function storm(s) {
+    const max = Math.floor(Math.min(s.width, s.height) / 2) - 2;
+    const ring = s.time + 1e-8 < 120 ? 0 : Math.min(max, 1 + Math.floor((s.time - 120 + 1e-8) / 12));
+    const due = ring < max ? 120 + ring * 12 : Infinity;
+    return { ring, due, warning: due - s.time <= 8 };
+  }
   function randomItem(rng) {
     let roll = rng() * 100;
     for (const [type, item] of Object.entries(ITEMS)) { roll -= item.weight; if (roll < 0) return type; }
@@ -23,6 +42,7 @@
   }
   const key = (x, y) => x + ',' + y;
   const index = (s, x, y) => y * s.width + x;
+  const wantsItem = (s, a, i) => !a.id || ((i * 37 + a.id * 17 + (s.seed % 100)) % 100) < Math.round(CPU_LEVELS[s.stage - 1].itemInterest * 100);
   const inside = (s, x, y) => x >= 0 && y >= 0 && x < s.width && y < s.height;
   const tile = (s, x, y) => inside(s, x, y) ? s.tiles[index(s, x, y)] : 1;
   function random(seed) {
@@ -63,9 +83,12 @@
     points.slice(0, cfg.enemies + 1).forEach(([x, y], id) => s.actors.push({
       id, x, y, prevX: x, prevY: y, movedAt: -1, dir: 'down', alive: true,
       color: COLORS[id], name: id === 0 ? '나' : 'CPU ' + id, capacity: 1, range: 2, speed: 4,
-      shield: 0, protectedUntil: 0,
+      shield: 0, protectedUntil: 0, kills: 0, death: null,
+      personality: ['attacker', 'collector', 'trapper'][(id - 1 + 3) % 3],
       nextMove: 0, blocks: 0, collected: 0, memory: [], ai: { next: 0, dir: null, nextBomb: 0 }
     }));
+    if (stage > 1 && options.bonus === 'shield') s.actors[0].shield = 1;
+    if (stage > 1 && options.bonus === 'bomb') s.actors[0].capacity = 2;
     return s;
   }
   const bombAt = (s, x, y) => s.bombs.find(b => b.x === x && b.y === y);
@@ -109,7 +132,7 @@
       done.add(b.id);
       const cells = new Set(blast(s, b, snapshot));
       for (const other of snapshot) if (!done.has(other.id) && cells.has(index(s, other.x, other.y))) queued.push(other);
-      s.flames.push({ cells, until: s.time + .4 });
+      s.flames.push({ cells, until: s.time + .4, owner: b.owner, bombId: b.id });
       s.events.push({ type: 'explode', x: b.x, y: b.y });
       for (const i of cells) {
         delete s.items[i];
@@ -125,13 +148,21 @@
     s.bombs = snapshot.filter(b => !done.has(b.id));
   }
   function damage(s) {
-    for (const a of s.actors) if (a.alive && burning(s, a.x, a.y) && s.time + 1e-8 >= a.protectedUntil) {
-      if (a.shield > 0) {
+    for (const a of s.actors) if (a.alive) {
+      const danger = stormDue(s, a.x, a.y) <= s.time + 1e-8;
+      const hits = s.flames.filter(f => f.until > s.time + 1e-8 && f.cells.has(index(s, a.x, a.y)));
+      if (!danger && (!hits.length || s.time + 1e-8 < a.protectedUntil)) continue;
+      if (!danger && a.shield > 0) {
         a.shield = 0; a.protectedUntil = s.time + SHIELD_GRACE;
         s.events.push({ type: 'shield', x: a.x, y: a.y, id: a.id });
         continue;
       }
-      a.alive = false; s.events.push({ type: 'death', x: a.x, y: a.y, color: a.color, id: a.id });
+      const hit = hits.find(f => Number.isInteger(f.owner) && f.owner !== a.id) || hits[0];
+      const killer = !danger && hit ? s.actors.find(p => p.id === hit.owner && p.id !== a.id) : null;
+      if (killer) killer.kills++;
+      a.death = { cause: danger ? 'storm' : hit?.owner === a.id ? 'self' : 'bomb', killerId: killer?.id ?? null,
+        cells: danger ? [index(s, a.x, a.y)] : [...new Set(hits.flatMap(f => [...f.cells]))], x: a.x, y: a.y };
+      a.alive = false; s.events.push({ type: 'death', x: a.x, y: a.y, color: a.color, id: a.id, killerId: killer?.id ?? null });
     }
   }
   function step(s, input = {}, dt = 1 / 60, controller) {
@@ -150,7 +181,9 @@
     for (const i of Object.keys(s.pending)) if (!burning(s, Number(i) % s.width, Math.floor(Number(i) / s.width))) { s.items[i] = s.pending[i]; delete s.pending[i]; }
     for (const a of order) if (a.alive) {
       const i = index(s, a.x, a.y), item = s.items[i];
-      if (item) {
+      // Low-stage CPUs leave most items on the floor, even when passing over them.
+      const interested = wantsItem(s, a, i);
+      if (item && interested) {
         let upgraded = false;
         if (item === 'bomb') upgraded = a.capacity < 3;
         if (item === 'fire' || item === 'superfire') upgraded = a.range < MAX_RANGE;
@@ -172,7 +205,7 @@
   }
   function pause(s) { if (s.phase === 'playing' || s.phase === 'countdown') { s.resumePhase = s.phase; s.phase = 'paused'; return true; } return false; }
   function resume(s) { if (s.phase === 'paused') { s.phase = s.resumePhase; return true; } return false; }
-  const api = { DIRS, STAGES, COLORS, ITEMS, MAX_RANGE, SHIELD_GRACE, create, random, key, index, tile, bombAt, burning, activeBombs, canWalk, move, place, blast, step, pause, resume };
+  const api = { DIRS, STAGES, COLORS, ITEMS, MAX_RANGE, SHIELD_GRACE, CPU_LEVELS, PERSONALITIES, wantsItem, stormDue, storm, create, random, key, index, tile, bombAt, burning, activeBombs, canWalk, move, place, blast, step, pause, resume };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.BlockBomber = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
