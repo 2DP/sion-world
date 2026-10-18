@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#fff8e8" />
     <title>SION WORLD - 게임 놀이터</title>
-    <meta name="description" content="SION WORLD의 알록달록 게임 놀이터! 별빛 비트, 파스텔 스텝, 첨벙클럽, 아이돌 키우기를 플레이하세요." />
+    <meta name="description" content="SION WORLD의 알록달록 게임 놀이터! 별빛 비트, 파스텔 스텝, 첨벙클럽, 아이돌 키우기, 블록 봄버를 플레이하세요." />
     <style>
       * { box-sizing: border-box; }
       :root { color-scheme: light; --ink: #343653; }
@@ -111,6 +111,9 @@
       .rhythm .scene img { width: 100%; height: 100%; object-fit: cover; }
       .rhythm h3 { color: #695189; }
       .rhythm .play { background: linear-gradient(110deg, #e9def8, #f9e4f0); color: #66517f; }
+      .bomber h3 { display: flex; align-items: center; gap: 10px; color: #326d5e; }
+      .bomber .play { background: #e1ecd5; color: #326d5e; }
+      .bomber-preview { width: 100%; height: 100%; object-fit: cover; }
       .description { margin: 0 0 22px; color: #626278; line-height: 1.7; font-size: 15px; word-break: keep-all; }
       .play { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding: 14px 18px; border-radius: 15px; background: #fce0eb; color: #833959; font-size: 17px; font-weight: 800; }
       .swim .play { background: #d9efff; color: #245d87; }
@@ -141,7 +144,7 @@
       <nav aria-labelledby="games-heading">
         <div class="section-heading">
           <h2 id="games-heading">나의 게임 놀이터</h2>
-          <span class="count">게임 4개</span>
+          <span class="count">게임 5개</span>
         </div>
         <ul class="games">
           <li>
@@ -151,6 +154,18 @@
                 <h3 id="rhythm-title">별빛 비트</h3>
                 <p class="description" id="rhythm-description">신나는 비트에 맞춰 작은 별을 깨워요!<br />세 곡의 댄스 음악을 키보드와 터치로 톡톡.</p>
                 <span class="play">연주하러 가기 <span class="arrow" aria-hidden="true">→</span></span>
+              </div>
+            </a>
+          </li>
+          <li>
+            <a class="game bomber" href="./bomberman/" aria-labelledby="bomber-title" aria-describedby="bomber-description">
+              <div class="scene">
+                <img class="bomber-preview" src="./bomberman/assets/preview.svg" alt="블록 놀이터에서 반짝이는 심지와 귀여운 표정의 폭탄" width="800" height="400" />
+              </div>
+              <div class="game-info">
+                <h3 id="bomber-title"><img class="idol-icon" src="./bomberman/assets/icon.svg" alt="" width="38" height="38" />블록 봄버</h3>
+                <p class="description" id="bomber-description">폭탄을 놓고, 모퉁이로 쏙!<br />점점 늘어나는 컴퓨터와 다섯 번의 짜릿한 대결.</p>
+                <span class="play">폭탄 놀이터로 <span class="arrow" aria-hidden="true">→</span></span>
               </div>
             </a>
           </li>

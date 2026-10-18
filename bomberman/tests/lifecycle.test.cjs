@@ -1,0 +1,114 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const vm = require('node:vm');
+const Engine = require('../engine.js');
+const AI = require('../ai.js');
+const folder = path.resolve(__dirname, '..');
+
+// A DOM boundary fixture exercises actual game.js handlers and engine results,
+// without adding a debug/cheat API to the shipped game or changing browser saves.
+function app(options = {}) {
+  const elements = new Map(), handlers = {}, storage = new Map();
+  let current, raf, now = 0;
+  const context2d = new Proxy({}, { get: (o, k) => o[k] || (() => {}), set: (o, k, v) => (o[k] = v, true) });
+  class Element {
+    constructor(id = '') { this.id = id; this.children = []; this.listeners = {}; this.dataset = {}; this.attrs = {}; this.textContent = ''; this.innerHTML = ''; this.hidden = false; this.disabled = false; this.value = ''; this.classes = new Set(); this.style = { setProperty() {} }; this.classList = { add: c => this.classes.add(c), remove: c => this.classes.delete(c), toggle: (c, v) => v ? this.classes.add(c) : this.classes.delete(c) }; }
+    addEventListener(event, fn) { (this.listeners[event] ||= []).push(fn); }
+    dispatch(event, args = {}) { for (const fn of this.listeners[event] || []) fn(args); }
+    click() { if (!this.disabled) this.dispatch('click'); }
+    append(e) { this.children.push(e); if (e.id) elements.set(e.id, e); }
+    replaceChildren() { this.children = []; }
+    setAttribute(k, v) { this.attrs[k] = v; }
+    focus() {} scrollIntoView() {} setPointerCapture() {} getContext() { return context2d; }
+  }
+  const html = fs.readFileSync(path.join(folder, 'index.html'), 'utf8');
+  for (const [, id] of html.matchAll(/\bid="([^"]+)"/g)) elements.set(id, new Element(id));
+  const body = new Element(), arena = new Element(), dpad = Object.keys(Engine.DIRS).map(dir => { const e = new Element(); e.dataset.dir = dir; return e; });
+  elements.get('timer').parentElement = new Element();
+  const document = {
+    body, hidden: false, getElementById: id => elements.get(id), createElement: () => new Element(),
+    querySelector: selector => selector === '.arena-card' ? arena : null,
+    querySelectorAll: selector => selector === '[data-dir]' ? dpad : [...elements.values()].filter(e => e.classes.has('pressed')),
+    addEventListener: (event, fn) => { handlers[event] = fn; }
+  };
+  const scope = { document, console, performance: { now: () => now }, devicePixelRatio: 1,
+    matchMedia: () => ({ matches: false }), addEventListener: (event, fn) => { handlers['window:' + event] = fn; },
+    localStorage: {
+      getItem: key => { if (options.storageFails) throw new Error('blocked'); return options.corrupt ? '{broken' : storage.get(key) || null; },
+      setItem: (key, value) => { if (options.storageFails) throw new Error('blocked'); storage.set(key, value); }
+    },
+    requestAnimationFrame: fn => { raf = fn; },
+    BlockBomber: { ...Engine, create: opts => (current = Engine.create({ ...opts, seed: 123 })) }, BlockBomberAI: AI
+  };
+  scope.window = scope;
+  vm.runInNewContext(fs.readFileSync(path.join(folder, 'game.js'), 'utf8'), scope, { filename: 'game.js' });
+  return { elements, handlers, storage, state: () => current, click: id => elements.get(id).click(),
+    advance: ticks => { for (let n = 0; n < ticks; n++) { now += 1000 / 60 + .001; raf(now); } } };
+}
+test('real UI handlers advance 1→5 CPUs, unlock stages, save once per win, and finish the campaign', () => {
+  const ui = app();
+  assert.equal(ui.elements.get('stages').children[1].disabled, true);
+  ui.click('primary');
+  for (let stage = 1; stage <= 5; stage++) {
+    assert.equal(ui.state().stage, stage); assert.equal(ui.state().actors.length, stage + 1);
+    ui.advance(181); assert.equal(ui.state().phase, 'playing');
+    ui.state().actors.slice(1).forEach(a => { a.alive = false; }); ui.advance(1);
+    assert.equal(ui.state().phase, stage < 5 ? 'stage-clear' : 'complete');
+    assert.equal(ui.elements.get('overlay').hidden, false);
+    ui.advance(120);
+    const saved = JSON.parse([...ui.storage.values()][0]);
+    assert.equal(saved.unlocked, Math.min(5, stage + 1)); assert.equal(saved.records.easy.wins, stage);
+    if (stage < 5) ui.click('primary');
+  }
+  assert.match(ui.elements.get('overlay-title').innerHTML, /챔피언/);
+  ui.click('secondary'); assert.ok(ui.elements.get('stages').children.every(b => !b.disabled));
+  ui.elements.get('stages').children[4].click(); assert.equal(ui.state().stage, 5);
+  ui.click('primary'); assert.equal(ui.state().enemies, 5);
+});
+test('defeat retries the same stage, while pause and blur clear pending input and freeze time', () => {
+  const ui = app(); ui.click('primary'); ui.advance(181);
+  const key = { code: 'ArrowRight', repeat: false, preventDefault() {} }; ui.handlers.keydown(key);
+  ui.click('pause'); const time = ui.state().time, x = ui.state().actors[0].x;
+  ui.advance(180); assert.equal(ui.state().time, time); ui.click('primary'); ui.advance(1); assert.equal(ui.state().actors[0].x, x);
+  ui.handlers['window:blur'](); assert.equal(ui.state().phase, 'paused'); ui.click('primary');
+  ui.state().actors[0].alive = false; ui.advance(1); assert.equal(ui.state().phase, 'defeat');
+  ui.click('primary'); assert.equal(ui.state().stage, 1); assert.equal(ui.state().phase, 'countdown'); assert.ok(ui.state().actors[0].alive);
+});
+test('short key taps between simulation frames still move once; held space does not repeat', () => {
+  const ui = app(); ui.click('primary'); ui.advance(181);
+  ui.handlers.keydown({ code: 'ArrowRight', repeat: false, preventDefault() {} }); ui.handlers.keyup({ code: 'ArrowRight' });
+  ui.advance(1); assert.equal(ui.state().actors[0].x, 2); ui.advance(20); assert.equal(ui.state().actors[0].x, 2);
+  ui.handlers.keydown({ code: 'Space', repeat: false, preventDefault() {} }); ui.advance(1); assert.equal(ui.state().bombs.filter(b => b.owner === 0).length, 1);
+  ui.handlers.keydown({ code: 'Space', repeat: true, preventDefault() {} }); ui.advance(1); assert.equal(ui.state().bombs.filter(b => b.owner === 0).length, 1);
+});
+test('corrupt or unavailable browser storage does not block start, results or retry', () => {
+  for (const options of [{ storageFails: true }, { corrupt: true }]) {
+    const ui = app(options); ui.click('primary'); ui.advance(181); ui.state().actors[1].alive = false; ui.advance(1);
+    assert.equal(ui.state().phase, 'stage-clear'); ui.click('primary'); assert.equal(ui.state().stage, 2);
+  }
+});
+test('shield and range HUD, pickup notices and rendering follow the actual new item effects', () => {
+  const ui = app(); ui.click('primary'); ui.advance(181);
+  const s = ui.state(), p = s.actors[0], i = Engine.index(s, p.x, p.y);
+  s.items[i] = 'shield'; ui.advance(1); assert.equal(ui.elements.get('power-shield').textContent, '1회');
+  assert.match(ui.elements.get('toast').textContent, /실드 장착/);
+  s.items[i] = 'superfire'; ui.advance(1); assert.equal(ui.elements.get('power-fire').textContent, '4칸');
+  s.flames.push({ cells: new Set([i]), until: s.time + .4 }); ui.advance(1);
+  assert.equal(ui.elements.get('power-shield').textContent, '보호 중'); assert.match(ui.elements.get('toast').textContent, /실드가 막았어요/);
+  ui.advance(49); assert.equal(ui.elements.get('power-shield').textContent, '없음'); assert.equal(p.alive, true);
+  s.items[Engine.index(s, 3, 3)] = 'superfire'; s.items[Engine.index(s, 3, 1)] = 'shield'; ui.advance(1);
+});
+test('shipped page references exist and the root card points to the real game and icons', () => {
+  for (const file of [path.join(folder, 'index.html'), path.join(folder, '..', 'index.html')]) {
+    const html = fs.readFileSync(file, 'utf8');
+    for (const [, value] of html.matchAll(/(?:src|href)="(\.[^"]+)"/g)) {
+      const local = path.resolve(path.dirname(file), value.split('?')[0]); assert.ok(fs.existsSync(local), value);
+    }
+  }
+  const root = fs.readFileSync(path.join(folder, '..', 'index.html'), 'utf8');
+  assert.match(root, /href="\.\/bomberman\/"/); assert.match(root, /bomberman\/assets\/icon.svg/);
+  const listedGames = [...root.matchAll(/<a\s+class="game(?:\s|")/g)].length;
+  assert.equal(Number(root.match(/class="count">게임 (\d+)개/)[1]), listedGames);
+});

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f6f2e9">
+  <meta name="description" content="폭탄을 놓고, 블록을 부수고, 마지막까지 살아남으세요! 컴퓨터가 한 명씩 늘어나는 5개의 스테이지, 블록 봄버.">
+  <title>블록 봄버 · SION WORLD</title>
+  <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./engine.js" defer></script>
+  <script src="./ai.js" defer></script>
+  <script src="./game.js" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a href="../index.html" class="brand"><span class="brand-mark">S</span><span>SION WORLD<span class="brand-sub">작은 모험, 커다란 즐거움</span></span></a>
+      <div class="tools"><button id="motion" class="tool" type="button" aria-pressed="false">움직임 줄이기</button><button id="sound" class="tool" type="button" aria-pressed="false">소리 켜짐 ♪</button></div>
+    </header>
+    <section class="intro" aria-labelledby="game-title">
+      <div><p class="eyebrow"><span></span> A LITTLE BLAST OF FUN</p><h1 id="game-title">블록 <span>봄버</span><img src="./assets/icon.svg" alt="" width="56" height="56"></h1><p class="subtitle">작은 폭탄 하나로, 놀이터를 뒤집어 봐!</p></div>
+      <div class="hero-tag"><span>01 — 05</span><strong>다섯 번의 짜릿한 도전</strong><small>스테이지마다 새로운 라이벌 +1</small></div>
+    </section>
+    <nav class="stages" aria-label="스테이지 선택" id="stages"></nav>
+    <div class="game-layout">
+      <section class="arena-card" aria-label="게임 경기장">
+        <div class="arena-top"><div><span class="live-dot"></span><strong id="stage-label">STAGE 01</strong><span class="stage-name" id="stage-name">첫 번째 불꽃</span></div><button id="pause" class="pause" type="button" disabled aria-label="일시정지">Ⅱ <span>잠깐 쉬기</span></button></div>
+        <div class="match-hud"><div><span class="hud-label">남은 라이벌</span><strong><span id="alive">1</span><small id="total"> / 1</small></strong></div><div class="timer-wrap"><span class="hud-label">남은 시간</span><strong id="timer">03:00</strong></div><div class="player-marker"><span class="player-dot"></span><div><span class="hud-label">내 캐릭터</span><strong>민트 봄버</strong></div></div></div>
+        <div class="board-wrap" id="board-wrap">
+          <canvas id="board" width="624" height="528" tabindex="0" role="img" aria-label="블록 봄버 게임판. 방향키 또는 WASD로 이동하고 스페이스로 폭탄을 설치합니다."></canvas>
+          <div class="overlay" id="overlay">
+            <section class="dialog" aria-labelledby="overlay-title">
+              <img class="dialog-icon" src="./assets/icon.svg" alt="" width="72" height="72">
+              <p class="eyebrow" id="overlay-kicker">READY, SET, BOOM!</p>
+              <h2 id="overlay-title">블록 사이,<br>짜릿한 한 판!</h2>
+              <p class="dialog-copy" id="overlay-copy">폭탄을 놓고 안전한 곳으로 쏙!<br>모든 컴퓨터를 이기면 다음 스테이지가 열려요.</p>
+              <div id="setup"><label for="difficulty">컴퓨터 난이도</label><select id="difficulty"><option value="easy">쉬움 · 천천히 익혀요</option><option value="normal">보통 · 제법 만만치 않아요</option><option value="hard">어려움 · 빈틈을 노려요</option></select></div>
+              <div id="result-stats" class="result-stats" hidden></div>
+              <button class="primary" id="primary" type="button">스테이지 1 시작 <span>→</span></button>
+              <button class="secondary" id="secondary" type="button" hidden>처음 화면으로</button>
+              <p class="dialog-foot" id="overlay-foot">방향키로 이동 · SPACE로 폭탄</p>
+            </section>
+          </div>
+          <div class="countdown" id="countdown" hidden aria-live="assertive"></div>
+          <div class="toast" id="toast" role="status" aria-live="polite"></div>
+        </div>
+        <div class="arena-bottom"><span><i class="legend-dot"></i> 나 <i class="legend-dot cpu"></i> 컴퓨터</span><span>내 폭탄도 조심하세요!</span></div>
+      </section>
+      <aside class="sidebar">
+        <section class="mission panel"><p class="eyebrow">TODAY’S MISSION</p><h2>마지막까지<br>살아남기<span>✦</span></h2><p id="mission-copy">컴퓨터 1명을 쓰러뜨리고<br>다음 놀이터로 떠나 보세요.</p><div class="rivals" id="rivals" aria-label="컴퓨터 생존 상태"></div></section>
+        <section class="power panel">
+          <div class="panel-heading"><h2>나의 파워</h2><span>POWER UP</span></div>
+          <div class="power-row"><span class="item-symbol bomb-symbol">●</span><span>폭탄<small>최대 3개 동시 설치</small></span><strong id="power-bomb">1 / 1</strong></div>
+          <div class="power-row"><span class="item-symbol fire-symbol">✦</span><span>폭탄 범위<small>상하좌우 최대 6칸</small></span><strong id="power-fire">2칸</strong></div>
+          <div class="power-row"><span class="item-symbol speed-symbol">➜</span><span>스피드<small>최대 초당 6칸</small></span><strong id="power-speed">4칸/초</strong></div>
+          <div class="power-row"><span class="item-symbol shield-symbol">⬟</span><span>실드<small>폭발 한 번을 막아요</small></span><strong id="power-shield">없음</strong></div>
+          <p class="power-tip">블록 속 다섯 가지 아이템을 찾아보세요.</p>
+          <details class="item-guide"><summary>아이템 5종 알아보기</summary>
+            <ul><li><b>● 폭탄 추가</b>동시 설치 +1 · 최대 3개</li><li><b>✦ 범위 강화</b>폭발 거리 +1칸 · 최대 6칸</li><li><b>✦✧ 슈퍼 불꽃</b>폭발 거리 +2칸 · 최대 6칸</li><li><b>➜ 이동 강화</b>초당 +1칸 · 최대 6칸</li><li><b>⬟ 1회용 실드</b>폭발 1회 방어 · 최대 1회 보관<br>깨진 직후 0.8초간 보호</li></ul>
+            <p>새 경기에서는 모두 초기화돼요.<br>컴퓨터도 같은 아이템을 사용해요.</p>
+          </details>
+        </section>
+        <section class="howto panel"><p class="eyebrow">HOW TO PLAY</p><div class="instruction"><div class="keys"><kbd>↑</kbd><span><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span></div><p>방향키 / WASD<small>상하좌우 이동</small></p></div><div class="instruction"><kbd class="space-key">SPACE</kbd><p>폭탄 놓기<small>2초 뒤 펑! 모퉁이로 피하기</small></p></div><div class="howto-note">✧ 컴퓨터끼리도 서로 공격해요.<br>서로 견제하는 틈을 노려 보세요!</div></section>
+        <p class="record" id="record">나만의 작은 도전을 시작해 보세요.</p>
+      </aside>
+    </div>
+    <section class="touch-controls" aria-label="터치 조작">
+      <div class="dpad"><button data-dir="up" class="up" aria-label="위로 이동">▲</button><button data-dir="left" class="left" aria-label="왼쪽으로 이동">◀</button><span class="pad-center">✦</span><button data-dir="right" class="right" aria-label="오른쪽으로 이동">▶</button><button data-dir="down" class="down" aria-label="아래로 이동">▼</button></div>
+      <p>놓고, 피하고,<br><strong>한 번 더!</strong></p><button class="bomb-button" id="bomb-button" type="button" aria-label="폭탄 설치"><img src="./assets/icon.svg" alt="" width="38" height="38"><span>폭탄 놓기</span></button>
+    </section>
+    <footer><span>BLOCK BOMBER <b>✦</b> SION WORLD</span><a href="../index.html">다른 게임도 만나 보기 ↗</a></footer>
+  </main>
+</body>
+</html>
