@@ -117,9 +117,10 @@ test('the last CPU and player dying together is a draw, with other survivors it 
   const s = arena(); at(s.actors[0], 3, 3); at(s.actors[1], 5, 3); put(s, 3, 3, .1); tick(s, .1); assert.equal(s.phase, 'draw');
   const many = arena(2); at(many.actors[0], 3, 3); at(many.actors[1], 5, 3); put(many, 3, 3, .1); tick(many, .1); assert.equal(many.phase, 'defeat');
 });
-test('time-out is a draw; damage at deadline takes priority', () => {
-  const s = arena(); at(s.actors[0], 5, 5); at(s.actors[1], 7, 5); s.time = 180 - 1 / 60; E.step(s); assert.equal(s.phase, 'draw');
+test('matches continue past three minutes with no timeout; later bomb damage still ends a match', () => {
+  const s = arena(); at(s.actors[0], 5, 5); at(s.actors[1], 7, 5); s.time = 180 - 1 / 60; E.step(s); assert.equal(s.phase, 'playing');
   assert.ok(s.actors.every(a => a.alive));
+  s.time = 3600; E.step(s); assert.equal(s.phase, 'playing');
   const hit = arena(); at(hit.actors[0], 5, 5); at(hit.actors[1], 7, 5); hit.time = 180 - 1 / 60; put(hit, 5, 5, 180, 1); E.step(hit); assert.equal(hit.phase, 'defeat');
 });
 test('damage precedes movement and pickups on the exact detonation tick', () => {

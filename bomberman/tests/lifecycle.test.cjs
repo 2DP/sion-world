@@ -11,6 +11,7 @@ const folder = path.resolve(__dirname, '..');
 // without adding a debug/cheat API to the shipped game or changing browser saves.
 function app(options = {}) {
   const elements = new Map(), handlers = {}, storage = new Map();
+  if (options.saved) storage.set('sion-world-block-bomber-v1', JSON.stringify(options.saved));
   let current, raf, now = 0;
   const context2d = new Proxy({}, { get: (o, k) => o[k] || (() => {}), set: (o, k, v) => (o[k] = v, true) });
   class Element {
@@ -40,7 +41,8 @@ function app(options = {}) {
       setItem: (key, value) => { if (options.storageFails) throw new Error('blocked'); storage.set(key, value); }
     },
     requestAnimationFrame: fn => { raf = fn; },
-    BlockBomber: { ...Engine, create: opts => (current = Engine.create({ ...opts, seed: 123 })) }, BlockBomberAI: AI
+    BlockBomber: { ...Engine, create: opts => (current = Engine.create({ ...opts, seed: 123 })) }, BlockBomberAI: AI,
+    BlockBomberAudio: options.audio || require('../audio.js')
   };
   scope.window = scope;
   vm.runInNewContext(fs.readFileSync(path.join(folder, 'game.js'), 'utf8'), scope, { filename: 'game.js' });
@@ -153,4 +155,31 @@ test('kill feedback and stage best times reflect actual kills and only improve o
   ui.click('secondary'); ui.click('primary'); ui.advance(181); s = ui.state(); s.time = 30;
   s.actors.slice(1).forEach(a => { a.alive = false; }); ui.advance(1);
   saved = JSON.parse([...ui.storage.values()][0]); assert.equal(saved.bests.easy[1], best);
+});
+
+test('elapsed HUD continues after three minutes and longer best times load and save', () => {
+  const ui = app({ saved: { bests: { easy: { 1: 240.5 } } } });
+  assert.match(ui.elements.get('record').textContent, /240.5초/);
+  ui.click('primary'); ui.advance(181);
+  const s = ui.state(); s.actors.forEach((a, i) => { a.x = 5 + i * 2; a.y = 5; a.nextMove = Infinity; a.ai.next = Infinity; });
+  s.bombs = []; s.flames = []; s.time = 181; ui.advance(1);
+  assert.equal(s.phase, 'playing'); assert.equal(ui.elements.get('timer').textContent, '03:01');
+  s.actors[1].alive = false; ui.advance(1);
+  const saved = JSON.parse([...ui.storage.values()][0]);
+  assert.ok(saved.bests.easy[1] > 180 && saved.bests.easy[1] < 182);
+  assert.equal(saved.records.easy.draws, 0);
+});
+
+test('game events request distinct audio effects, warning beeps, and victory music', () => {
+  const played = [], controls = [];
+  const ui = app({ audio: { create: () => ({ unlock: async () => {}, play: type => played.push(type), stop: () => controls.push('stop'), setMuted: value => controls.push(value) }) } });
+  ui.click('primary'); ui.advance(181);
+  assert.ok(played.includes('countdown')); assert.ok(played.includes('start'));
+  const s = ui.state(), p = s.actors[0]; s.items[Engine.index(s,p.x,p.y)] = 'superfire'; ui.advance(1);
+  assert.ok(played.includes('item-superfire'));
+  s.time = 112; ui.advance(1); const warnings = played.filter(t => t === 'warning').length;
+  ui.advance(2); assert.equal(played.filter(t => t === 'warning').length, warnings);
+  ui.click('pause'); assert.ok(controls.includes('stop')); ui.click('primary');
+  s.actors[1].alive = false; ui.advance(1); assert.ok(played.includes('stage-clear'));
+  ui.click('sound'); assert.equal(controls.at(-1), true);
 });

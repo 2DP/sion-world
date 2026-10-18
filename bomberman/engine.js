@@ -55,7 +55,7 @@
     const seed = options.seed === undefined ? (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0 : options.seed >>> 0;
     const rng = random(seed);
     const s = { ...cfg, stage, seed, rng, difficulty: ['easy', 'normal', 'hard'].includes(options.difficulty) ? options.difficulty : 'easy',
-      time: 0, limit: 180, tick: 0, phase: options.phase || 'ready', countdown: 3,
+      time: 0, tick: 0, phase: options.phase || 'ready', countdown: 3,
       tiles: Array(cfg.width * cfg.height).fill(0), hidden: {}, items: {}, pending: {},
       bombs: [], flames: [], actors: [], events: [], nextBombId: 0 };
     const mid = Math.floor(cfg.width / 2) | 1;
@@ -200,7 +200,6 @@
     const player = s.actors[0], enemies = s.actors.filter(a => a.id && a.alive).length;
     if (!player.alive) s.phase = enemies === 0 ? 'draw' : 'defeat';
     else if (!enemies) s.phase = s.stage === STAGES.length ? 'complete' : 'stage-clear';
-    else if (s.time + 1e-8 >= s.limit) s.phase = 'draw';
     if (s.phase !== 'playing') s.events.push({ type: 'result', result: s.phase });
   }
   function pause(s) { if (s.phase === 'playing' || s.phase === 'countdown') { s.resumePhase = s.phase; s.phase = 'paused'; return true; } return false; }

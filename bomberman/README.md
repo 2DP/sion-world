@@ -43,8 +43,10 @@ node bomberman/serve.cjs
 
 - 초반 CPU는 쉬는 시간이 길고 아이템을 자주 지나친다. 5단계까지 활동·수집·공격 빈도가 점차 올라간다.
 - 공격형·수집형·함정형 CPU가 서로 다른 우선순위로 움직인다.
-- 남은 60초부터 외곽 바닥이 위험해진다. 8초 전 표시를 보고 중앙으로 이동한다. **외곽 위험은 실드로 막지 못한다.**
+- 경기 시작 2분부터 외곽 바닥이 위험해진다. 8초 전 표시를 보고 중앙으로 이동한다. **외곽 위험은 실드로 막지 못한다.**
 - 직접 처치·연속 처치 알림, 실제 사망 원인과 경로 표시, 단계별 최고 기록을 제공한다.
+
+효과음 버튼으로 설치·폭발·아이템·처치·승패 소리를 켜거나 끌 수 있다. 일시정지 시 소리도 멈춘다. 시간 제한은 없으며 타이머는 플레이 시간을 표시한다. 동시에 마지막 생존자들이 탈락할 때만 무승부다.
 
 ## 검증
 
@@ -54,6 +56,7 @@ node bomberman/serve.cjs
 node --test --test-isolation=none bomberman/tests/*.test.cjs
 node --check bomberman/engine.js
 node --check bomberman/ai.js
+node --check bomberman/audio.js
 node --check bomberman/game.js
 node --check bomberman/serve.cjs
 ```

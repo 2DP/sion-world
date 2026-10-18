@@ -10,13 +10,14 @@
   <link rel="stylesheet" href="./styles.css">
   <script src="./engine.js" defer></script>
   <script src="./ai.js" defer></script>
+  <script src="./audio.js" defer></script>
   <script src="./game.js" defer></script>
 </head>
 <body>
   <main class="shell">
     <header class="topbar">
       <a href="../index.html" class="brand"><span class="brand-mark">S</span><span>SION WORLD<span class="brand-sub">작은 모험, 커다란 즐거움</span></span></a>
-      <div class="tools"><button id="motion" class="tool" type="button" aria-pressed="false">움직임 줄이기</button><button id="sound" class="tool" type="button" aria-pressed="false">소리 켜짐 ♪</button></div>
+      <div class="tools"><button id="motion" class="tool" type="button" aria-pressed="false">움직임 줄이기</button><button id="sound" class="tool" type="button" aria-pressed="false">효과음 켜짐 ♪</button></div>
     </header>
     <section class="intro" aria-labelledby="game-title">
       <div><p class="eyebrow"><span></span> A LITTLE BLAST OF FUN</p><h1 id="game-title">블록 <span>봄버</span><img src="./assets/icon.svg" alt="" width="56" height="56"></h1><p class="subtitle">작은 폭탄 하나로, 놀이터를 뒤집어 봐!</p></div>
@@ -26,7 +27,7 @@
     <div class="game-layout">
       <section class="arena-card" aria-label="게임 경기장">
         <div class="arena-top"><div><span class="live-dot"></span><strong id="stage-label">STAGE 01</strong><span class="stage-name" id="stage-name">첫 번째 불꽃</span></div><button id="pause" class="pause" type="button" disabled aria-label="일시정지">Ⅱ <span>잠깐 쉬기</span></button></div>
-        <div class="match-hud"><div><span class="hud-label">남은 라이벌</span><strong><span id="alive">1</span><small id="total"> / 1</small></strong></div><div class="timer-wrap"><span class="hud-label">남은 시간</span><strong id="timer">03:00</strong></div><div class="player-marker"><span class="player-dot"></span><div><span class="hud-label">내 캐릭터</span><strong>민트 봄버</strong></div></div></div>
+        <div class="match-hud"><div><span class="hud-label">남은 라이벌</span><strong><span id="alive">1</span><small id="total"> / 1</small></strong></div><div class="timer-wrap"><span class="hud-label">플레이 시간</span><strong id="timer">00:00</strong></div><div class="player-marker"><span class="player-dot"></span><div><span class="hud-label">내 캐릭터</span><strong>민트 봄버</strong></div></div></div>
         <p class="battle-notice" id="battle-notice" role="status">초반 컴퓨터는 느긋해요. 아이템부터 모아 보세요!</p>
         <div class="board-wrap" id="board-wrap">
           <canvas id="board" width="624" height="528" tabindex="0" role="img" aria-label="블록 봄버 게임판. 방향키 또는 WASD로 이동하고 스페이스로 폭탄을 설치합니다."></canvas>
@@ -63,7 +64,7 @@
             <p>새 경기에서는 시작 보상 외 능력이 초기화돼요.<br>초반 컴퓨터는 아이템을 자주 지나쳐요.</p>
           </details>
         </section>
-        <section class="howto panel"><p class="eyebrow">HOW TO PLAY</p><div class="instruction"><div class="keys"><kbd>↑</kbd><span><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span></div><p>방향키 / WASD<small>상하좌우 이동</small></p></div><div class="instruction"><kbd class="space-key">SPACE</kbd><p>폭탄 놓기<small>2초 뒤 펑! 모퉁이로 피하기</small></p></div><div class="howto-note">✧ 컴퓨터끼리도 서로 공격해요.<br>서로 견제하는 틈을 노려 보세요!<br>⚠ 남은 60초부터 외곽이 좁아져요.<br>8초 전 경고 · 실드로는 막지 못해요.</div></section>
+        <section class="howto panel"><p class="eyebrow">HOW TO PLAY</p><div class="instruction"><div class="keys"><kbd>↑</kbd><span><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span></div><p>방향키 / WASD<small>상하좌우 이동</small></p></div><div class="instruction"><kbd class="space-key">SPACE</kbd><p>폭탄 놓기<small>2초 뒤 펑! 모퉁이로 피하기</small></p></div><div class="howto-note">✧ 컴퓨터끼리도 서로 공격해요.<br>서로 견제하는 틈을 노려 보세요!<br>⚠ 2분부터 외곽이 좁아져요. 시간 제한은 없어요.<br>8초 전 경고 · 실드로는 막지 못해요.</div></section>
         <p class="record" id="record">나만의 작은 도전을 시작해 보세요.</p>
       </aside>
     </div>
