@@ -9,6 +9,7 @@
     ['달빛 대행진', [2, 2, 1]], ['버블 페스티벌', [2, 2, 2]]
   ];
   const RADII = [15, 29, 49], SPEEDS = [164, 128, 98], BOUNCE = [265, 370, 485];
+  const EASY_BUBBLES = { 4: [2, 0], 8: [1, 1, 1, 0, 0] };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   function bubble(size, x, y, direction, scale) {
     const r = RADII[size];
@@ -20,7 +21,7 @@
     const scale = (difficulty === 'easy' ? .8 : 1) * (stage === 1 ? .85 : 1);
     return { stage, difficulty, scale, status: 'ready', time: difficulty === 'easy' ? 150 : 110,
       lives: 3, score: 0, hits: 0, player: { x: W / 2, invincible: 1.5 },
-      bubbles: STAGES[stage - 1][1].map((size, i, all) => bubble(size, 90 + i * 780 / Math.max(1, all.length - 1), 100 + i % 2 * 60, i % 2 ? -1 : 1, scale)),
+      bubbles: (difficulty === 'easy' && EASY_BUBBLES[stage] || STAGES[stage - 1][1]).map((size, i, all) => bubble(size, 90 + i * 780 / Math.max(1, all.length - 1), 100 + i % 2 * 60, i % 2 ? -1 : 1, scale)),
       shots: [], items: [], weapon: 'basic', weaponTime: 0, cooldown: 0, events: [] };
   }
   function start(s) { if (s.status === 'ready' || s.status === 'paused') s.status = 'playing'; }
@@ -45,9 +46,16 @@
     s.weaponTime = Math.max(0, s.weaponTime - dt);
     if (!s.weaponTime) s.weapon = 'basic';
     s.player.x = clamp(s.player.x + ((input.right ? 1 : 0) - (input.left ? 1 : 0)) * 290 * dt, 20, W - 20);
-    if (input.fire && !s.cooldown && s.shots.length < (s.weapon === 'double' ? 2 : 1)) {
-      s.shots.push({ x: s.player.x, top: FLOOR - 33, hold: 0, sticky: s.weapon === 'sticky' });
-      s.cooldown = .25; s.events.push('fire');
+    if (input.fire && !s.cooldown) {
+      const limit = s.weapon === 'basic' ? 1 : 2;
+      if (s.weapon === 'sticky' && s.shots.length >= limit) {
+        const oldest = s.shots.filter(shot => shot.sticky && shot.top === 12).sort((a, b) => b.hold - a.hold)[0];
+        if (oldest) s.shots.splice(s.shots.indexOf(oldest), 1);
+      }
+      if (s.shots.length < limit) {
+        s.shots.push({ x: s.player.x, top: FLOOR - 33, hold: 0, sticky: s.weapon === 'sticky' });
+        s.cooldown = .25; s.events.push('fire');
+      }
     }
     for (const b of s.bubbles) {
       b.vy += 620 * s.scale * s.scale * dt; b.x += b.vx * dt; b.y += b.vy * dt;

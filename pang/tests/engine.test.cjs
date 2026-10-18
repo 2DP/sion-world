@@ -80,3 +80,44 @@ test('save sanitizer rejects corrupt values and bounds records', () => {
   assert.equal(save.difficulty, 'easy'); assert.equal(save.muted, false); assert.equal(save.easy.unlocked, 10);
   assert.deepEqual(save.easy.scores.slice(0, 3), [0, 0, 1000000]);
 });
+
+test('easy softens stages 4 and 8 without altering normal or other stages', () => {
+  for (let stage = 1; stage <= 10; stage++) {
+    assert.deepEqual(E.create(stage, 'normal').bubbles.map(b => b.size), E.STAGES[stage - 1][1]);
+    assert.deepEqual(E.create(stage, 'easy').bubbles.map(b => b.size), ({ 4: [2, 0], 8: [1, 1, 1, 0, 0] })[stage] || E.STAGES[stage - 1][1]);
+  }
+});
+test('sticky replaces only the oldest ceiling line and fires at the new position', () => {
+  const s = active(); s.weapon = 'sticky'; s.weaponTime = 10;
+  const older = { x: 500, top: 12, hold: 1, sticky: true }, newer = { x: 600, top: 12, hold: .3, sticky: true };
+  s.shots = [newer, older]; s.player.x = 750;
+  E.step(s, { fire: true }, .005);
+  assert.equal(s.shots.length, 2); assert.ok(s.shots.includes(newer)); assert.ok(!s.shots.includes(older));
+  assert.equal(s.shots.find(shot => shot !== newer).x, 750); assert.ok(s.cooldown > .24);
+  E.step(s, { fire: true }, .1); assert.ok(s.shots.includes(newer), 'cooldown prevents another recall');
+});
+test('two rising sticky lines cannot be recalled, while one ceiling line can', () => {
+  const s = active(); s.weapon = 'sticky'; s.weaponTime = 10;
+  const rising = { x: 500, top: 300, hold: 0, sticky: true }, other = { x: 600, top: 200, hold: 0, sticky: true };
+  s.shots = [rising, other]; E.step(s, { fire: true }, .01);
+  assert.equal(s.shots.length, 2); assert.ok(s.shots.includes(rising) && s.shots.includes(other)); assert.equal(s.cooldown, 0);
+  other.top = 12; other.hold = .5; E.step(s, { fire: true }, .005);
+  assert.ok(s.shots.includes(rising)); assert.ok(!s.shots.includes(other)); assert.equal(s.shots.length, 2);
+});
+test('sticky automatic fire respects two-line cap and cooldown; basic/double never recall', () => {
+  const s = active(); s.weapon = 'sticky'; s.weaponTime = 10; s.player.invincible = 100;
+  s.bubbles[0].x = 50; s.bubbles[0].vx = 0;
+  let elapsed = 0, lastFire = -1, fires = 0;
+  for (let i = 0; i < 360; i++) {
+    elapsed += 1 / 120; E.step(s, { fire: true }, 1 / 120);
+    assert.ok(s.shots.length <= 2);
+    if (s.events.includes('fire')) { if (lastFire >= 0) assert.ok(elapsed - lastFire >= .249); lastFire = elapsed; fires++; }
+  }
+  assert.ok(fires >= 6, 'held fire continues after ceiling recall');
+  for (const weapon of ['basic', 'double']) {
+    const trial = active(); trial.weapon = weapon; trial.weaponTime = 10;
+    const lines = Array.from({ length: weapon === 'basic' ? 1 : 2 }, (_, i) => ({ x: 500 + i * 70, top: 12, hold: .2, sticky: true }));
+    trial.shots = [...lines]; E.step(trial, { fire: true }, .005);
+    assert.deepEqual(trial.shots, lines); assert.equal(trial.cooldown, 0);
+  }
+});

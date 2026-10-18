@@ -115,7 +115,7 @@
     E.step(state, input(), dt);
     for (const event of state.events) {
       sound(event);
-      if ((event === 'double' || event === 'sticky') && !seen.has(event)) { seen.add(event); toast(event === 'double' ? '더블 줄! 10초 동안 두 줄을 함께 쏴요.' : '붙는 줄! 천장에 닿아도 2초 동안 남아요.'); }
+      if ((event === 'double' || event === 'sticky') && !seen.has(event)) { seen.add(event); toast(event === 'double' ? '더블 줄! 10초 동안 두 줄을 함께 쏴요.' : '붙는 줄! 두 줄까지, 천장에 2초! 다시 쏘면 오래된 천장 줄을 회수해요.'); }
       if (event === 'pop' && !reduced) for (let i = 0; i < 7; i++) particles.push({ x: state.player.x, y: 350, vx: (Math.random() - .5) * 160, vy: -Math.random() * 140, life: 1, color: ['#e5a5b2', '#a69bc4', '#e8cc75'][i % 3] });
     }
     if (state.status === 'playing') { for (const p of particles) { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt * 2; } particles = particles.filter(p => p.life > 0); }
