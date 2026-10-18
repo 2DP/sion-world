@@ -1,0 +1,7 @@
+{
+  "name": "starlight-beat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "별빛 비트 — 오리지널 4레인 리듬게임",
+  "scripts": { "start": "node serve.cjs", "test": "node --test --test-isolation=none tests/*.test.cjs", "build": "node build.cjs" }
+}
