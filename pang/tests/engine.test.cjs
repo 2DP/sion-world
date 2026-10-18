@@ -118,10 +118,10 @@ test('save sanitizer rejects corrupt values and bounds records', () => {
   assert.deepEqual(save.easy.scores.slice(0, 3), [0, 0, 1000000]);
 });
 
-test('easy softens stages 4, 8 and crowded new stages while normal keeps its designed layouts', () => {
+test('easy uses playtested layouts while normal keeps its designed layouts', () => {
   for (let stage = 1; stage <= E.STAGES.length; stage++) {
     assert.deepEqual(E.create(stage, 'normal').bubbles.map(b => b.size), E.STAGES[stage - 1][1]);
-    assert.deepEqual(E.create(stage, 'easy').bubbles.map(b => b.size), ({ 4: [2, 0], 8: [1, 1, 1, 0, 0] })[stage] || (stage > 10 && E.STAGES[stage - 1][1].length >= 5 ? E.STAGES[stage - 1][1].slice(1) : E.STAGES[stage - 1][1]));
+    assert.deepEqual(E.create(stage, 'easy').bubbles.map(b => b.size), ({ 4: [2, 0], 8: [1, 1, 1, 0, 0], 12: [2, 1, 1, 1], 14: [2, 1, 1, 1, 0], 26: [2, 2, 1, 1, 1, 0] })[stage] || (stage > 10 && E.STAGES[stage - 1][1].length >= 5 ? E.STAGES[stage - 1][1].slice(1) : E.STAGES[stage - 1][1]));
   }
 });
 test('sticky replaces only the oldest ceiling line and fires at the new position', () => {

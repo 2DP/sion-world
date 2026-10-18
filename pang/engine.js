@@ -19,7 +19,10 @@
     ['마지막 별의 문', [2, 2, 2, 2, 2, 0]], ['서른 번째 별빛', [2, 2, 2, 2, 2, 1, 1]]
   ];
   const RADII = [15, 29, 49], SPEEDS = [164, 128, 98], BOUNCE = [285, 400, 525];
-  const EASY_BUBBLES = { 4: [2, 0], 8: [1, 1, 1, 0, 0] };
+  const EASY_BUBBLES = {
+    4: [2, 0], 8: [1, 1, 1, 0, 0],
+    12: [2, 1, 1, 1], 14: [2, 1, 1, 1, 0], 26: [2, 2, 1, 1, 1, 0]
+  };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   function bubble(size, x, y, direction, scale) {
     const r = RADII[size];
