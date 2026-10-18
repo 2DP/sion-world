@@ -3,7 +3,7 @@
   'use strict';
   const E = typeof module !== 'undefined' && module.exports ? require('./engine.js') : root.BlockBomber;
   const cadence = { easy: .4, normal: .25, hard: .12 };
-  function profile(s) { return E.CPU_LEVELS[s.stage - 1]; }
+  function profile(s, a) { return E.cpuLevel(s, a); }
   function forecast(s, extra) {
     const bombs = extra ? [...s.bombs, extra] : s.bombs.slice();
     const due = new Map(bombs.map(b => [b.id, b.due]));
@@ -66,8 +66,8 @@
     return item === 'speed' && a.speed < 6;
   }
   function choose(s, a, f) {
-    const level = profile(s), personality = a.personality;
-    const rivals = s.actors.filter(p => p.alive && p.id !== a.id);
+    const level = profile(s, a), personality = a.personality;
+    const rivals = s.actors.filter(p => p.alive && E.opponents(a, p));
     const queue = [{ x: a.x, y: a.y, depth: 0, dir: null }], seen = new Set([E.index(s, a.x, a.y)]);
     let best = -Infinity, direction = null;
     for (let n = 0; n < queue.length; n++) {
@@ -95,7 +95,8 @@
     return direction;
   }
   function input(s, a) {
-    const level = profile(s), delay = cadence[s.difficulty] + level.delay;
+    if (s.settling) { const f = forecast(s); return { dir: escape(s, a, f).dir }; }
+    const level = profile(s, a), delay = cadence[s.difficulty] + level.delay;
     // Hesitation applies only while safe: novices still try to escape bombs and the border.
     const resting = ((s.time + a.id * .7) % 5) / 5 >= level.activity;
     if (resting) {
@@ -125,8 +126,8 @@
     if (s.time >= a.ai.nextBomb && !E.bombAt(s, a.x, a.y) && E.activeBombs(s, a) < a.capacity) {
       const test = { id: -1, x: a.x, y: a.y, range: a.range, due: s.time + 2 }, cells = E.blast(s, test);
       const crates = cells.some(i => s.tiles[i] === 2);
-      const attack = s.actors.some(r => r.id !== a.id && r.alive && (cells.includes(E.index(s, r.x, r.y)) ||
-        (s.stage >= 4 && s.difficulty === 'hard' && E.DIRS[r.dir] && cells.includes(E.index(s, r.x + E.DIRS[r.dir][0], r.y + E.DIRS[r.dir][1])))));
+      const attack = s.actors.some(r => E.opponents(a, r) && r.alive && (cells.includes(E.index(s, r.x, r.y)) ||
+        (s.stage >= 9 && s.difficulty === 'hard' && E.DIRS[r.dir] && cells.includes(E.index(s, r.x + E.DIRS[r.dir][0], r.y + E.DIRS[r.dir][1])))));
       if ((crates || attack) && s.rng() < (crates ? .45 + level.activity * .55 : level.attack * (s.difficulty === 'easy' ? .55 : 1))) {
         // Account for the full reaction delay after planting, not just instantaneous movement.
         const delayed = { ...a, nextMove: Math.max(a.nextMove, s.time + delay + 1 / 60) };

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f6f2e9">
-  <meta name="description" content="폭탄을 놓고, 블록을 부수고, 마지막까지 살아남으세요! 컴퓨터가 한 명씩 늘어나는 5개의 스테이지, 블록 봄버.">
+  <meta name="description" content="폭탄을 놓고, 블록을 부수고, 마지막까지 살아남으세요! 아군과 함께 도전하는 12개의 스테이지, 블록 봄버.">
   <title>블록 봄버 · SION WORLD</title>
   <link rel="icon" type="image/svg+xml" href="./assets/icon.svg">
   <link rel="stylesheet" href="./styles.css">
@@ -21,16 +21,17 @@
     </header>
     <section class="intro" aria-labelledby="game-title">
       <div><p class="eyebrow"><span></span> A LITTLE BLAST OF FUN</p><h1 id="game-title">블록 <span>봄버</span><img src="./assets/icon.svg" alt="" width="56" height="56"></h1><p class="subtitle">작은 폭탄 하나로, 놀이터를 뒤집어 봐!</p></div>
-      <div class="hero-tag"><span>01 — 05</span><strong>다섯 번의 짜릿한 도전</strong><small>스테이지마다 새로운 라이벌 +1</small></div>
+      <div class="hero-tag"><span>01 — 12</span><strong>열두 번의 팀 도전</strong><small>두 단계마다 적 +1 · 함께 싸우는 아군</small></div>
     </section>
     <nav class="stages" aria-label="스테이지 선택" id="stages"></nav>
     <div class="game-layout">
       <section class="arena-card" aria-label="게임 경기장">
         <div class="arena-top"><div><span class="live-dot"></span><strong id="stage-label">STAGE 01</strong><span class="stage-name" id="stage-name">첫 번째 불꽃</span></div><button id="pause" class="pause" type="button" disabled aria-label="일시정지">Ⅱ <span>잠깐 쉬기</span></button></div>
-        <div class="match-hud"><div><span class="hud-label">남은 라이벌</span><strong><span id="alive">1</span><small id="total"> / 1</small></strong></div><div class="timer-wrap"><span class="hud-label">플레이 시간</span><strong id="timer">00:00</strong></div><div class="player-marker"><span class="player-dot"></span><div><span class="hud-label">내 캐릭터</span><strong>민트 봄버</strong></div></div></div>
+        <div class="match-hud"><div><span class="hud-label">남은 적</span><strong><span id="alive">1</span><small id="total"> / 1</small></strong></div><div class="timer-wrap"><span class="hud-label">플레이 시간</span><strong id="timer">00:00</strong></div><div class="player-marker"><span class="player-dot"></span><div><span class="hud-label">우리 팀</span><strong id="team-alive">우리 팀 2 / 2</strong></div></div></div>
         <p class="battle-notice" id="battle-notice" role="status">초반 컴퓨터는 느긋해요. 아이템부터 모아 보세요!</p>
+        <div class="map-tools"><span id="map-size">13 × 11칸</span><button id="map-zoom" type="button" aria-pressed="false">확대 · 따라가기</button></div>
         <div class="board-wrap" id="board-wrap">
-          <canvas id="board" width="624" height="528" tabindex="0" role="img" aria-label="블록 봄버 게임판. 방향키 또는 WASD로 이동하고 스페이스로 폭탄을 설치합니다."></canvas>
+          <div id="map-view" class="map-view"><canvas id="board" width="624" height="528" tabindex="0" role="img" aria-label="블록 봄버 게임판. 방향키 또는 WASD로 이동하고 스페이스로 폭탄을 설치합니다."></canvas></div>
           <div class="overlay" id="overlay">
             <section class="dialog" aria-labelledby="overlay-title">
               <img class="dialog-icon" src="./assets/icon.svg" alt="" width="72" height="72">
@@ -48,10 +49,10 @@
           <div class="countdown" id="countdown" hidden aria-live="assertive"></div>
           <div class="toast" id="toast" role="status" aria-live="polite"></div>
         </div>
-        <div class="arena-bottom"><span><i class="legend-dot"></i> 나 <i class="legend-dot cpu"></i> 컴퓨터</span><span>내 폭탄도 조심하세요!</span></div>
+        <div class="arena-bottom"><span><i class="legend-dot"></i> 나 · 아군 <i class="legend-dot cpu"></i> 적</span><span>내 폭탄도 조심하세요!</span></div>
       </section>
       <aside class="sidebar">
-        <section class="mission panel"><p class="eyebrow">TODAY’S MISSION</p><h2>마지막까지<br>살아남기<span>✦</span></h2><p id="mission-copy">컴퓨터 1명을 쓰러뜨리고<br>다음 놀이터로 떠나 보세요.</p><div class="rivals" id="rivals" aria-label="컴퓨터 생존 상태"></div></section>
+        <section class="mission panel"><p class="eyebrow">TODAY’S MISSION</p><h2>우리 팀이<br>끝까지<span>✦</span></h2><p id="mission-copy">컴퓨터 1명을 쓰러뜨리고<br>다음 놀이터로 떠나 보세요.</p><div class="rivals" id="rivals" aria-label="아군과 적의 생존 상태"></div></section>
         <section class="power panel">
           <div class="panel-heading"><h2>나의 파워</h2><span>POWER UP</span></div>
           <div class="power-row"><span class="item-symbol bomb-symbol">●</span><span>폭탄<small>최대 3개 동시 설치</small></span><strong id="power-bomb">1 / 1</strong></div>
@@ -64,7 +65,7 @@
             <p>새 경기에서는 시작 보상 외 능력이 초기화돼요.<br>초반 컴퓨터는 아이템을 자주 지나쳐요.</p>
           </details>
         </section>
-        <section class="howto panel"><p class="eyebrow">HOW TO PLAY</p><div class="instruction"><div class="keys"><kbd>↑</kbd><span><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span></div><p>방향키 / WASD<small>상하좌우 이동</small></p></div><div class="instruction"><kbd class="space-key">SPACE</kbd><p>폭탄 놓기<small>2초 뒤 펑! 모퉁이로 피하기</small></p></div><div class="howto-note">✧ 컴퓨터끼리도 서로 공격해요.<br>서로 견제하는 틈을 노려 보세요!<br>⚠ 2분부터 외곽이 좁아져요. 시간 제한은 없어요.<br>8초 전 경고 · 실드로는 막지 못해요.</div></section>
+        <section class="howto panel"><p class="eyebrow">HOW TO PLAY</p><div class="instruction"><div class="keys"><kbd>↑</kbd><span><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span></div><p>방향키 / WASD<small>상하좌우 이동</small></p></div><div class="instruction"><kbd class="space-key">SPACE</kbd><p>폭탄 놓기<small>2초 뒤 펑! 모퉁이로 피하기</small></p></div><div class="howto-note">✧ 같은 팀끼리는 폭탄 피해가 없어요.<br>내 폭탄은 위험해요. 아군과 함께 싸워요!<br>⚠ 외곽 축소는 큰 맵일수록 늦게 시작해요. 시간 제한은 없어요.<br>8초 전 경고 · 실드로는 막지 못해요.</div></section>
         <p class="record" id="record">나만의 작은 도전을 시작해 보세요.</p>
       </aside>
     </div>

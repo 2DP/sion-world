@@ -3,12 +3,13 @@
   'use strict';
   const DIRS = { up: [0, -1], right: [1, 0], down: [0, 1], left: [-1, 0] };
   const STAGES = [
-    { name: '첫 번째 불꽃', width: 13, height: 11, enemies: 1 },
-    { name: '두근두근 삼각 대결', width: 13, height: 11, enemies: 2 },
-    { name: '네 모서리의 소동', width: 13, height: 11, enemies: 3 },
-    { name: '넓어진 놀이터', width: 17, height: 13, enemies: 4 },
-    { name: '마지막 불꽃 축제', width: 17, height: 13, enemies: 5 }
-  ];
+    ['첫 번째 불꽃',13,11,1,1], ['함께 걷는 길',15,11,1,1],
+    ['두 번째 라이벌',15,13,2,1], ['넓어진 골목',17,13,2,1],
+    ['세 갈래 작전',17,15,3,1], ['블록 정원',19,15,3,1],
+    ['지원군 도착',21,17,4,2], ['팀워크의 시간',21,19,4,2],
+    ['다섯 라이벌',23,19,5,2], ['커다란 놀이터',25,21,5,2],
+    ['마지막 작전',27,21,6,2], ['불꽃 팀 챔피언',29,23,6,2]
+  ].map(([name,width,height,enemies,allies], i) => ({ name,width,height,enemies,allies,stormStart:120 + Math.floor(i / 2) * 15 }));
   const COLORS = ['#247f77', '#e57460', '#9875bc', '#d69a37', '#538fcb', '#c66f9e'];
   const ITEMS = Object.freeze({
     bomb: { name: '폭탄 추가', weight: 25 }, fire: { name: '범위 강화', weight: 25 },
@@ -16,23 +17,24 @@
     superfire: { name: '슈퍼 불꽃', weight: 10 }
   });
   const MAX_RANGE = 6, SHIELD_GRACE = .8;
-  const CPU_LEVELS = [
-    { activity: .35, itemInterest: .1, attack: .2, cooldown: 3.2, delay: .55 },
-    { activity: .5, itemInterest: .3, attack: .4, cooldown: 2.5, delay: .4 },
-    { activity: .7, itemInterest: .55, attack: .65, cooldown: 1.8, delay: .25 },
-    { activity: .85, itemInterest: .8, attack: .85, cooldown: 1.2, delay: .1 },
-    { activity: 1, itemInterest: 1, attack: 1, cooldown: .85, delay: 0 }
-  ];
+  const CPU_LEVELS = STAGES.map((_, i) => {
+    const t = i / (STAGES.length - 1);
+    return { activity: .35 + .65 * t, itemInterest: .1 + .9 * t, attack: .2 + .8 * t, cooldown: 3.2 - 2.35 * t, delay: .55 * (1 - t) };
+  });
+  const ALLY_LEVEL = { activity: .8, itemInterest: .8, attack: .7, cooldown: 1.5, delay: .15 };
+  const cpuLevel = (s, a) => a && a.id && a.team === 0 ? ALLY_LEVEL : CPU_LEVELS[s.stage - 1];
+  const opponents = (a, b) => a.team !== b.team;
+  const teamCounts = s => ({ ours: s.actors.filter(a => a.alive && a.team === 0).length, enemies: s.actors.filter(a => a.alive && a.team === 1).length });
   const PERSONALITIES = { attacker: '공격형', collector: '수집형', trapper: '함정형' };
   // The outer floor turns dangerous, rather than adding walls that split the maze.
   function stormDue(s, x, y) {
     const depth = Math.min(x, y, s.width - 1 - x, s.height - 1 - y);
-    return depth > 0 && depth <= Math.floor(Math.min(s.width, s.height) / 2) - 2 ? 120 + (depth - 1) * 12 : Infinity;
+    return depth > 0 && depth <= Math.floor(Math.min(s.width, s.height) / 2) - 2 ? (s.stormStart || 120) + (depth - 1) * 12 : Infinity;
   }
   function storm(s) {
     const max = Math.floor(Math.min(s.width, s.height) / 2) - 2;
-    const ring = s.time + 1e-8 < 120 ? 0 : Math.min(max, 1 + Math.floor((s.time - 120 + 1e-8) / 12));
-    const due = ring < max ? 120 + ring * 12 : Infinity;
+    const ring = s.time + 1e-8 < (s.stormStart || 120) ? 0 : Math.min(max, 1 + Math.floor((s.time - (s.stormStart || 120) + 1e-8) / 12));
+    const due = ring < max ? (s.stormStart || 120) + ring * 12 : Infinity;
     return { ring, due, warning: due - s.time <= 8 };
   }
   function randomItem(rng) {
@@ -42,7 +44,7 @@
   }
   const key = (x, y) => x + ',' + y;
   const index = (s, x, y) => y * s.width + x;
-  const wantsItem = (s, a, i) => !a.id || ((i * 37 + a.id * 17 + (s.seed % 100)) % 100) < Math.round(CPU_LEVELS[s.stage - 1].itemInterest * 100);
+  const wantsItem = (s, a, i) => !a.id || ((i * 37 + a.id * 17 + (s.seed % 100)) % 100) < Math.round(cpuLevel(s, a).itemInterest * 100);
   const inside = (s, x, y) => x >= 0 && y >= 0 && x < s.width && y < s.height;
   const tile = (s, x, y) => inside(s, x, y) ? s.tiles[index(s, x, y)] : 1;
   function random(seed) {
@@ -50,20 +52,21 @@
     return () => { n += 0x6D2B79F5; let t = n; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   }
   function create(options = {}) {
-    const stage = Math.max(1, Math.min(5, Math.floor(options.stage || 1)));
+    const stage = Math.max(1, Math.min(STAGES.length, Math.floor(options.stage || 1)));
     const cfg = STAGES[stage - 1];
     const seed = options.seed === undefined ? (Date.now() ^ Math.floor(Math.random() * 0xffffffff)) >>> 0 : options.seed >>> 0;
     const rng = random(seed);
     const s = { ...cfg, stage, seed, rng, difficulty: ['easy', 'normal', 'hard'].includes(options.difficulty) ? options.difficulty : 'easy',
-      time: 0, tick: 0, phase: options.phase || 'ready', countdown: 3,
+      time: 0, tick: 0, settling: false, phase: options.phase || 'ready', countdown: 3,
       tiles: Array(cfg.width * cfg.height).fill(0), hidden: {}, items: {}, pending: {},
       bombs: [], flames: [], actors: [], events: [], nextBombId: 0 };
-    const mid = Math.floor(cfg.width / 2) | 1;
-    const points = [[1, 1], [s.width - 2, s.height - 2], [s.width - 2, 1], [1, s.height - 2], [mid, 1], [mid, s.height - 2]];
+    const midX = Math.floor(s.width / 2) | 1, midY = Math.floor(s.height / 2) | 1;
+    const enemySpawns = [[s.width-2,s.height-2],[s.width-2,1],[s.width-2,midY],[midX,1],[midX,s.height-2],[midX,midY]];
+    const points = [[1,1,0], ...enemySpawns.slice(0,cfg.enemies).map(p => [...p,1]), ...[[1,s.height-2],[1,midY]].slice(0,cfg.allies).map(p => [...p,0])];
     const reserved = new Set();
-    for (const [x, y] of points.slice(0, cfg.enemies + 1)) {
-      const cx = x === 1 ? 2 : x === s.width - 2 ? s.width - 3 : x;
-      const cy = y === 1 ? 2 : s.height - 3;
+    for (const [x, y] of points) {
+      const cx = Math.max(2, Math.min(s.width - 3, x));
+      const cy = Math.max(2, Math.min(s.height - 3, y));
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
         reserved.add(key(cx + dx, cy + dy));
         reserved.add(key(s.width - 1 - cx - dx, s.height - 1 - cy - dy));
@@ -80,9 +83,9 @@
         if (rng() < .45) { const type = randomItem(rng); s.hidden[i] = s.hidden[j] = type; }
       }
     }
-    points.slice(0, cfg.enemies + 1).forEach(([x, y], id) => s.actors.push({
-      id, x, y, prevX: x, prevY: y, movedAt: -1, dir: 'down', alive: true,
-      color: COLORS[id], name: id === 0 ? '나' : 'CPU ' + id, capacity: 1, range: 2, speed: 4,
+    points.forEach(([x, y, team], id) => s.actors.push({
+      id, team, x, y, prevX: x, prevY: y, movedAt: -1, dir: 'down', alive: true,
+      color: team === 0 ? (id ? '#369ca0' : COLORS[0]) : COLORS[1 + (id - 1) % (COLORS.length - 1)], name: id === 0 ? '나' : team === 0 ? '아군 ' + (id - cfg.enemies) : '적 ' + id, capacity: 1, range: 2, speed: 4,
       shield: 0, protectedUntil: 0, kills: 0, death: null,
       personality: ['attacker', 'collector', 'trapper'][(id - 1 + 3) % 3],
       nextMove: 0, blocks: 0, collected: 0, memory: [], ai: { next: 0, dir: null, nextBomb: 0 }
@@ -110,7 +113,7 @@
     return true;
   }
   function place(s, a) {
-    if (!a.alive || tile(s, a.x, a.y) || bombAt(s, a.x, a.y) || burning(s, a.x, a.y) || activeBombs(s, a) >= a.capacity) return false;
+    if (s.settling || !a.alive || tile(s, a.x, a.y) || bombAt(s, a.x, a.y) || burning(s, a.x, a.y) || activeBombs(s, a) >= a.capacity) return false;
     const b = { id: s.nextBombId++, x: a.x, y: a.y, owner: a.id, range: a.range, at: s.time, due: s.time + 2,
       grace: new Set(s.actors.filter(p => p.alive && p.x === a.x && p.y === a.y).map(p => p.id)) };
     s.bombs.push(b); s.events.push({ type: 'place', x: a.x, y: a.y, id: a.id }); return true;
@@ -132,7 +135,7 @@
       done.add(b.id);
       const cells = new Set(blast(s, b, snapshot));
       for (const other of snapshot) if (!done.has(other.id) && cells.has(index(s, other.x, other.y))) queued.push(other);
-      s.flames.push({ cells, until: s.time + .4, owner: b.owner, bombId: b.id });
+      s.flames.push({ cells, until: s.time + .4, owner: b.owner, bombId: b.id, team: s.actors.find(a => a.id === b.owner)?.team });
       s.events.push({ type: 'explode', x: b.x, y: b.y });
       for (const i of cells) {
         delete s.items[i];
@@ -150,7 +153,7 @@
   function damage(s) {
     for (const a of s.actors) if (a.alive) {
       const danger = stormDue(s, a.x, a.y) <= s.time + 1e-8;
-      const hits = s.flames.filter(f => f.until > s.time + 1e-8 && f.cells.has(index(s, a.x, a.y)));
+      const hits = s.flames.filter(f => f.until > s.time + 1e-8 && f.cells.has(index(s, a.x, a.y)) && (f.owner === a.id || f.team === undefined || f.team !== a.team));
       if (!danger && (!hits.length || s.time + 1e-8 < a.protectedUntil)) continue;
       if (!danger && a.shield > 0) {
         a.shield = 0; a.protectedUntil = s.time + SHIELD_GRACE;
@@ -160,7 +163,7 @@
       const hit = hits.find(f => Number.isInteger(f.owner) && f.owner !== a.id) || hits[0];
       const killer = !danger && hit ? s.actors.find(p => p.id === hit.owner && p.id !== a.id) : null;
       if (killer) killer.kills++;
-      a.death = { cause: danger ? 'storm' : hit?.owner === a.id ? 'self' : 'bomb', killerId: killer?.id ?? null,
+      a.death = { at: s.time, cause: danger ? 'storm' : hit?.owner === a.id ? 'self' : 'bomb', killerId: killer?.id ?? null,
         cells: danger ? [index(s, a.x, a.y)] : [...new Set(hits.flatMap(f => [...f.cells]))], x: a.x, y: a.y };
       a.alive = false; s.events.push({ type: 'death', x: a.x, y: a.y, color: a.color, id: a.id, killerId: killer?.id ?? null });
     }
@@ -172,12 +175,16 @@
     s.time += dt; s.tick++;
     s.flames = s.flames.filter(f => f.until > s.time + 1e-8);
     explode(s); damage(s);
+    const before = teamCounts(s);
+    if (!before.ours || !before.enemies) s.settling = true;
     const order = s.tick % 2 ? s.actors : s.actors.slice().reverse(), intents = new Map();
     for (const a of order) if (a.alive) {
       const command = input[a.id] || (a.id && controller ? controller(s, a) : {}) || {};
       intents.set(a.id, command); if (command.dir) move(s, a, command.dir);
     }
     damage(s);
+    const after = teamCounts(s);
+    if (!after.ours || !after.enemies) s.settling = true;
     for (const i of Object.keys(s.pending)) if (!burning(s, Number(i) % s.width, Math.floor(Number(i) / s.width))) { s.items[i] = s.pending[i]; delete s.pending[i]; }
     for (const a of order) if (a.alive) {
       const i = index(s, a.x, a.y), item = s.items[i];
@@ -197,14 +204,17 @@
       }
       if (intents.get(a.id)?.bomb) place(s, a);
     }
-    const player = s.actors[0], enemies = s.actors.filter(a => a.id && a.alive).length;
-    if (!player.alive) s.phase = enemies === 0 ? 'draw' : 'defeat';
-    else if (!enemies) s.phase = s.stage === STAGES.length ? 'complete' : 'stage-clear';
+    const teams = teamCounts(s);
+    if (!teams.ours || !teams.enemies) s.settling = true;
+    if (s.settling && !s.bombs.length && !s.flames.length) {
+      if (!teams.ours) s.phase = teams.enemies ? 'defeat' : 'draw';
+      else if (!teams.enemies) s.phase = s.stage === STAGES.length ? 'complete' : 'stage-clear';
+    }
     if (s.phase !== 'playing') s.events.push({ type: 'result', result: s.phase });
   }
   function pause(s) { if (s.phase === 'playing' || s.phase === 'countdown') { s.resumePhase = s.phase; s.phase = 'paused'; return true; } return false; }
   function resume(s) { if (s.phase === 'paused') { s.phase = s.resumePhase; return true; } return false; }
-  const api = { DIRS, STAGES, COLORS, ITEMS, MAX_RANGE, SHIELD_GRACE, CPU_LEVELS, PERSONALITIES, wantsItem, stormDue, storm, create, random, key, index, tile, bombAt, burning, activeBombs, canWalk, move, place, blast, step, pause, resume };
+  const api = { DIRS, STAGES, COLORS, ITEMS, MAX_RANGE, SHIELD_GRACE, CPU_LEVELS, cpuLevel, opponents, teamCounts, PERSONALITIES, wantsItem, stormDue, storm, create, random, key, index, tile, bombAt, burning, activeBombs, canWalk, move, place, blast, step, pause, resume };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.BlockBomber = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -4,7 +4,8 @@ const E = require('../engine.js');
 const AI = require('../ai.js');
 
 function arena(stage = 1) {
-  const s = E.create({ seed: 123, stage, phase: 'playing' });
+  const s = E.create({ seed: 123, stage: stage <= 5 ? stage * 2 - 1 : stage, phase: 'playing' });
+  s.actors = s.actors.filter(a => a.id === 0 || a.team === 1); // Isolate legacy single-player rule cases; team coverage lives in teams.test.cjs.
   s.tiles = s.tiles.map(t => t === 2 ? 0 : t); s.hidden = {}; return s;
 }
 function tick(s, seconds, inputs = {}, controller) { for (let i = 0; i < Math.round(seconds * 60); i++) E.step(s, inputs, 1 / 60, controller); }
@@ -13,16 +14,18 @@ function put(s, x, y, due = 2, range = 2, owner = 0) {
 }
 function at(a, x, y) { a.x = a.prevX = x; a.y = a.prevY = y; }
 
-test('five stages increase CPU count 1→5 and expand the late-stage maps', () => {
-  for (let stage = 1; stage <= 5; stage++) {
-    const s = E.create({ stage, seed: 5 });
-    assert.equal(s.actors.length, stage + 1); assert.equal(s.enemies, stage);
-    assert.equal(new Set(s.actors.map(a => E.key(a.x, a.y))).size, stage + 1);
-    assert.equal(s.width, stage < 4 ? 13 : 17);
+test('twelve stages add enemies every two rounds and grow maps for both teams', () => {
+  for (let stage = 1; stage <= E.STAGES.length; stage++) {
+    const s = E.create({stage,seed:5});
+    assert.equal(s.enemies, Math.ceil(stage/2)); assert.equal(s.allies,stage<7?1:2);
+    assert.equal(s.actors.length,1+s.enemies+s.allies);
+    assert.equal(new Set(s.actors.map(a=>E.key(a.x,a.y))).size,s.actors.length);
+    if(stage>1) { const prev=E.STAGES[stage-2]; assert.ok(s.width*s.height>prev.width*prev.height); }
   }
+  assert.equal(E.STAGES.at(-1).width,29); assert.equal(E.STAGES.at(-1).height,23);
 });
-test('100 generated maps have symmetric blocks/items, legal spawns, escape routes and connected destructible terrain', () => {
-  for (let stage = 1; stage <= 5; stage++) for (let seed = 0; seed < 20; seed++) {
+test('240 generated maps have symmetric blocks/items, legal spawns, escape routes and connected destructible terrain', () => {
+  for (let stage = 1; stage <= E.STAGES.length; stage++) for (let seed = 0; seed < 20; seed++) {
     const s = E.create({ stage, seed });
     s.tiles.forEach((t, i) => { assert.equal(t, s.tiles[s.tiles.length - 1 - i]); assert.equal(s.hidden[i], s.hidden[s.tiles.length - 1 - i]); });
     for (const a of s.actors) {
@@ -102,26 +105,26 @@ test('simultaneous pickup and bomb installation have a single winner', () => {
   assert.ok(s.bombs[0].grace.has(0)); assert.ok(s.bombs[0].grace.has(1));
 });
 test('own bomb defeats the player and all later time is frozen', () => {
-  const s = arena(); E.place(s, s.actors[0]); tick(s, 2);
+  const s = arena(); E.place(s, s.actors[0]); tick(s, 2.4);
   assert.equal(s.phase, 'defeat'); const time = s.time; tick(s, 5); assert.equal(s.time, time);
 });
 test('all remaining rivals must be defeated before a stage clears', () => {
   const s = arena(3); s.actors[1].alive = false; s.actors[2].alive = false;
   E.step(s); assert.equal(s.phase, 'playing'); s.actors[3].alive = false; E.step(s); assert.equal(s.phase, 'stage-clear');
 });
-test('stage five ends in final victory; new stage resets abilities and actors', () => {
-  const s = arena(5); s.actors.slice(1).forEach(a => a.alive = false); E.step(s); assert.equal(s.phase, 'complete');
-  const next = E.create({ stage: 4 }); assert.equal(next.phase, 'ready'); assert.equal(next.actors[0].range, 2); assert.equal(next.actors.length, 5);
+test('stage twelve ends in final victory; new stage resets abilities and actors', () => {
+  const s = arena(12); s.actors.slice(1).forEach(a => a.alive = false); E.step(s); assert.equal(s.phase, 'complete');
+  const next = E.create({ stage: 4 }); assert.equal(next.phase, 'ready'); assert.equal(next.actors[0].range, 2); assert.equal(next.actors.length, 1 + next.enemies + next.allies);
 });
 test('the last CPU and player dying together is a draw, with other survivors it is defeat', () => {
-  const s = arena(); at(s.actors[0], 3, 3); at(s.actors[1], 5, 3); put(s, 3, 3, .1); tick(s, .1); assert.equal(s.phase, 'draw');
-  const many = arena(2); at(many.actors[0], 3, 3); at(many.actors[1], 5, 3); put(many, 3, 3, .1); tick(many, .1); assert.equal(many.phase, 'defeat');
+  const s = arena(); at(s.actors[0], 3, 3); at(s.actors[1], 5, 3); put(s, 3, 3, .1); tick(s, .5); assert.equal(s.phase, 'draw');
+  const many = arena(2); at(many.actors[0], 3, 3); at(many.actors[1], 5, 3); put(many, 3, 3, .1); tick(many, .5); assert.equal(many.phase, 'defeat');
 });
 test('matches continue past three minutes with no timeout; later bomb damage still ends a match', () => {
   const s = arena(); at(s.actors[0], 5, 5); at(s.actors[1], 7, 5); s.time = 180 - 1 / 60; E.step(s); assert.equal(s.phase, 'playing');
   assert.ok(s.actors.every(a => a.alive));
   s.time = 3600; E.step(s); assert.equal(s.phase, 'playing');
-  const hit = arena(); at(hit.actors[0], 5, 5); at(hit.actors[1], 7, 5); hit.time = 180 - 1 / 60; put(hit, 5, 5, 180, 1); E.step(hit); assert.equal(hit.phase, 'defeat');
+  const hit = arena(); at(hit.actors[0], 5, 5); at(hit.actors[1], 7, 5); hit.time = 180 - 1 / 60; put(hit, 5, 5, 180, 1); E.step(hit); assert.equal(hit.actors[0].alive, false); tick(hit,.4); assert.equal(hit.phase, 'defeat');
 });
 test('damage precedes movement and pickups on the exact detonation tick', () => {
   const s = arena(); s.items[E.index(s, 1, 1)] = 'speed'; put(s, 1, 1, 1 / 60);
@@ -129,7 +132,7 @@ test('damage precedes movement and pickups on the exact detonation tick', () => 
 });
 test('moving into an existing flame causes immediate damage', () => {
   const s = arena(); s.flames.push({ cells: new Set([E.index(s, 2, 1)]), until: 1 });
-  E.step(s, { 0: { dir: 'right' } }); assert.equal(s.phase, 'defeat');
+  E.step(s, { 0: { dir: 'right' } }); assert.equal(s.actors[0].alive, false); tick(s,1); assert.equal(s.phase, 'defeat');
 });
 test('forecast handles chains and later rays through previously destroyed crates without mutating the board', () => {
   const s = arena(); s.tiles[E.index(s, 5, 3)] = 2; put(s, 5, 1, .5); put(s, 3, 3, 1.5, 4); const third = put(s, 7, 3, 3, 2);
@@ -151,7 +154,7 @@ test('CPU escapes its starting bomb on every difficulty, including a turn', () =
   }
 });
 test('all AI modes play seeded matches without invalid positions, over-capacity bombs or NaN', () => {
-  for (const difficulty of ['easy', 'normal', 'hard']) for (let stage = 1; stage <= 5; stage++) {
+  for (const difficulty of ['easy', 'normal', 'hard']) for (let stage = 1; stage <= E.STAGES.length; stage++) {
     const s = E.create({ stage, seed: stage * 42, phase: 'playing', difficulty });
     let placements = 0;
     for (let n = 0; n < 60 * 35 && s.phase === 'playing'; n++) {

@@ -10,13 +10,13 @@
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey));
       if (!saved || typeof saved !== 'object') return data;
-      data.unlocked = Number.isInteger(saved.unlocked) ? Math.min(5, Math.max(1, saved.unlocked)) : 1;
+      data.unlocked = Number.isInteger(saved.unlocked) ? Math.min(E.STAGES.length, Math.max(1, saved.unlocked)) : 1;
       data.difficulty = Object.hasOwn(difficulties, saved.difficulty) ? saved.difficulty : 'easy';
       if (typeof saved.muted === 'boolean') data.muted = saved.muted;
       if (typeof saved.reduced === 'boolean') data.reduced = saved.reduced;
       for (const d of Object.keys(difficulties)) {
         data.bests[d] = {};
-        for (let stage = 1; stage <= 5; stage++) {
+        for (let stage = 1; stage <= E.STAGES.length; stage++) {
           const best = saved.bests?.[d]?.[stage];
           if (typeof best === 'number' && Number.isFinite(best) && best > 0) data.bests[d][stage] = best;
         }
@@ -35,13 +35,15 @@
   const held = new Map(), particles = [];
   let heldOrder = 0;
   let stageBonus = null, revealAt = 0, newBest = false, lastKillAt = -Infinity, combo = 0, lastWarning = null;
-  const stageHints = ['느긋한 연습 상대 · 아이템에 거의 관심이 없어요', '탐색 시작 · 가끔 아이템을 챙겨요', '본격 대결 · 공격과 수집이 활발해져요', '적극적인 라이벌 · 아이템을 먼저 차지하세요', '최종 대결 · 쉬지 않고 공격하고 수집해요'];
+  const stageHint = n => n <= 3 ? '느긋한 시작 · 아군과 함께 아이템을 모으세요' : n <= 6 ? '차근차근 강해지는 적 · 길을 함께 열어요' : n <= 9 ? '지원군 합류 · 넓어진 맵에서 협력하세요' : '마지막 팀 대결 · 동료와 함께 살아남으세요';
+  const stageNumber = n => String(n).padStart(2, '0');
+  let manualZoom = null, zoomed = false;
   function deathCopy() {
     const death = state.actors[0].death;
     if (!death) return '다음에는 모퉁이 뒤로 피할 길을 찾아 보세요.';
     if (death.cause === 'storm') return '좁아진 경기장 바깥에 있었어요. 경고 칸은 실드로 막을 수 없으니 중앙으로 피하세요.';
     if (death.cause === 'self') return '내 폭탄의 불꽃에 닿았어요. 설치한 뒤 모퉁이 너머로 피하세요.';
-    return (death.killerId == null ? '폭탄' : 'CPU ' + death.killerId + '의 폭탄') + ' 불꽃에 닿았어요. 연쇄 폭발과 남은 불꽃도 조심하세요.';
+    return (death.killerId == null ? '폭탄' : (state.actors.find(a => a.id === death.killerId)?.name || '상대') + '의 폭탄') + ' 불꽃에 닿았어요. 연쇄 폭발과 남은 불꽃도 조심하세요.';
   }
   function text(id, value) { const element = $(id); if (element.textContent !== String(value)) element.textContent = value; }
   function clearInput() { held.clear(); queuedBomb = false; queuedMove = null; document.querySelectorAll('.pressed').forEach(b => b.classList.remove('pressed')); }
@@ -49,6 +51,12 @@
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = state.width * cell * dpr; canvas.height = state.height * cell * dpr;
     $('board-wrap').style.setProperty('--board-ratio', state.width / state.height);
+    zoomed = manualZoom ?? (window.innerWidth < 780 && state.width > 17);
+    $('map-view').classList.toggle('zoomed', zoomed);
+    $('map-view').style.setProperty('--map-width', state.width * 28 + 'px');
+    text('map-zoom', zoomed ? '전체 맵 보기' : '확대 · 따라가기');
+    $('map-zoom').setAttribute('aria-pressed', String(zoomed));
+    text('map-size', state.width + ' × ' + state.height + '칸');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   function settings() {
@@ -65,9 +73,9 @@
       const button = document.createElement('button'); button.type = 'button';
       button.className = 'stage-step' + (i + 1 === selected ? ' current' : i + 1 < prefs.unlocked ? ' passed' : '');
       button.disabled = state.phase !== 'ready' || i + 1 > prefs.unlocked;
-      button.setAttribute('aria-label', '스테이지 ' + (i + 1) + ', 컴퓨터 ' + stage.enemies + '명' + (i + 1 > prefs.unlocked ? ', 잠김' : ''));
+      button.setAttribute('aria-label', '스테이지 ' + (i + 1) + ', 적 ' + stage.enemies + '명, 아군 ' + stage.allies + '명' + (i + 1 > prefs.unlocked ? ', 잠김' : ''));
       if (i + 1 === selected) button.setAttribute('aria-current', 'step');
-      button.innerHTML = '<span class="stage-number">0' + (i + 1) + '</span><span><strong>STAGE 0' + (i + 1) + '</strong><small>컴퓨터 ' + stage.enemies + '명</small></span><span class="stage-status">' + (i + 1 < prefs.unlocked ? '✓' : i + 1 > prefs.unlocked ? '·' : '✦') + '</span>';
+      button.innerHTML = '<span class="stage-number">' + stageNumber(i + 1) + '</span><span><strong>STAGE ' + stageNumber(i + 1) + '</strong><small>적 ' + stage.enemies + ' · 아군 ' + stage.allies + '</small></span><span class="stage-status">' + (i + 1 < prefs.unlocked ? '✓' : i + 1 > prefs.unlocked ? '·' : '✦') + '</span>';
       button.addEventListener('click', () => { selected = i + 1; home(); }); $('stages').append(button);
     });
   }
@@ -75,7 +83,7 @@
     $('rivals').replaceChildren();
     for (const a of state.actors.slice(1)) {
       const el = document.createElement('div'); el.className = 'rival'; el.id = 'rival-' + a.id; el.style.setProperty('--cpu', a.color);
-      el.innerHTML = '<span></span>CPU ' + a.id + ' · ' + E.PERSONALITIES[a.personality]; $('rivals').append(el);
+      el.innerHTML = '<span></span>' + a.name + ' · ' + E.PERSONALITIES[a.personality]; $('rivals').append(el);
     }
   }
   function overlay(mode) {
@@ -91,17 +99,17 @@
     const win = mode === 'stage-clear' || mode === 'complete';
     const titles = { ready: '블록 사이,<br>짜릿한 한 판!', paused: '잠깐, 숨 고르기', 'stage-clear': '스테이지 클리어!', complete: '놀이터의 챔피언!', defeat: '앗, 아쉬워요!', draw: '이번 판은 무승부!' };
     const descriptions = {
-      ready: '폭탄을 놓고 안전한 곳으로 쏙!<br>컴퓨터 ' + state.enemies + '명을 모두 이기면 ' + (selected === 5 ? '최종 우승이에요.' : '다음 스테이지가 열려요.'),
+      ready: '아군 ' + state.allies + '명과 함께 적 ' + state.enemies + '명을 이겨요!<br>우리 팀이 남아 있으면 ' + (selected === E.STAGES.length ? '최종 우승이에요.' : '다음 스테이지가 열려요.'),
       paused: '폭탄도, 컴퓨터도 잠깐 쉬고 있어요.<br>준비되면 다시 이어서 플레이하세요.',
-      'stage-clear': '잘했어요! 다음 스테이지에는<br>컴퓨터 ' + (state.enemies + 1) + '명이 기다리고 있어요.',
-      complete: '컴퓨터 5명과의 마지막 대결까지 성공!<br>다섯 놀이터를 모두 열었어요. 멋진 승리예요!',
-      defeat: deathCopy(),
-      draw: deathCopy() + '<br>마지막 라이벌도 함께 탈락해 무승부예요.'
+      'stage-clear': (state.actors[0].alive ? '우리 팀 승리!' : '아군이 해냈어요! 우리 팀 승리!') + '<br>다음 단계: 적 ' + (E.STAGES[selected]?.enemies || 0) + '명 · 아군 ' + (E.STAGES[selected]?.allies || 0) + '명',
+      complete: '12단계의 팀 대결을 모두 이겼어요!<br>우리 팀이 놀이터의 챔피언이에요!',
+      defeat: '우리 팀이 모두 탈락했어요.<br>' + deathCopy(),
+      draw: '남은 폭탄과 불꽃이 끝난 뒤<br>양쪽 팀 모두 탈락해 무승부예요.'
     };
     $('overlay-title').innerHTML = titles[mode]; $('overlay-copy').innerHTML = descriptions[mode];
     text('overlay-kicker', mode === 'ready' ? 'READY, SET, BOOM!' : mode === 'paused' ? 'TAKE A LITTLE BREAK' : win ? 'A LITTLE VICTORY, A BIG SMILE' : 'ONE MORE LITTLE ADVENTURE');
     $('primary').innerHTML = (mode === 'ready' ? '스테이지 ' + selected + ' 시작' : mode === 'paused' ? '이어서 하기' : mode === 'stage-clear' ? '다음 스테이지로' : mode === 'complete' ? '스테이지 1부터 다시' : '같은 스테이지 다시 도전') + '<span>→</span>';
-    text('overlay-foot', mode === 'ready' ? '방향키로 이동 · SPACE로 폭탄' : mode === 'paused' ? 'ESC로도 다시 시작할 수 있어요' : difficulties[state.difficulty] + ' · STAGE 0' + state.stage);
+    text('overlay-foot', mode === 'ready' ? '방향키로 이동 · SPACE로 폭탄' : mode === 'paused' ? 'ESC로도 다시 시작할 수 있어요' : difficulties[state.difficulty] + ' · STAGE ' + stageNumber(state.stage));
     if (!['ready', 'paused'].includes(mode)) {
       const p = state.actors[0]; $('result-stats').innerHTML = '<span><strong>' + Math.ceil(state.time) + '초</strong>플레이 시간</span><span><strong>' + p.kills + '</strong>직접 처치</span><span><strong>' + p.blocks + '</strong>부순 블록</span><span><strong>' + p.collected + '</strong>얻은 아이템</span>';
       if (newBest && win) text('overlay-foot', '새 최고 기록! ' + state.time.toFixed(1) + '초 · ' + difficulties[state.difficulty]);
@@ -112,8 +120,8 @@
     }
   }
   function refresh() {
-    stages(); rivals(); text('stage-label', 'STAGE 0' + selected); text('stage-name', E.STAGES[selected - 1].name);
-    $('mission-copy').innerHTML = '컴퓨터 ' + state.enemies + '명을 모두 쓰러뜨리고<br>' + (selected === 5 ? '마지막 놀이터의 챔피언이 되세요.' : '다음 놀이터로 떠나 보세요.');
+    stages(); rivals(); text('stage-label', 'STAGE ' + stageNumber(selected)); text('stage-name', E.STAGES[selected - 1].name);
+    $('mission-copy').innerHTML = '아군 ' + state.allies + '명과 적 ' + state.enemies + '명에게 도전!<br>' + (selected === E.STAGES.length ? '마지막 놀이터의 챔피언이 되세요.' : '다음 놀이터로 떠나 보세요.');
     text('total', ' / ' + state.enemies); updateHUD();
   }
   function home() {
@@ -165,7 +173,7 @@
         const r = prefs.records[state.difficulty] || (prefs.records[state.difficulty] = { wins: 0, losses: 0, draws: 0 });
         const kind = state.phase === 'defeat' ? 'losses' : state.phase === 'draw' ? 'draws' : 'wins'; r[kind]++;
         if (kind === 'wins') {
-          prefs.unlocked = Math.max(prefs.unlocked, Math.min(5, selected + 1));
+          prefs.unlocked = Math.max(prefs.unlocked, Math.min(E.STAGES.length, selected + 1));
           const bests = prefs.bests[state.difficulty] || (prefs.bests[state.difficulty] = {});
           newBest = !bests[selected] || state.time < bests[selected];
           if (newBest) bests[selected] = state.time;
@@ -173,7 +181,7 @@
         save(); clearInput(); stages();
       }
       lastPhase = state.phase;
-      if (!state.actors[0].alive && state.actors[0].death) {
+      if (['defeat', 'draw'].includes(state.phase) && state.actors[0].death && state.time - state.actors[0].death.at < 1) {
         revealAt = performance.now() + 1600; overlay('playing'); $('pause').disabled = true;
       } else overlay(state.phase);
     }
@@ -185,9 +193,10 @@
       const warning = Math.ceil(border.due - state.time);
       if (warning !== lastWarning) { tone('warning'); lastWarning = warning; }
     } else if (!border.warning) lastWarning = null;
-    text('battle-notice', revealAt ? deathCopy() : border.warning ? '⚠ ' + Math.max(1, Math.ceil(border.due - state.time)) + '초 후 표시된 바닥이 위험해져요! 중앙으로 이동 · 실드 방어 불가' : border.ring ? '⚠ 바깥쪽은 위험해요! 중앙에서 승부를 끝내세요 · 실드 방어 불가' : stageHints[selected - 1]);
+    text('battle-notice', revealAt ? deathCopy() : ['complete', 'stage-clear'].includes(state.phase) ? '우리 팀 승리! 마지막 불꽃까지 모두 확인했어요.' : ['defeat', 'draw'].includes(state.phase) ? '경기가 끝났어요. 다시 도전해 보세요!' : state.settling ? '마지막 폭탄과 불꽃이 끝날 때까지 기다려요! 아직 피할 수 있어요.' : !p.alive ? '관전 중 · 아군이 싸우고 있어요! 우리 팀이 남아 있으면 패배가 아니에요.' : border.warning ? '⚠ ' + Math.max(1, Math.ceil(border.due - state.time)) + '초 후 표시된 바닥이 위험해져요! 중앙으로 이동 · 실드 방어 불가' : border.ring ? '⚠ 바깥쪽은 위험해요! 중앙에서 승부를 끝내세요 · 실드 방어 불가' : stageHint(selected));
     notice.classList.toggle('danger', !!revealAt || border.warning || border.ring > 0);
-    text('alive', state.actors.filter(a => a.id && a.alive).length);
+    text('alive', E.teamCounts(state).enemies);
+    text('team-alive', '우리 팀 ' + E.teamCounts(state).ours + ' / ' + (state.allies + 1));
     text('timer', String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0'));
     $('timer').parentElement.classList.toggle('urgent', border.warning || border.ring > 0);
     text('power-bomb', (p.capacity - E.activeBombs(state, p)) + ' / ' + p.capacity); text('power-fire', p.range + '칸'); text('power-speed', p.speed + '칸/초');
@@ -251,7 +260,7 @@
     if (a.id) { round(-2, -26, 4, 7, 2, '#586958'); circle(0, -27, 4, a.color); } else { round(-10, -23, 20, 5, 2, '#afd8ba'); }
     const look = E.DIRS[a.dir] || [0, 0]; circle(-5 + look[0], -8 + look[1], 2, '#3a5149'); circle(5 + look[0], -8 + look[1], 2, '#3a5149');
     circle(-9, -3, 2, '#edbb9f'); circle(9, -3, 2, '#edbb9f'); round(-3, 4, 6, 5, 2, '#f7d27b');
-    round(-12, -39, 24, 11, 4, a.id ? '#fcf9e6e8' : '#2c6557'); label(a.id ? 'C' + a.id : '나', 0, -33, 8, a.id ? '#576b52' : '#fff6d8');
+    round(-12, -39, 24, 11, 4, a.id ? '#fcf9e6e8' : '#2c6557'); label(a.id ? (a.team === 0 ? '아' + (a.id - state.enemies) : '적' + a.id) : '나', 0, -33, 8, a.id ? '#576b52' : '#fff6d8');
     if (a.shield) { shieldShape(16, -20, 7, '#548fc1'); label('1', 16, -20, 8, '#fff'); }
     ctx.restore();
   }
@@ -283,6 +292,11 @@
       round(x + 1, y + 1, 46, 46, 10, '#edaa4b'); round(x + 8, y + 5, 32, 38, 12, '#ffd781'); star(x + 24, y + 24, prefs.reduced ? 16 : 15 + Math.sin(state.time * 25 + i) * 3, '#fff7ce');
     }
     state.bombs.forEach(drawBomb);
+    if (zoomed) {
+      const followed = state.actors[0].alive ? state.actors[0] : state.actors.find(a => a.alive && a.team === 0);
+      const view = $('map-view');
+      if (followed) { view.scrollLeft = (followed.x + .5) * canvas.clientWidth / state.width - view.clientWidth / 2; view.scrollTop = (followed.y + .5) * canvas.clientHeight / state.height - view.clientHeight / 2; }
+    }
     state.actors.slice().sort((a, b) => a.y - b.y || a.id - b.id).forEach(drawActor);
     const death = state.actors[0].death;
     if (revealAt && death) {
@@ -321,6 +335,7 @@
     start();
   });
   $('secondary').addEventListener('click', home);
+  $('map-zoom').addEventListener('click', () => { manualZoom = !zoomed; resize(); });
   $('pause').addEventListener('click', togglePause);
   $('difficulty').addEventListener('change', () => { prefs.difficulty = $('difficulty').value; state.difficulty = prefs.difficulty; save(); updateHUD(); });
   $('sound').addEventListener('click', () => { prefs.muted = !prefs.muted; sound.setMuted(prefs.muted); initAudio().then(() => { if (!prefs.muted) tone('item'); }); save(); settings(); });

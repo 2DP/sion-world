@@ -33,7 +33,7 @@ test('shield blocks own bomb and overlapping flames once, allowing movement afte
 test('a second hit after grace ends defeats the actor; staying in fire is not permanent immunity', () => {
   const s = world(), a = s.actors[0]; get(s, a, 'shield'); flame(s, a, 3);
   E.step(s); const end = a.protectedUntil; ticks(s, 47); assert.equal(a.alive, true);
-  E.step(s); assert.ok(s.time + 1e-8 >= end); assert.equal(s.phase, 'defeat');
+  E.step(s); assert.ok(s.time + 1e-8 >= end); assert.equal(s.actors[0].alive, false);
 });
 test('shield cannot stack, and pause preserves its post-hit grace', () => {
   const s = world(), a = s.actors[0]; get(s, a, 'shield'); get(s, a, 'shield');
@@ -43,16 +43,16 @@ test('shield cannot stack, and pause preserves its post-hit grace', () => {
   E.resume(s); ticks(s, 24); assert.equal(a.alive, true); assert.equal(a.shield, 0);
 });
 test('CPU gains the same range and shield effects; stage creation resets both', () => {
-  const s = world(), cpu = s.actors[1]; s.stage = 5; get(s, cpu, 'superfire'); assert.equal(cpu.range, 4);
+  const s = world(), cpu = s.actors[1]; s.stage = E.STAGES.length; get(s, cpu, 'superfire'); assert.equal(cpu.range, 4);
   get(s, cpu, 'shield'); flame(s, cpu); E.step(s); assert.equal(cpu.alive, true); assert.equal(cpu.shield, 0);
   const fresh = E.create({ stage: 2 }); assert.ok(fresh.actors.every(a => a.range === 2 && a.shield === 0 && a.protectedUntil === 0));
 });
 test('shield collection cannot rescue an already fatal same-frame hit', () => {
-  const s = world(), a = s.actors[0]; flame(s, a); get(s, a, 'shield'); assert.equal(s.phase, 'defeat'); assert.equal(a.shield, 0);
+  const s = world(), a = s.actors[0]; flame(s, a); get(s, a, 'shield'); assert.equal(s.actors[0].alive, false); assert.equal(a.shield, 0);
 });
 test('AI seeks visible shield and super fire and keeps checking escapes with extended range', () => {
   for (const type of ['shield', 'superfire']) {
-    const s = world(), a = s.actors[1]; s.stage = 5; s.items[E.index(s, a.x - 1, a.y)] = type;
+    const s = world(), a = s.actors[1]; s.stage = E.STAGES.length; s.items[E.index(s, a.x - 1, a.y)] = type;
     const action = AI.input(s, a); assert.equal(action.dir, 'left');
     E.step(s, { 1: action }); assert.equal(a.collected, 1);
   }

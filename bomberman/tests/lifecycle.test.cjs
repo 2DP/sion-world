@@ -49,25 +49,25 @@ function app(options = {}) {
   return { elements, handlers, storage, state: () => current, click: id => elements.get(id).click(),
     advance: ticks => { for (let n = 0; n < ticks; n++) { now += 1000 / 60 + .001; raf(now); } } };
 }
-test('real UI handlers advance 1→5 CPUs, unlock stages, save once per win, and finish the campaign', () => {
+test('real UI handlers advance through 12 team stages, unlock stages, save once per win, and finish the campaign', () => {
   const ui = app();
   assert.equal(ui.elements.get('stages').children[1].disabled, true);
   ui.click('primary');
-  for (let stage = 1; stage <= 5; stage++) {
-    assert.equal(ui.state().stage, stage); assert.equal(ui.state().actors.length, stage + 1);
+  for (let stage = 1; stage <= Engine.STAGES.length; stage++) {
+    assert.equal(ui.state().stage, stage); assert.equal(ui.state().actors.length, 1 + ui.state().enemies + ui.state().allies);
     ui.advance(181); assert.equal(ui.state().phase, 'playing');
-    ui.state().actors.slice(1).forEach(a => { a.alive = false; }); ui.advance(1);
-    assert.equal(ui.state().phase, stage < 5 ? 'stage-clear' : 'complete');
+    ui.state().actors.slice(1).forEach(a => { a.alive = false; }); ui.advance(151);
+    assert.equal(ui.state().phase, stage < Engine.STAGES.length ? 'stage-clear' : 'complete');
     assert.equal(ui.elements.get('overlay').hidden, false);
     ui.advance(120);
     const saved = JSON.parse([...ui.storage.values()][0]);
-    assert.equal(saved.unlocked, Math.min(5, stage + 1)); assert.equal(saved.records.easy.wins, stage);
-    if (stage < 5) ui.click('primary');
+    assert.equal(saved.unlocked, Math.min(Engine.STAGES.length, stage + 1)); assert.equal(saved.records.easy.wins, stage);
+    if (stage < Engine.STAGES.length) ui.click('primary');
   }
   assert.match(ui.elements.get('overlay-title').innerHTML, /챔피언/);
   ui.click('secondary'); assert.ok(ui.elements.get('stages').children.every(b => !b.disabled));
-  ui.elements.get('stages').children[4].click(); assert.equal(ui.state().stage, 5);
-  ui.click('primary'); assert.equal(ui.state().enemies, 5);
+  ui.elements.get('stages').children[11].click(); assert.equal(ui.state().stage, 12);
+  ui.click('primary'); assert.equal(ui.state().enemies, 6);
 });
 test('defeat retries the same stage, while pause and blur clear pending input and freeze time', () => {
   const ui = app(); ui.click('primary'); ui.advance(181);
@@ -75,7 +75,7 @@ test('defeat retries the same stage, while pause and blur clear pending input an
   ui.click('pause'); const time = ui.state().time, x = ui.state().actors[0].x;
   ui.advance(180); assert.equal(ui.state().time, time); ui.click('primary'); ui.advance(1); assert.equal(ui.state().actors[0].x, x);
   ui.handlers['window:blur'](); assert.equal(ui.state().phase, 'paused'); ui.click('primary');
-  ui.state().actors[0].alive = false; ui.advance(1); assert.equal(ui.state().phase, 'defeat');
+  ui.state().actors.filter(a => a.team === 0).forEach(a => { a.alive = false; }); ui.advance(1); assert.equal(ui.state().phase, 'defeat');
   ui.click('primary'); assert.equal(ui.state().stage, 1); assert.equal(ui.state().phase, 'countdown'); assert.ok(ui.state().actors[0].alive);
 });
 test('short key taps between simulation frames still move once; held space does not repeat', () => {
@@ -121,7 +121,7 @@ test('clear reward choice survives a retry, is replaced at the next clear, and r
   assert.equal(ui.elements.get('reward-choice').hidden, false);
   ui.elements.get('reward').value = 'bomb'; ui.click('primary');
   assert.equal(ui.state().actors[0].capacity, 2); assert.equal(ui.state().actors[0].shield, 0);
-  ui.advance(181); ui.state().actors[0].alive = false; ui.advance(1); ui.click('primary');
+  ui.advance(181); ui.state().actors.filter(a => a.team === 0).forEach(a => { a.alive = false; }); ui.advance(1); ui.click('primary');
   assert.equal(ui.state().stage, 2); assert.equal(ui.state().actors[0].capacity, 2);
   ui.advance(181); ui.state().actors.slice(1).forEach(a => { a.alive = false; }); ui.advance(1);
   ui.elements.get('reward').value = 'shield'; ui.click('primary');
@@ -132,9 +132,9 @@ test('clear reward choice survives a retry, is replaced at the next clear, and r
 
 test('fatal hit reveals actual cause and path before presenting retry; simulation stays frozen', () => {
   const ui = app(); ui.click('primary'); ui.advance(181);
-  const s = ui.state(), p = s.actors[0];
+  const s = ui.state(), p = s.actors[0]; s.actors.filter(a => a.id && a.team === 0).forEach(a => { a.alive = false; });
   s.flames.push({ cells: new Set([Engine.index(s, p.x, p.y)]), owner: 0, until: s.time + .4 });
-  ui.advance(1); const time = s.time;
+  ui.advance(25); const time = s.time;
   assert.equal(s.phase, 'defeat'); assert.equal(ui.elements.get('overlay').hidden, true);
   assert.match(ui.elements.get('battle-notice').textContent, /내 폭탄/);
   assert.equal(p.death.cells.length, 1);
@@ -145,10 +145,10 @@ test('fatal hit reveals actual cause and path before presenting retry; simulatio
 test('kill feedback and stage best times reflect actual kills and only improve on faster wins', () => {
   const ui = app(); ui.click('primary'); ui.advance(181);
   let s = ui.state(); s.stage = 2;
-  s.actors.push({ ...s.actors[1], id: 2, x: 7, y: 5, alive: true });
+  s.actors.push({ ...s.actors[1], id: 3, team: 1, x: 7, y: 5, alive: true });
   const victim = s.actors[1]; s.flames.push({ cells: new Set([Engine.index(s, victim.x, victim.y)]), owner: 0, until: s.time + .4 });
   ui.advance(1); assert.match(ui.elements.get('toast').textContent, /CPU 1 처치/);
-  s.stage = 1; s.time = 20; s.actors[2].alive = false; ui.advance(1);
+  s.stage = 1; s.time = 20; s.actors.filter(a => a.team === 1).forEach(a => { a.alive = false; }); ui.advance(1);
   assert.match(ui.elements.get('result-stats').innerHTML, /직접 처치/);
   let saved = JSON.parse([...ui.storage.values()][0]); const best = saved.bests.easy[1];
   assert.ok(best >= 20 && best < 21);
@@ -182,4 +182,26 @@ test('game events request distinct audio effects, warning beeps, and victory mus
   ui.click('pause'); assert.ok(controls.includes('stop')); ui.click('primary');
   s.actors[1].alive = false; ui.advance(1); assert.ok(played.includes('stage-clear'));
   ui.click('sound'); assert.equal(controls.at(-1), true);
+});
+
+test('player death keeps the live team game visible and an ally win saves a victory', () => {
+  const ui=app(); ui.click('primary'); ui.advance(181);
+  const s=ui.state(); s.actors[0].alive=false;
+  ui.advance(1); assert.equal(s.phase,'playing'); assert.equal(ui.elements.get('overlay').hidden,true);
+  assert.match(ui.elements.get('battle-notice').textContent,/관전 중/);
+  assert.equal(ui.elements.get('team-alive').textContent,'우리 팀 1 / 2');
+  assert.equal(ui.storage.size,0);
+  s.actors.filter(a=>a.team===1).forEach(a=>a.alive=false); ui.advance(151);
+  assert.equal(s.phase,'stage-clear'); assert.match(ui.elements.get('overlay-copy').innerHTML,/아군이 해냈어요/);
+  const saved=JSON.parse([...ui.storage.values()][0]); assert.equal(saved.records.easy.wins,1); assert.equal(saved.records.easy.losses,0);
+  ui.click('primary'); assert.equal(ui.state().stage,2);
+});
+
+test('result UI stays hidden during the last fuse and flame and is saved only after settlement', () => {
+  const ui=app(); ui.click('primary'); ui.advance(181);
+  const s=ui.state(),p=s.actors[0]; Engine.place(s,p); p.x=3; p.y=3;
+  s.actors.filter(a=>a.team===1).forEach(a=>a.alive=false); ui.advance(1);
+  assert.equal(ui.elements.get('overlay').hidden,true); assert.match(ui.elements.get('battle-notice').textContent,/마지막 폭탄/);
+  assert.equal(ui.storage.size,0); ui.advance(120); assert.equal(ui.storage.size,0);
+  ui.advance(24); assert.equal(s.phase,'stage-clear'); assert.equal(ui.elements.get('overlay').hidden,false);
 });
