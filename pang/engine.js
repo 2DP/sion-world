@@ -6,9 +6,19 @@
     ['솜사탕 첫걸음', [1]], ['둘이서 통통', [1, 1]], ['커다란 선물', [2]],
     ['별빛 교차로', [2, 0, 0]], ['민트빛 오후', [1, 1, 1]], ['구름 위 소동', [2, 1, 1]],
     ['무지개 파도', [2, 2]], ['반짝이는 소나기', [1, 1, 1, 1, 0, 0]],
-    ['달빛 대행진', [2, 2, 1]], ['버블 페스티벌', [2, 2, 2]]
+    ['달빛 대행진', [2, 2, 1]], ['버블 페스티벌', [2, 2, 2]],
+    ['새벽빛 산책', [2, 2, 1, 0]], ['꽃잎 징검다리', [2, 1, 1, 1, 1]],
+    ['구름 기차', [2, 2, 1, 1]], ['별사탕 소나기', [2, 1, 1, 1, 1, 0]],
+    ['노을빛 무도회', [2, 2, 2, 0]], ['초승달 정원', [2, 2, 1, 1, 0]],
+    ['은하수 물결', [2, 2, 2, 1]], ['오로라 놀이터', [2, 2, 1, 1, 1, 0]],
+    ['별똥별 행진', [2, 2, 2, 1, 0]], ['하늘빛 축제', [2, 2, 2, 2]],
+    ['달무리 쉼터', [2, 2, 1, 1, 1, 1]], ['혜성의 꼬리', [2, 2, 2, 1, 1]],
+    ['반짝이는 성운', [2, 2, 2, 2, 0]], ['별빛 회오리', [2, 2, 2, 1, 1, 0]],
+    ['우주 꽃밭', [2, 2, 2, 2, 1]], ['달빛 퍼레이드', [2, 2, 2, 1, 1, 1]],
+    ['은빛 별자리', [2, 2, 2, 2, 1, 0]], ['무지개 은하', [2, 2, 2, 2, 1, 1]],
+    ['마지막 별의 문', [2, 2, 2, 2, 2, 0]], ['서른 번째 별빛', [2, 2, 2, 2, 2, 1, 1]]
   ];
-  const RADII = [15, 29, 49], SPEEDS = [164, 128, 98], BOUNCE = [265, 370, 485];
+  const RADII = [15, 29, 49], SPEEDS = [164, 128, 98], BOUNCE = [285, 400, 525];
   const EASY_BUBBLES = { 4: [2, 0], 8: [1, 1, 1, 0, 0] };
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   function bubble(size, x, y, direction, scale) {
@@ -16,12 +26,16 @@
     return { size, r, x: clamp(x, r, W - r), y: clamp(y, r + 12, FLOOR - r), vx: direction * SPEEDS[size] * scale, vy: -BOUNCE[size] * scale };
   }
   function create(stage = 1, difficulty = 'easy') {
-    stage = clamp(Math.floor(Number(stage) || 1), 1, 10);
+    stage = clamp(Math.floor(Number(stage) || 1), 1, STAGES.length);
     difficulty = difficulty === 'normal' ? 'normal' : 'easy';
+    const maxLives = stage >= 8 ? 7 : stage >= 5 ? 6 : 5;
     const scale = (difficulty === 'easy' ? .8 : 1) * (stage === 1 ? .85 : 1);
+    let sizes = STAGES[stage - 1][1];
+    // New easy stages remove one large bubble when the opening is crowded.
+    if (difficulty === 'easy') sizes = EASY_BUBBLES[stage] || (stage > 10 && sizes.length >= 5 ? sizes.slice(1) : sizes);
     return { stage, difficulty, scale, status: 'ready', time: difficulty === 'easy' ? 150 : 110,
-      lives: 3, score: 0, hits: 0, player: { x: W / 2, invincible: 1.5 },
-      bubbles: (difficulty === 'easy' && EASY_BUBBLES[stage] || STAGES[stage - 1][1]).map((size, i, all) => bubble(size, 90 + i * 780 / Math.max(1, all.length - 1), 100 + i % 2 * 60, i % 2 ? -1 : 1, scale)),
+      lives: maxLives, maxLives, score: 0, hits: 0, player: { x: W / 2, invincible: 1.5 },
+      bubbles: sizes.map((size, i, all) => bubble(size, 90 + i * 780 / Math.max(1, all.length - 1), 100 + i % 2 * 60, i % 2 ? -1 : 1, scale)),
       shots: [], items: [], weapon: 'basic', weaponTime: 0, cooldown: 0, events: [] };
   }
   function start(s) { if (s.status === 'ready' || s.status === 'paused') s.status = 'playing'; }
@@ -105,14 +119,16 @@
     out.difficulty = raw.difficulty === 'normal' ? 'normal' : 'easy'; out.muted = raw.muted === true;
     for (const mode of ['easy', 'normal']) {
       const data = raw[mode] || {};
-      out[mode].unlocked = clamp(Math.floor(Number(data.unlocked) || 1), 1, 10);
-      out[mode].scores = Array.from({ length: 10 }, (_, i) => clamp(Math.floor(Number(data.scores?.[i]) || 0), 0, 1000000));
+      out[mode].unlocked = clamp(Math.floor(Number(data.unlocked) || 1), 1, STAGES.length);
+      out[mode].scores = Array.from({ length: STAGES.length }, (_, i) => clamp(Math.floor(Number(data.scores?.[i]) || 0), 0, 1000000));
+      // v1 saves capped progress at 10, even after completing the old finale.
+      if (out[mode].unlocked === 10 && out[mode].scores[9] > 0) out[mode].unlocked = 11;
     }
     return out;
   }
   function record(save, s) {
     if (s.status !== 'won') return;
-    const data = save[s.difficulty]; data.unlocked = Math.max(data.unlocked, Math.min(10, s.stage + 1));
+    const data = save[s.difficulty]; data.unlocked = Math.max(data.unlocked, Math.min(STAGES.length, s.stage + 1));
     data.scores[s.stage - 1] = Math.max(data.scores[s.stage - 1] || 0, s.score);
   }
   const api = { W, H, FLOOR, STAGES, RADII, create, start, pause, step, cleanSave, record };

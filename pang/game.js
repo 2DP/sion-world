@@ -28,13 +28,13 @@
   function button(text, action, primary = false) { return `<button ${primary ? 'class="primary"' : ''} data-action="${action}">${text}</button>`; }
   function menu() {
     clearInput(); clearToast(); mode = 'menu'; state = E.create(1, save.difficulty); $('pause').disabled = true;
-    overlay(`<div class="symbol">✦</div><div class="subtitle">TEN LITTLE ADVENTURES</div><h2>버블을 톡, 모험을 시작!</h2><p>좌우로 움직이고 발사를 꾹 눌러 보세요.<br>모든 버블을 없애면 다음 모험이 열려요.</p><label for="difficulty">난이도</label><select id="difficulty"><option value="easy" ${save.difficulty === 'easy' ? 'selected' : ''}>쉬움 · 여유로운 별빛 산책</option><option value="normal" ${save.difficulty === 'normal' ? 'selected' : ''}>일반 · 신나는 버블 모험</option></select><label for="stage-select">출발할 스테이지</label><select id="stage-select"></select><div class="actions">${button('✦ 모험 시작', 'ready', true)}</div>`);
+    overlay(`<div class="symbol">✦</div><div class="subtitle">${E.STAGES.length} LITTLE ADVENTURES</div><h2>버블을 톡, 모험을 시작!</h2><p>좌우로 움직이고 발사를 꾹 눌러 보세요.<br>모든 버블을 없애면 다음 모험이 열려요.</p><label for="difficulty">난이도</label><select id="difficulty"><option value="easy" ${save.difficulty === 'easy' ? 'selected' : ''}>쉬움 · 여유로운 별빛 산책</option><option value="normal" ${save.difficulty === 'normal' ? 'selected' : ''}>일반 · 신나는 버블 모험</option></select><label for="stage-select">출발할 스테이지</label><select id="stage-select"></select><div class="actions">${button('✦ 모험 시작', 'ready', true)}</div>`);
     stageOptions(); $('difficulty').addEventListener('change', event => { save.difficulty = event.target.value; persist(); stageOptions(); state = E.create(1, save.difficulty); });
   }
   function stageOptions() { $('stage-select').innerHTML = E.STAGES.map((s, i) => `<option value="${i + 1}" ${i + 1 > save[save.difficulty].unlocked ? 'disabled' : ''}>${String(i + 1).padStart(2, '0')} · ${s[0]}${i + 1 > save[save.difficulty].unlocked ? ' 🔒' : ''}</option>`).join(''); }
   function ready(stage) {
     clearInput(); clearToast(); state = E.create(stage, save.difficulty); particles = []; mode = 'ready'; $('pause').disabled = true;
-    overlay(`<div class="symbol">☁</div><div class="subtitle">STAGE ${String(stage).padStart(2, '0')}</div><h2>${E.STAGES[stage - 1][0]}</h2><p>생명 3개 · ${state.time}초<br>큰 버블은 둘로 나뉘어요. 작은 버블까지 모두 팡!</p><div class="actions">${button('준비됐어요!', 'play', true)}${button('단계 선택', 'menu')}</div>`);
+    overlay(`<div class="symbol">☁</div><div class="subtitle">STAGE ${String(stage).padStart(2, '0')}</div><h2>${E.STAGES[stage - 1][0]}</h2><p>생명 ${state.maxLives}개 · ${state.time}초<br>큰 버블은 둘로 나뉘어요. 작은 버블까지 모두 팡!</p><div class="actions">${button('준비됐어요!', 'play', true)}${button('단계 선택', 'menu')}</div>`);
   }
   function play() { clearInput(); E.start(state); mode = 'play'; last = performance.now(); $('overlay').classList.add('hidden'); $('pause').disabled = false; $('pause').textContent = 'Ⅱ 일시정지'; sound('fire'); }
   function pause() {
@@ -45,9 +45,9 @@
   }
   function result() {
     clearInput(); mode = 'result'; $('pause').disabled = true;
-    const won = state.status === 'won', final = won && state.stage === 10;
+    const won = state.status === 'won', final = won && state.stage === E.STAGES.length;
     if (won) { E.record(save, state); persist(); }
-    overlay(`<div class="symbol">${won ? '✦' : '☁'}</div><div class="subtitle">${final ? 'ALL TEN STAGES COMPLETE' : won ? 'STAGE CLEAR' : 'ONE MORE LITTLE ADVENTURE'}</div><h2>${final ? '열 번의 모험, 모두 성공!' : won ? '반짝반짝, 클리어!' : state.time <= 0 ? '시간이 다 됐어요' : '조금만 더, 할 수 있어요!'}</h2><p>${final ? '당신은 최고의 별 사냥꾼이에요.<br>' : ''}점수 <b>${state.score.toLocaleString()}</b> · 최고 <b>${(save[state.difficulty].scores[state.stage - 1] || 0).toLocaleString()}</b>${won ? '<br>남은 시간과 생명 보너스가 포함되었어요.' : '<br>움직이면서 발사를 꾹 눌러 보세요.'}</p><div class="actions">${won && !final ? button('다음 모험 →', 'next', true) : button('다시 도전', 'retry', true)}${button('단계 선택', 'menu')}${final ? '<a class="home" href="../index.html">SION WORLD로</a>' : ''}</div>`);
+    overlay(`<div class="symbol">${won ? '✦' : '☁'}</div><div class="subtitle">${final ? `ALL ${E.STAGES.length} STAGES COMPLETE` : won ? 'STAGE CLEAR' : 'ONE MORE LITTLE ADVENTURE'}</div><h2>${final ? `${E.STAGES.length}단계 모험, 모두 성공!` : won ? '반짝반짝, 클리어!' : state.time <= 0 ? '시간이 다 됐어요' : '조금만 더, 할 수 있어요!'}</h2><p>${final ? '당신은 최고의 별 사냥꾼이에요.<br>' : ''}점수 <b>${state.score.toLocaleString()}</b> · 최고 <b>${(save[state.difficulty].scores[state.stage - 1] || 0).toLocaleString()}</b>${won ? '<br>남은 시간과 생명 보너스가 포함되었어요.' : '<br>움직이면서 발사를 꾹 눌러 보세요.'}</p><div class="actions">${won && !final ? button('다음 모험 →', 'next', true) : button('다시 도전', 'retry', true)}${button('단계 선택', 'menu')}${final ? '<a class="home" href="../index.html">SION WORLD로</a>' : ''}</div>`);
   }
   $('panel').addEventListener('click', event => {
     const action = event.target.closest('[data-action]')?.dataset.action;
@@ -105,7 +105,7 @@
     ctx.fillStyle = '#7d83ac'; ctx.beginPath(); ctx.roundRect(x - 17, y - 35, 34, 34, 10); ctx.fill(); circle(x, y - 37, 23, '#959bc4', '#757fa7', 2); circle(x, y - 34, 16, '#fff0df'); circle(x - 6, y - 36, 2.2, '#575d7e'); circle(x + 6, y - 36, 2.2, '#575d7e'); star(x + 15, y - 52, 8, '#fff1a8'); ctx.fillStyle = '#626c95'; ctx.fillRect(x - 18, y - 5, 14, 6); ctx.fillRect(x + 4, y - 5, 14, 6); ctx.restore();
     for (const p of particles) star(p.x, p.y, p.life * 7, p.color);
     $('stage-hud').textContent = `${String(state.stage).padStart(2, '0')} · ${E.STAGES[state.stage - 1][0]}`;
-    $('lives').textContent = '♥ '.repeat(state.lives) + '♡ '.repeat(3 - state.lives);
+    $('lives').textContent = '♥ '.repeat(state.lives) + '♡ '.repeat(state.maxLives - state.lives);
     $('time').textContent = String(Math.ceil(state.time)).padStart(3, '0'); $('score').textContent = state.score.toLocaleString();
     $('weapon').textContent = names[state.weapon] + (state.weaponTime ? ` ${Math.ceil(state.weaponTime)}s` : '');
     $('best').textContent = `최고 기록 ${(save[state.difficulty].scores[state.stage - 1] || 0).toLocaleString()}`;

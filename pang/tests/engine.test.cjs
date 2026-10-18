@@ -3,8 +3,31 @@ const assert = require('node:assert/strict');
 const E = require('../engine.js');
 const run = (s, seconds, input = {}) => { for (let i = 0; i < Math.ceil(seconds * 120); i++) E.step(s, input, 1 / 120); };
 const active = (stage = 1) => { const s = E.create(stage); E.start(s); return s; };
+
+test('both difficulties start and retry with stage-specific life capacity', () => {
+  for (const difficulty of ['easy', 'normal']) for (let stage = 1; stage <= E.STAGES.length; stage++) {
+    const expected = stage >= 8 ? 7 : stage >= 5 ? 6 : 5;
+    const s = E.create(stage, difficulty);
+    assert.equal(s.lives, expected); assert.equal(s.maxLives, expected);
+    s.lives--;
+    assert.equal(E.create(s.stage, s.difficulty).lives, expected);
+  }
+});
+
+test('each bubble size bounces about 16–17 percent higher in both difficulties', () => {
+  for (const difficulty of ['easy', 'normal']) for (let size = 0; size < 3; size++) {
+    const s = E.create(8, difficulty); E.start(s); s.player.invincible = 100;
+    const r = E.RADII[size], floor = E.FLOOR - r;
+    s.bubbles = [{ size, r, x: 100, y: floor, vx: 0, vy: 1 }];
+    let apex = floor;
+    for (let frame = 0; frame < 360; frame++) { E.step(s, {}, 1 / 120); apex = Math.min(apex, s.bubbles[0].y); }
+    const oldHeight = [265, 370, 485][size] ** 2 / (2 * 620);
+    assert.ok((floor - apex) / oldHeight > 1.14);
+    assert.ok((floor - apex) / oldHeight < 1.18);
+  }
+});
 test('all stages use valid separated spawns and bounded long-running physics', () => {
-  for (let stage = 1; stage <= 10; stage++) {
+  for (let stage = 1; stage <= E.STAGES.length; stage++) {
     const s = active(stage); s.player.invincible = 1000;
     run(s, 30);
     for (const b of s.bubbles) { assert.ok(b.x >= b.r && b.x <= E.W - b.r); assert.ok(b.y >= b.r && b.y <= E.FLOOR - b.r); }
@@ -25,8 +48,8 @@ test('line body catches a sideways bubble and consumes one target', () => {
 test('overlapping bubbles cause one hit, grace prevents immediate repeats', () => {
   const s = active(2); s.player.invincible = 0;
   for (const b of s.bubbles) { b.x = s.player.x; b.y = E.FLOOR - b.r; b.vy = 0; }
-  E.step(s, {}, .005); assert.equal(s.lives, 2); assert.ok(s.player.invincible > 1.9);
-  E.step(s, {}, .1); assert.equal(s.lives, 2);
+  E.step(s, {}, .005); assert.equal(s.lives, 4); assert.ok(s.player.invincible > 1.9);
+  E.step(s, {}, .1); assert.equal(s.lives, 4);
 });
 test('double shot limit, sticky ceiling lifetime and weapon expiry', () => {
   const s = active(); s.bubbles[0].x = 50; s.weapon = 'double'; s.weaponTime = 10;
@@ -44,7 +67,7 @@ test('pause freezes complete simulation, resume and retry reset lifecycle', () =
   const s = active(); s.weapon = 'double'; s.weaponTime = 7; E.pause(s);
   const before = JSON.stringify(s); E.step(s, { right: true, fire: true }, 8); assert.equal(JSON.stringify(s), before);
   E.start(s); E.step(s, {}, .05); assert.ok(s.time < 150);
-  const fresh = E.create(s.stage, s.difficulty); assert.equal(fresh.status, 'ready'); assert.equal(fresh.lives, 3); assert.equal(fresh.weapon, 'basic'); assert.equal(fresh.shots.length, 0);
+  const fresh = E.create(s.stage, s.difficulty); assert.equal(fresh.status, 'ready'); assert.equal(fresh.lives, 5); assert.equal(fresh.weapon, 'basic'); assert.equal(fresh.shots.length, 0);
 });
 test('timeout loses and huge frame gaps advance at most 0.1 seconds', () => {
   const s = active(); E.step(s, {}, 100); assert.ok(s.time > 149.89);
@@ -60,9 +83,10 @@ test('last shot wins before simultaneous player contact; fatal unprotected conta
   E.step(danger, {}, .005); assert.equal(danger.status, 'lost'); assert.equal(danger.lives, 0);
 });
 test('real shooting clears every stage, bonuses are awarded once and records unlock campaign', () => {
+  for (const difficulty of ['easy', 'normal']) {
   const save = E.cleanSave();
-  for (let stage = 1; stage <= 10; stage++) {
-    const s = active(stage); s.player.invincible = 10000;
+  for (let stage = 1; stage <= E.STAGES.length; stage++) {
+    const s = E.create(stage, difficulty); E.start(s); s.player.invincible = 10000;
     // Deterministic aiming fixture removes navigation difficulty but exercises real line flight and split physics.
     for (let frame = 0; frame < 18000 && s.status === 'playing'; frame++) {
       if (s.bubbles.length) s.player.x = s.bubbles[0].x;
@@ -70,21 +94,34 @@ test('real shooting clears every stage, bonuses are awarded once and records unl
     }
     assert.equal(s.status, 'won', `stage ${stage}`); const score = s.score;
     E.step(s, { fire: true }, .1); assert.equal(s.score, score); E.record(save, s); E.record(save, s);
-    assert.equal(save.easy.scores[stage - 1], score); assert.equal(save.easy.unlocked, Math.min(stage + 1, 10));
+    assert.equal(save[difficulty].scores[stage - 1], score); assert.equal(save[difficulty].unlocked, Math.min(stage + 1, E.STAGES.length));
   }
-  assert.equal(save.normal.unlocked, 1);
+  assert.equal(save[difficulty === 'easy' ? 'normal' : 'easy'].unlocked, 1);
+  }
+});
+
+test('thirty-stage campaign preserves old saves and opens 11 only after an old finale win', () => {
+  assert.equal(E.STAGES.length, 30);
+  assert.equal(new Set(E.STAGES.map(s => s[0])).size, 30);
+  const scores = Array(10).fill(0); scores[0] = 3490; scores[9] = 5780;
+  const save = E.cleanSave({ muted: true, easy: { unlocked: 10, scores }, normal: { unlocked: 10, scores: [2000] } });
+  assert.equal(save.easy.unlocked, 11); assert.equal(save.normal.unlocked, 10);
+  assert.equal(save.easy.scores.length, 30); assert.equal(save.easy.scores[0], 3490);
+  assert.equal(save.easy.scores[9], 5780); assert.equal(save.easy.scores[29], 0); assert.equal(save.muted, true);
+  assert.deepEqual(E.cleanSave(save), save);
+  assert.equal(E.create(999).stage, 30); assert.equal(E.create(-1).stage, 1);
 });
 test('save sanitizer rejects corrupt values and bounds records', () => {
   assert.equal(E.cleanSave(null).easy.unlocked, 1);
   const save = E.cleanSave({ difficulty: 'bad', muted: 'true', easy: { unlocked: 999, scores: [-5, 'bad', Infinity] } });
-  assert.equal(save.difficulty, 'easy'); assert.equal(save.muted, false); assert.equal(save.easy.unlocked, 10);
+  assert.equal(save.difficulty, 'easy'); assert.equal(save.muted, false); assert.equal(save.easy.unlocked, E.STAGES.length);
   assert.deepEqual(save.easy.scores.slice(0, 3), [0, 0, 1000000]);
 });
 
-test('easy softens stages 4 and 8 without altering normal or other stages', () => {
-  for (let stage = 1; stage <= 10; stage++) {
+test('easy softens stages 4, 8 and crowded new stages while normal keeps its designed layouts', () => {
+  for (let stage = 1; stage <= E.STAGES.length; stage++) {
     assert.deepEqual(E.create(stage, 'normal').bubbles.map(b => b.size), E.STAGES[stage - 1][1]);
-    assert.deepEqual(E.create(stage, 'easy').bubbles.map(b => b.size), ({ 4: [2, 0], 8: [1, 1, 1, 0, 0] })[stage] || E.STAGES[stage - 1][1]);
+    assert.deepEqual(E.create(stage, 'easy').bubbles.map(b => b.size), ({ 4: [2, 0], 8: [1, 1, 1, 0, 0] })[stage] || (stage > 10 && E.STAGES[stage - 1][1].length >= 5 ? E.STAGES[stage - 1][1].slice(1) : E.STAGES[stage - 1][1]));
   }
 });
 test('sticky replaces only the oldest ceiling line and fires at the new position', () => {

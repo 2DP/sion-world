@@ -29,16 +29,20 @@ function app(options = {}) {
     advance(ticks = 1) { for (let i = 0; i < ticks; i++) { now += 1000 / 60; raf(now); } },
     key(code, down = true) { handlers[down ? 'keydown' : 'keyup']({ code, repeat: false, preventDefault() {} }); } };
 }
-test('actual UI completes ten stages, saves unlocks and presents campaign end', () => {
+test('actual UI completes thirty stages, saves unlocks and presents campaign end', () => {
   const ui = app(); assert.match(ui.elements.get('panel').innerHTML, /모험 시작/); ui.click('ready');
-  for (let stage = 1; stage <= 10; stage++) {
-    assert.equal(ui.state().stage, stage); assert.equal(ui.state().status, 'ready'); ui.click('play');
+  for (let stage = 1; stage <= E.STAGES.length; stage++) {
+    assert.equal(ui.state().stage, stage); assert.equal(ui.state().status, 'ready');
+    const lives = stage >= 8 ? 7 : stage >= 5 ? 6 : 5;
+    assert.match(ui.elements.get('panel').innerHTML, new RegExp(`생명 ${lives}개`));
+    ui.advance(); assert.equal(ui.elements.get('lives').textContent.trim(), '♥ '.repeat(lives).trim());
+    ui.click('play');
     ui.state().bubbles = []; ui.advance(); assert.equal(ui.state().status, 'won');
-    const saved = JSON.parse([...ui.storage.values()][0]); assert.equal(saved.easy.unlocked, Math.min(10, stage + 1));
+    const saved = JSON.parse([...ui.storage.values()][0]); assert.equal(saved.easy.unlocked, Math.min(E.STAGES.length, stage + 1));
     const score = ui.state().score; ui.advance(20); assert.equal(ui.state().score, score);
-    if (stage < 10) ui.click('next');
+    if (stage < E.STAGES.length) ui.click('next');
   }
-  assert.match(ui.elements.get('panel').innerHTML, /열 번의 모험, 모두 성공/);
+  assert.match(ui.elements.get('panel').innerHTML, /30단계 모험, 모두 성공/);
   ui.click('menu'); assert.equal(ui.state().status, 'ready'); assert.doesNotMatch(ui.elements.get('stage-select').innerHTML, /disabled/);
 });
 test('pause, blur and visibility freeze timers and clear held input; retry is fresh', () => {
@@ -48,7 +52,7 @@ test('pause, blur and visibility freeze timers and clear held input; retry is fr
   assert.equal(ui.state().player.x, x); assert.equal(ui.state().shots.length, 0);
   ui.key('ArrowRight'); ui.handlers['window:blur'](); assert.equal(ui.state().status, 'paused'); ui.click('play'); ui.advance(); assert.equal(ui.state().player.x, x);
   ui.document.hidden = true; ui.handlers.visibilitychange(); assert.equal(ui.state().status, 'paused');
-  ui.click('retry'); assert.equal(ui.state().lives, 3); assert.equal(ui.state().time, 150); assert.equal(ui.state().status, 'ready');
+  ui.click('retry'); assert.equal(ui.state().lives, 5); assert.equal(ui.state().time, 150); assert.equal(ui.state().status, 'ready');
   ui.click('play'); ui.state().time = .001; ui.advance(); assert.equal(ui.state().status, 'lost'); ui.click('retry'); assert.equal(ui.state().stage, 1);
 });
 test('brief keyboard fire and multitouch movement/fire work without stuck pointers', () => {
