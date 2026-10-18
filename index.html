@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#fff8e8" />
     <title>SION WORLD - 게임 놀이터</title>
-    <meta name="description" content="SION WORLD의 알록달록 게임 놀이터! 버블 팡, 별빛 땅따먹기, 별빛 비트, 파스텔 스텝, 첨벙클럽, 아이돌 키우기, 블록 봄버를 플레이하세요." />
+    <meta name="description" content="SION WORLD의 알록달록 게임 놀이터! 냠냠 스네이크, 버블 팡, 별빛 땅따먹기, 별빛 비트, 파스텔 스텝, 첨벙클럽, 아이돌 키우기, 블록 봄버를 플레이하세요." />
     <style>
       * { box-sizing: border-box; }
       :root { color-scheme: light; --ink: #343653; }
@@ -120,6 +120,8 @@
       .pang .play { background: #fde3e7; color: #8c4862; }
       .territory h3 { color: #36776c; }
       .territory .play { background: #dff1e6; color: #346c60; }
+      .snake h3 { display: flex; align-items: center; gap: 10px; color: #507448; }
+      .snake .play { background: #e5edcf; color: #4b713e; }
       .description { margin: 0 0 22px; color: #626278; line-height: 1.7; font-size: 15px; word-break: keep-all; }
       .play { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding: 14px 18px; border-radius: 15px; background: #fce0eb; color: #833959; font-size: 17px; font-weight: 800; }
       .swim .play { background: #d9efff; color: #245d87; }
@@ -150,9 +152,21 @@
       <nav aria-labelledby="games-heading">
         <div class="section-heading">
           <h2 id="games-heading">나의 게임 놀이터</h2>
-          <span class="count">게임 7개</span>
+          <span class="count">게임 8개</span>
         </div>
         <ul class="games">
+          <li>
+            <a class="game snake" href="./snake/" aria-labelledby="snake-title" aria-describedby="snake-description">
+              <div class="scene">
+                <img class="arcade-preview" src="./snake/assets/preview.svg" alt="초록 체크 정원에서 빨간 사과를 향해 꼬불꼬불 움직이는 스네이크" width="800" height="400" />
+              </div>
+              <div class="game-info">
+                <h3 id="snake-title"><img class="idol-icon" src="./snake/assets/icon.svg" alt="" width="38" height="38" />냠냠 스네이크</h3>
+                <p class="description" id="snake-description">사과를 냠냠, 꼬리는 쑥쑥!<br />벽과 내 꼬리를 피해 이어가는 작은 초록빛 모험.</p>
+                <span class="play">사과 먹으러 가기 <span class="arrow" aria-hidden="true">→</span></span>
+              </div>
+            </a>
+          </li>
           <li>
             <a class="game pang" href="./pang/" aria-labelledby="pang-title" aria-describedby="pang-description">
               <div class="scene">
