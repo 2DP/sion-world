@@ -1,23 +1,35 @@
-# Verification
+# 검증 기록
 
-## Completed by implementation agent · 2026-10-18
+2026-10-18 구현 및 직접 플레이 후 조작 개선 검증.
 
-- `node --test --test-isolation=none territory/tests/engine.test.cjs territory/tests/lifecycle.test.cjs`: **18 passed, 0 failed**.
-- Tests cover initial border exclusion, safe movement/toggle, enemy-rooted fill, multiple occupied components, no repeated scoring, self collision, swept enemy collision, shield/commit overlap, damage restoration and immunity, pause freezing, timeout/terminal stability, capture priority at time boundary, stage configuration, progression separation, save sanitization/best records, and outer perimeter collision.
-- `node --check territory/game.js`: passed.
-- Standard test runner process isolation encountered sandbox `spawn EPERM`; running Node's test runner with isolation disabled executes the same tests successfully.
+## 자동 검증
 
-- Six VM DOM lifecycle tests execute real game.js: blocked/corrupt storage, blur/visibility clearing and pause, short taps, repeated Space, result idempotence, six-stage next-button campaign, difficulty menu, retry, stage select, and pause label reset.
+`node --test --test-isolation=none territory/tests/*.test.cjs` — 24개 성공, 0개 실패.
 
-## Browser QA completed · 2026-10-18
+- 테두리를 제외한 점령률 계산, 안전 지대 이동, 그리기 토글
+- 적이 있는 영역 보존, 다중 영역 flood fill, 중복 점수 방지
+- 자기 선 충돌, 빠른 적과 선 충돌, 무적 중 영역 확정, 복귀 위치
+- 일시정지, 제한 시간, 승패 동시 발생 우선순위, 종료 상태 보존
+- 6단계 설정·해금·최종 화면, 난이도별 기록, 손상되거나 차단된 저장소
+- 실제 `game.js` 이벤트: 짧은 방향키, 반복 Space, 포커스 이탈 및 탭 숨김, 다음 단계와 재도전
+- 소리 버튼 포커스 후 Space 그리기, 메뉴의 기본 Space/Enter 동작 유지
+- P/Esc 재개와 입력 초기화, 일시정지에서 같은 단계 재도전
+- 다중 포인터 방향 유지, 해제·취소·캡처 소실 시 입력 정리
+- 방향 버튼 Enter 유지 이동과 키 해제, 접근성 클릭 1회 이동
+- 선택한 단계·난이도에 맞는 미리보기/HUD, 기존 기록 보존, 메뉴 포커스 복구
 
-- Using keyboard Space and held Down, completed a real line, captured 50% and cleared stage 1 with 8,765 points.
-- Repeated the capture using the on-screen drawing and direction buttons inside a 360px mobile frame.
-- Confirmed document and scroll widths are both 360px, all four direction buttons are 48×48px, and the start button is contained by the overlay. Fixed the initial grid/aspect-ratio horizontal overflow.
-- At 1280×720, verified the compact desktop layout, reachable start button and pause dialog. Active gameplay retains a 3:2 board.
-- Confirmed a fresh page load restores stage 2 unlock and the stage 1 best score/percentage.
-- Verified actual homepage card navigation, home return, original SVG icon/preview, and `/sion-world/territory/` relative routes. The browser tab used for direct game interactions reported no application errors or warnings.
+`node --check territory/game.js` 문법 검사 통과. 테스트 프로세스 생성이 제한된 환경에서 동일 테스트를 실행하기 위해 `--test-isolation=none`을 사용한다.
 
-## Scope limits
+## 브라우저 직접 플레이
 
-The full six-stage UI sequence and ending, late-stage firefly, storage errors and lifecycle edge cases are covered by automated tests; a human did not manually finish every stage. Actual phone multitouch and speaker volume were not hardware-tested. No online multiplayer, server saves, or mid-round restoration. Canvas board uses a text label and adjacent semantic controls; the spatial playfield is not a screen-reader-equivalent game.
+1. 실제 서비스에서 Space와 방향키로 1단계를 클리어하고, 2단계에서 꺾어 그리기와 여러 차례 점령으로 59.1%·9,925점 클리어를 확인했다.
+2. 3단계에서 자기 선을 되짚을 때 생명 하나가 줄고 출발 위치로 복귀하는 동작과 일시정지를 확인했다.
+3. 소리 버튼 클릭 후 Space가 그리기 대신 소리를 다시 토글하는 문제를 재현했다. 수정본에서는 소리 상태를 유지하면서 그리기가 켜졌고, 재도전 후 Space와 Down으로 1단계를 다시 클리어했다.
+4. 1단계 완료 후 2단계를 선택했을 때 HUD에 이전 단계와 점수가 남는 문제를 재현했다. 수정본에서는 단계명·목표 55%·점수 0·시간 3:45와 선택 버튼 포커스가 일치했다.
+5. 수정된 방향 버튼의 Enter 유지 입력으로 2단계에서 아래→오른쪽으로 선을 꺾어 18.3%·2,530점을 점령했다. 키 해제 후 멈추고, P로 일시정지하면 이어하기에 포커스가 이동했다. 새 직접 플레이 탭의 오류·경고 로그는 없었다.
+6. 360px 모바일 프레임에서 화면의 그리기·아래 버튼만으로 1단계를 50%·8,765점으로 클리어했다. 세로 스크롤바를 포함해 가로 넘침이 없었다. 방향 버튼은 48×48px이다.
+7. 1280×720 배치, 시작·일시정지 화면, 새 페이지에서 기록과 해금 복원, 홈 카드·복귀 링크와 `/sion-world/territory/` 하위 경로를 확인했다.
+
+## 범위
+
+6단계 전체 연결과 최종 화면, 후반 반딧불 충돌 및 저장소 오류는 자동 테스트로 검증했다. 직접 모든 단계를 완주한 것은 아니다. 실제 스마트폰의 두 손가락 동시 조작과 스피커 음량은 하드웨어에서 검증하지 않았으며, 다중 입력 경계 조건은 실제 이벤트 핸들러 테스트로 확인했다. Canvas의 공간 정보를 스크린 리더로 모두 표현하는 게임은 아니다.

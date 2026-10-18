@@ -4,11 +4,11 @@
   const KEY = 'sion-world-bubble-pang-v1';
   let save; try { save = E.cleanSave(JSON.parse(localStorage.getItem(KEY))); } catch { save = E.cleanSave(); }
   let state = E.create(1, save.difficulty), last = 0, mode = 'menu', toastUntil = 0, audio, particles = [], seen = new Set(), fireQueued = false;
-  const keys = new Set(), pointers = new Map(), tapped = new Set(), reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const keys = new Set(), pointers = new Map(), buttonKeys = new Map(), tapped = new Set(), reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const names = { basic: '✦ 별빛 줄', double: 'Ⅱ 더블 줄', sticky: '✧ 붙는 줄' };
   function persist() { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch {} }
-  function clearInput() { keys.clear(); pointers.clear(); tapped.clear(); fireQueued = false; }
-  function input() { const values = [...keys].map(code => mapping[code]).concat([...pointers.values()], [...tapped]); tapped.clear(); const fire = values.includes('fire') || fireQueued; fireQueued = false; return { left: values.includes('left'), right: values.includes('right'), fire }; }
+  function clearInput() { keys.clear(); pointers.clear(); buttonKeys.clear(); tapped.clear(); fireQueued = false; }
+  function input() { const values = [...keys].map(code => mapping[code]).concat([...pointers.values()], [...buttonKeys.values()], [...tapped]); tapped.clear(); const fire = values.includes('fire') || fireQueued; fireQueued = false; return { left: values.includes('left'), right: values.includes('right'), fire }; }
   function sound(type) {
     if (save.muted) return;
     try {
@@ -23,16 +23,17 @@
     } catch {}
   }
   function toast(text) { $('toast').textContent = text; $('toast').classList.add('show'); toastUntil = performance.now() + 3500; }
+  function clearToast() { toastUntil = 0; $('toast').textContent = ''; $('toast').classList.remove('show'); }
   function overlay(html) { $('overlay').classList.remove('hidden'); $('panel').innerHTML = html; $('panel').querySelector('button,select')?.focus({ preventScroll: true }); }
   function button(text, action, primary = false) { return `<button ${primary ? 'class="primary"' : ''} data-action="${action}">${text}</button>`; }
   function menu() {
-    clearInput(); mode = 'menu'; state = E.create(1, save.difficulty); $('pause').disabled = true;
+    clearInput(); clearToast(); mode = 'menu'; state = E.create(1, save.difficulty); $('pause').disabled = true;
     overlay(`<div class="symbol">✦</div><div class="subtitle">TEN LITTLE ADVENTURES</div><h2>버블을 톡, 모험을 시작!</h2><p>좌우로 움직이고 발사를 꾹 눌러 보세요.<br>모든 버블을 없애면 다음 모험이 열려요.</p><label for="difficulty">난이도</label><select id="difficulty"><option value="easy" ${save.difficulty === 'easy' ? 'selected' : ''}>쉬움 · 여유로운 별빛 산책</option><option value="normal" ${save.difficulty === 'normal' ? 'selected' : ''}>일반 · 신나는 버블 모험</option></select><label for="stage-select">출발할 스테이지</label><select id="stage-select"></select><div class="actions">${button('✦ 모험 시작', 'ready', true)}</div>`);
     stageOptions(); $('difficulty').addEventListener('change', event => { save.difficulty = event.target.value; persist(); stageOptions(); state = E.create(1, save.difficulty); });
   }
   function stageOptions() { $('stage-select').innerHTML = E.STAGES.map((s, i) => `<option value="${i + 1}" ${i + 1 > save[save.difficulty].unlocked ? 'disabled' : ''}>${String(i + 1).padStart(2, '0')} · ${s[0]}${i + 1 > save[save.difficulty].unlocked ? ' 🔒' : ''}</option>`).join(''); }
   function ready(stage) {
-    clearInput(); state = E.create(stage, save.difficulty); particles = []; mode = 'ready'; $('pause').disabled = true;
+    clearInput(); clearToast(); state = E.create(stage, save.difficulty); particles = []; mode = 'ready'; $('pause').disabled = true;
     overlay(`<div class="symbol">☁</div><div class="subtitle">STAGE ${String(stage).padStart(2, '0')}</div><h2>${E.STAGES[stage - 1][0]}</h2><p>생명 3개 · ${state.time}초<br>큰 버블은 둘로 나뉘어요. 작은 버블까지 모두 팡!</p><div class="actions">${button('준비됐어요!', 'play', true)}${button('단계 선택', 'menu')}</div>`);
   }
   function play() { clearInput(); E.start(state); mode = 'play'; last = performance.now(); $('overlay').classList.add('hidden'); $('pause').disabled = false; $('pause').textContent = 'Ⅱ 일시정지'; sound('fire'); }
@@ -60,13 +61,26 @@
   const mapping = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', Space: 'fire', KeyJ: 'fire' };
   document.addEventListener('keydown', event => {
     if ((event.code === 'Escape' || event.code === 'KeyP') && !event.repeat) { pause(); return; }
+    const control = event.target?.closest?.('[data-control]')?.dataset.control;
+    if (state.status === 'playing' && event.code === 'Enter' && control) {
+      // Prevent native repeated clicks: the simulation owns held activation.
+      event.preventDefault();
+      if (!event.repeat) { buttonKeys.set('Enter', control); tapped.add(control); }
+      return;
+    }
     if (state.status !== 'playing' || !mapping[event.code]) return;
     event.preventDefault(); keys.add(event.code); tapped.add(mapping[event.code]); if (mapping[event.code] === 'fire') fireQueued = true;
   });
-  document.addEventListener('keyup', event => { if (mapping[event.code]) keys.delete(event.code); });
+  document.addEventListener('keyup', event => { if (mapping[event.code]) keys.delete(event.code); buttonKeys.delete(event.code); });
   for (const btn of document.querySelectorAll('[data-control]')) {
     btn.addEventListener('pointerdown', event => { if (state.status !== 'playing') return; event.preventDefault(); btn.setPointerCapture(event.pointerId); pointers.set(event.pointerId, btn.dataset.control); tapped.add(btn.dataset.control); if (btn.dataset.control === 'fire') fireQueued = true; });
     for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) btn.addEventListener(name, event => pointers.delete(event.pointerId));
+    btn.addEventListener('blur', () => { if (buttonKeys.get('Enter') === btn.dataset.control) { buttonKeys.delete('Enter'); tapped.delete(btn.dataset.control); } });
+    btn.addEventListener('click', event => {
+      // Assistive technology may activate a button without pointer/key events.
+      // Pointer clicks already went through pointerdown; do not enqueue twice.
+      if (state.status === 'playing' && event.detail === 0 && !buttonKeys.size) tapped.add(btn.dataset.control);
+    });
     btn.addEventListener('contextmenu', event => event.preventDefault());
   }
   window.addEventListener('blur', () => { clearInput(); if (state.status === 'playing') pause(); });

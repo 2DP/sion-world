@@ -64,3 +64,28 @@ test('brief keyboard fire and multitouch movement/fire work without stuck pointe
 test('corrupt or throwing localStorage allows start, win and next stage', () => {
   for (const option of [{ corrupt: true }, { blocked: true }]) { const ui = app(option); ui.click('ready'); ui.click('play'); ui.state().bubbles = []; ui.advance(); assert.equal(ui.state().status, 'won'); ui.click('next'); assert.equal(ui.state().stage, 2); }
 });
+
+test('focused controls support Enter hold/release, synthetic activation and lifecycle cleanup', () => {
+  const ui = app(); ui.click('ready'); ui.click('play');
+  const enter = (index, down = true, repeat = false) => {
+    let prevented = false;
+    ui.handlers[down ? 'keydown' : 'keyup']({ code: 'Enter', repeat, target: { closest: () => ui.controls[index] }, preventDefault() { prevented = true; } });
+    return prevented;
+  };
+  const initial = ui.state().player.x; assert.equal(enter(1), true); ui.advance(10); assert.ok(ui.state().player.x > initial + 35);
+  enter(1, false); const stopped = ui.state().player.x; ui.advance(3); assert.equal(ui.state().player.x, stopped);
+  ui.state().weapon = 'double'; ui.state().weaponTime = 10;
+  enter(2); ui.advance(21); assert.equal(ui.state().shots.length, 2); enter(2, false);
+  ui.state().shots = []; ui.state().cooldown = 0; ui.advance(); assert.equal(ui.state().shots.length, 0);
+  ui.controls[2].dispatch('click', { detail: 0 }); ui.advance(); assert.equal(ui.state().shots.length, 1);
+  ui.state().shots = []; ui.state().cooldown = 0; ui.advance(); assert.equal(ui.state().shots.length, 0);
+  ui.controls[2].dispatch('click', { detail: 1 }); ui.advance(); assert.equal(ui.state().shots.length, 0);
+  enter(1); ui.advance(); ui.controls[1].dispatch('blur'); const blurred = ui.state().player.x; ui.advance(); assert.equal(ui.state().player.x, blurred);
+  enter(1); ui.handlers['window:blur'](); ui.click('play'); ui.advance(); assert.equal(ui.state().player.x, blurred);
+  enter(2); ui.elements.get('pause').dispatch('click'); ui.click('play'); ui.advance(); assert.equal(ui.state().shots.length, 0);
+  ui.elements.get('pause').dispatch('click');
+  for (const code of ['Enter', 'Space']) {
+    let prevented = false; ui.handlers.keydown({ code, repeat: false, target: { closest: () => null }, preventDefault() { prevented = true; } });
+    assert.equal(prevented, false, 'menu button native activation stays intact');
+  }
+});
