@@ -122,6 +122,7 @@
   }
   function draw() {
     const cell = canvas.width / state.size;
+    const pose = E.pose(state);
     ctx.fillStyle = '#e6edd6'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     for (let y = 0; y < state.size; y++) for (let x = 0; x < state.size; x++) {
       if ((x + y) % 2 === 0) { ctx.fillStyle = '#e0e9cc'; ctx.fillRect(x * cell, y * cell, cell, cell); }
@@ -131,24 +132,31 @@
       ctx.strokeStyle = '#a9c290'; ctx.lineWidth = 3; ctx.setLineDash([6, 8]); ctx.strokeRect(2, 2, 596, 596); ctx.setLineDash([]);
     }
     if (state.food) apple(state.food.x * cell, state.food.y * cell, cell);
-    for (let i = state.snake.length - 1; i >= 0; i--) {
-      const p = state.snake[i], next = state.snake[i - 1];
-      const fill = i === 0 ? '#456c3f' : i % 2 ? '#86a95c' : '#95b76b';
-      // Join neighbors, but never draw a bridge across a wrapped edge.
-      if (next && Math.abs(p.x - next.x) + Math.abs(p.y - next.y) === 1) {
-        rounded(Math.min(p.x, next.x) * cell + 3, Math.min(p.y, next.y) * cell + 3,
-          Math.abs(p.x - next.x) * cell + cell - 6, Math.abs(p.y - next.y) * cell + cell - 6, 6, fill);
+    const copies = state.mode === 'wrap' ? [-state.size, 0, state.size] : [0];
+    for (const dx of copies) for (const dy of copies) {
+      ctx.save(); ctx.translate(dx * cell, dy * cell);
+      for (let i = pose.snake.length - 1; i >= 0; i--) {
+        const p = pose.snake[i], next = pose.snake[i - 1];
+        const fill = i === 0 ? '#456c3f' : i % 2 ? '#86a95c' : '#95b76b';
+        if (next) {
+          const nx = p.x + E.offset(p.x, next.x, state.size, state.mode === 'wrap');
+          const ny = p.y + E.offset(p.y, next.y, state.size, state.mode === 'wrap');
+          ctx.strokeStyle = fill; ctx.lineWidth = cell - 6; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo((p.x + .5) * cell, (p.y + .5) * cell);
+          ctx.lineTo((nx + .5) * cell, (ny + .5) * cell); ctx.stroke();
+        }
+        rounded(p.x * cell + 2, p.y * cell + 2, cell - 4, cell - 4, i === 0 ? 9 : 7, fill);
+        if (i > 0) rounded(p.x * cell + 6, p.y * cell + 5, cell - 12, 4, 2, '#c1d69a66');
       }
-      rounded(p.x * cell + 2, p.y * cell + 2, cell - 4, cell - 4, i === 0 ? 9 : 7, fill);
-      if (i > 0) rounded(p.x * cell + 6, p.y * cell + 5, cell - 12, 4, 2, '#c1d69a66');
+      const head = pose.snake[0];
+      ctx.save(); ctx.translate((head.x + .5) * cell, (head.y + .5) * cell);
+      ctx.rotate(pose.angle);
+      for (const y of [-6, 6]) {
+        rounded(1, y - 4, 8, 8, 4, '#fffdf0'); rounded(5, y - 2, 3, 4, 1.5, '#263f2e');
+      }
+      ctx.restore();
+      ctx.restore();
     }
-    const head = state.snake[0];
-    ctx.save(); ctx.translate((head.x + .5) * cell, (head.y + .5) * cell);
-    ctx.rotate({ right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 }[state.direction]);
-    for (const y of [-6, 6]) {
-      rounded(1, y - 4, 8, 8, 4, '#fffdf0'); rounded(5, y - 2, 3, 4, 1.5, '#263f2e');
-    }
-    ctx.restore();
   }
   $('primary').addEventListener('click', play);
   $('pause').addEventListener('click', togglePause);
@@ -201,12 +209,13 @@
     const events = E.advance(state, delta);
     if (events.length) {
       if (state.score > best()) { records[recordKey()] = state.score; save(); }
-      stats(); draw();
+      stats();
       if (events.includes('eat')) { tone(520, .09); tone(780, .12, .06); }
       if (state.status === 'lost' || state.status === 'won') {
         tone(state.status === 'won' ? 880 : 220, .24); panel(); $('primary').focus({ preventScroll: true });
       }
     }
+    if (state.status === 'playing' || events.length) draw();
     requestAnimationFrame(frame);
   }
   soundLabel(); fresh(); requestAnimationFrame(frame);

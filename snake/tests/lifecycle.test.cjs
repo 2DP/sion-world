@@ -7,8 +7,8 @@ const E = require('../engine.js');
 
 function app(options = {}) {
   const elements = new Map(), handlers = {}, windowHandlers = {}, storage = new Map();
-  let state, raf, time = 0, focused;
-  const context = new Proxy({}, { get: (object, key) => object[key] || (() => {}), set: (object, key, value) => (object[key] = value, true) });
+  let state, raf, time = 0, focused, paints = 0;
+  const context = new Proxy({ fillRect() { paints++; } }, { get: (object, key) => object[key] || (() => {}), set: (object, key, value) => (object[key] = value, true) });
   class Element {
     constructor(id, tag = 'div') { this.id = id; this.tag = tag; this.listeners = {}; this.dataset = {}; this.attributes = {}; this.width = 600; this.height = 600; this.textContent = ''; this.hidden = false; this.disabled = false; }
     addEventListener(name, fn) { (this.listeners[name] ||= []).push(fn); }
@@ -38,7 +38,7 @@ function app(options = {}) {
   scope.window = scope;
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../game.js'), 'utf8'), scope);
   return {
-    elements, handlers, windowHandlers, storage, document, directions, state: () => state, focused: () => focused,
+    elements, handlers, windowHandlers, storage, document, directions, state: () => state, focused: () => focused, paints: () => paints,
     click: id => elements.get(id).dispatch('click'),
     advance(ms) { time += ms; raf(time); },
     key(code, target = elements.get('board'), repeat = false) {
@@ -60,6 +60,18 @@ test('start, eat, record, wall loss, retry and new game update the actual UI', (
   ui.advance(2000); assert.equal(ui.state().score, 10);
   ui.click('primary'); assert.equal(ui.state().status, 'playing'); assert.equal(ui.state().score, 0); assert.equal(ui.state().snake.length, 4);
   ui.click('restart'); assert.equal(ui.state().status, 'ready'); assert.equal(ui.elements.get('best').textContent, '010');
+});
+
+test('animation redraws between grid moves and freezes its exact pose during pause', () => {
+  const ui = app(); ui.click('primary'); ui.advance(0); ui.advance(145);
+  const logicalHead = { ...ui.state().snake[0] }, paints = ui.paints();
+  ui.advance(16);
+  assert.ok(ui.paints() > paints); assert.deepEqual(ui.state().snake[0], logicalHead);
+  assert.ok(E.pose(ui.state()).snake[0].x > 7 && E.pose(ui.state()).snake[0].x < 8);
+  const pose = E.pose(ui.state()); ui.click('pause'); const pausedPaints = ui.paints();
+  ui.advance(10000); assert.equal(ui.paints(), pausedPaints); assert.deepEqual(E.pose(ui.state()), pose);
+  ui.click('primary'); ui.advance(10000); assert.deepEqual(E.pose(ui.state()), pose);
+  ui.advance(16); assert.ok(E.pose(ui.state()).snake[0].x > pose.snake[0].x);
 });
 
 test('pause, blur and backgrounding freeze the round and clear queued input', () => {

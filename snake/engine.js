@@ -31,11 +31,12 @@
   function interval(s) { return Math.max(65, SPEEDS[s.difficulty] - Math.floor(s.eaten / 3) * 5); }
   function start(s) {
     if (s.status !== 'ready' && s.status !== 'paused') return;
-    s.status = 'playing'; s.elapsed = 0; s.queue = [];
+    if (s.status === 'ready') s.elapsed = 0;
+    s.status = 'playing'; s.queue = [];
   }
   function pause(s) {
     if (s.status !== 'playing') return;
-    s.status = 'paused'; s.elapsed = 0; s.queue = [];
+    s.status = 'paused'; s.queue = [];
   }
   function turn(s, direction) {
     if (s.status !== 'playing' || !Object.hasOwn(DIRECTIONS, direction) || s.queue.length >= 2) return false;
@@ -47,6 +48,8 @@
   }
   function step(s, random = Math.random) {
     if (s.status !== 'playing') return null;
+    s.previousSnake = s.snake.slice();
+    s.previousDirection = s.direction;
     s.direction = s.queue.shift() || s.direction;
     const d = DIRECTIONS[s.direction];
     const head = { x: s.snake[0].x + d.x, y: s.snake[0].y + d.y };
@@ -79,7 +82,25 @@
     }
     return events;
   }
-  const api = { SIZE, DIRECTIONS, create, foodFor, interval, start, pause, turn, step, advance };
+  function offset(from, to, size, wrap) {
+    let distance = to - from;
+    if (wrap && Math.abs(distance) > size / 2) distance -= Math.sign(distance) * size;
+    return distance;
+  }
+  function pose(s) {
+    const progress = s.status === 'lost' || s.status === 'won' ? 1 : Math.min(1, s.elapsed / interval(s));
+    const previous = s.previousSnake || s.snake;
+    const snake = s.snake.map((p, i) => {
+      const from = previous[Math.min(i, previous.length - 1)];
+      return { x: from.x + offset(from.x, p.x, s.size, s.mode === 'wrap') * progress,
+        y: from.y + offset(from.y, p.y, s.size, s.mode === 'wrap') * progress };
+    });
+    const angles = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 };
+    const from = angles[s.previousDirection || s.direction];
+    const angle = from + offset(from, angles[s.direction], Math.PI * 2, true) * progress;
+    return { snake, angle };
+  }
+  const api = { SIZE, DIRECTIONS, create, foodFor, interval, start, pause, turn, step, advance, pose, offset };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.SnakeEngine = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

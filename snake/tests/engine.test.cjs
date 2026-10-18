@@ -70,12 +70,35 @@ test('filling the last free cell wins and freezes the completed board', () => {
   assert.equal(s.snake.length, 4); assert.deepEqual(E.advance(s, 500), []);
 });
 
-test('pause clears buffered turns and timing; resume never catches up hidden time', () => {
+test('pause clears buffered turns but preserves movement phase without catching up hidden time', () => {
   const s = running(); E.turn(s, 'up'); E.advance(s, 50); E.pause(s);
-  assert.equal(s.queue.length, 0); assert.equal(s.elapsed, 0);
+  assert.equal(s.queue.length, 0); assert.equal(s.elapsed, 50);
   const before = JSON.stringify(s.snake); E.advance(s, 60000); assert.equal(JSON.stringify(s.snake), before);
-  E.start(s); E.advance(s, 144); assert.equal(JSON.stringify(s.snake), before);
+  E.start(s); E.advance(s, 94); assert.equal(JSON.stringify(s.snake), before);
   E.advance(s, 1); assert.equal(s.snake[0].x, 8); assert.equal(s.direction, 'right');
+});
+
+test('visual positions move between cells without altering collision coordinates', () => {
+  const s = running(); E.advance(s, 145);
+  assert.equal(s.snake[0].x, 8); assert.equal(E.pose(s).snake[0].x, 7);
+  E.advance(s, 72.5);
+  assert.equal(E.pose(s).snake[0].x, 7.5); assert.equal(E.pose(s).snake[1].x, 6.5);
+  assert.equal(s.snake[0].x, 8);
+  const frozen = E.pose(s); E.pause(s); E.advance(s, 5000);
+  assert.deepEqual(E.pose(s), frozen); E.start(s); assert.deepEqual(E.pose(s), frozen);
+  E.advance(s, 72.5); assert.equal(E.pose(s).snake[0].x, 8);
+});
+
+test('turns rotate smoothly, growth starts at the tail, and wrap takes the short path', () => {
+  const s = running(); E.turn(s, 'up'); E.advance(s, 145); E.advance(s, 72.5);
+  assert.equal(E.pose(s).snake[0].y, 9.5); assert.equal(E.pose(s).angle, -Math.PI / 4);
+  const growth = running(); growth.food = { x: 8, y: 10 }; E.advance(growth, 145);
+  assert.deepEqual(E.pose(growth).snake.slice(-2), [{ x: 4, y: 10 }, { x: 4, y: 10 }]);
+  for (const [direction, from, expected] of [['right', 19, 19.5], ['left', 0, -.5]]) {
+    const wrap = running({ mode: 'wrap' }); wrap.snake = [{ x: from, y: 4 }]; wrap.direction = direction;
+    E.advance(wrap, 145); E.advance(wrap, 72.5);
+    assert.equal(E.pose(wrap).snake[0].x, expected);
+  }
 });
 
 test('speed increases every three apples and remains bounded in all difficulties', () => {
