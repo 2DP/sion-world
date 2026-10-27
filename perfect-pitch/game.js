@@ -16,7 +16,7 @@
   let transport = null, preview = null, previewRound = null, beatMuted = false;
   let inputHz = null, inputRms = 0, history = [], lastSample = 0, ignoreUntil = 0;
   let lastTime = performance.now(), visualTime = 0, lastUI = 0, resultShown = false;
-  let particles = [], flash = 0, flashSuccess = true, statusText = '', statusUntil = 0;
+  let particles = [], flightTrail = [], flash = 0, flashSuccess = true, statusText = '', statusUntil = 0;
   let sceneWidth = 1100;
   function resizeCanvas() {
     const bounds = canvas.getBoundingClientRect();
@@ -201,9 +201,9 @@
   }
   function resetLobby() {
     playing = false; demo = false; requesting = false; releaseMic(); stopTone(); stopTransport();
-    state = E.create(options()); resultShown = false; particles = []; flash = 0; statusText = '';
+    state = E.create(options()); resultShown = false; particles = []; flightTrail = []; flash = 0; statusText = '';
     $('start-panel').hidden = false; $('panel-kicker').textContent = 'READY TO SING?';
-    $('panel-title').textContent = '목소리에 날개를 달아볼까요?'; $('panel-text').textContent = '네 박자를 센 뒤, 음표의 길이대로 멜로디를 불러요.';
+    $('panel-title').textContent = '목소리에 날개를 달아볼까요?'; $('panel-text').textContent = '높은 음은 위로, 낮은 음은 아래로. 문 틈과 높이를 맞춰 유지해요.';
     $('start').innerHTML = '<span aria-hidden="true">♩</span> 마이크 켜고 시작 <span aria-hidden="true">→</span>';
     $('start').disabled = false; $('demo').textContent = '먼저 둘러보기 ↗';
     $('result').hidden = true; $('error').hidden = true; $('demo-badge').hidden = true; $('sky').classList.remove('demo');
@@ -256,7 +256,7 @@
   function burst(success) {
     flash = 1; flashSuccess = success;
     if (reducedMotion) return;
-    for (let i = 0; i < (success ? 30 : 12); i++) particles.push({ x: 210, y: 280, vx: (Math.random() - 0.5) * 330, vy: (Math.random() - 0.6) * 270, life: 1.2, color: success ? ['#b8a1db', '#efcf79', '#a1c5a5', '#f1b4b6'][i % 4] : '#d8a5a1', size: 3 + Math.random() * 4 });
+    for (let i = 0; i < (success ? 30 : 12); i++) particles.push({ x: E.FLIGHT.playerX, y: state.playerY, vx: (Math.random() - 0.5) * 330, vy: (Math.random() - 0.6) * 270, life: 1.2, color: success ? ['#b8a1db', '#efcf79', '#a1c5a5', '#f1b4b6'][i % 4] : '#d8a5a1', size: 3 + Math.random() * 4 });
   }
   function updateUI(now) {
     $('score').textContent = String(state.score).padStart(5, '0');
@@ -281,12 +281,13 @@
     else if (playing && state.phase === 'countin') hint = '네 박자를 듣고 첫 음을 준비해요';
     else if (playing && state.target === null) hint = n ? '쉼표예요 · 소리를 잠깐 멈춰요' : '잘 쉬고 있어요 · 다음 음을 준비해요';
     else if (playing && !n) hint = inputRms > .015 ? '현재 음을 또렷하게 불러보세요' : '편하게 “아—” 하고 불러주세요';
-    else if (playing && matched) hint = '좋아요! 이 음을 유지해요';
+    else if (playing && matched) hint = '문 틈과 같은 높이예요! 그대로 유지해요';
     else if (playing && n) hint = cents < 0 ? '목소리를 조금 높여주세요 ↑' : '목소리를 조금 낮춰주세요 ↓';
     $('input-hint').textContent = hint;
-    const text = now < statusUntil ? statusText : playing ? (state.phase === 'countin' ? `준비! ${Math.min(4, Math.floor(state.beat) + 1)} · 첫 음은 ${E.NOTES[state.target % 12]}` : state.target === null ? '쉼표 · 목소리를 잠깐 쉬어요' : state.matched ? '좋아요! 박자선을 따라 계속 불러요 ♫' : '지금 표시된 음을 박자에 맞춰 불러요') : '';
+    const text = now < statusUntil ? statusText : playing ? (state.phase === 'countin' ? `준비! ${Math.min(4, Math.floor(state.beat) + 1)} · 첫 음은 ${E.NOTES[state.target % 12]}` : state.target === null ? '쉼표 · 목소리를 잠깐 쉬어요' : state.matched ? '좋아요! 문 틈을 지나고 있어요 ♫' : state.hasPitch ? '별을 문 틈의 높이에 맞춰주세요' : '소리를 내어 별을 띄워주세요') : '';
     if ($('game-message').textContent !== text) $('game-message').textContent = text;
-    $('canvas-hint').textContent = demo ? '마이크 없이 둘러보는 중' : playing && state.combo > 1 ? `${state.combo} COMBO · 멋지게 날고 있어요!` : state.freeOctave ? '높이보다 음정이 중요해요' : '표시된 옥타브까지 맞춰주세요';
+    $('canvas-hint').textContent = demo ? '시연 · 음 높이에 따라 별이 움직여요' : state.freeOctave ? '옥타브 자유 · 같은 음은 같은 높이' : '높은 음 ↑ · 낮은 음 ↓';
+    canvas.setAttribute('aria-label', `목소리 음 높이로 별이 위아래로 움직이는 게임. ${state.hasPitch ? '현재 음 ' + (n ? n.name : '') : '현재 소리 없음'}. 목표 ${state.target === null ? '쉼표' : E.NOTES[state.target % 12] + ' 높이의 문 틈'}.`);
     renderRhythm();
   }
   function roundRect(x, y, w, h, r, fill, stroke) {
@@ -307,29 +308,55 @@
     ctx.strokeStyle = '#a2b28d'; ctx.lineWidth = 3;
     for (let i = 0; i < 5; i++) { let p = x - size * .5 + i * size * .23; ctx.beginPath(); ctx.moveTo(p, y - 3); ctx.quadraticCurveTo(p - 4, y - 18 - i % 2 * 8, p - 8, y - 12); ctx.stroke(); }
   }
-  function drawGate(x, target, active = false, alpha = 1) {
-    const n = target === null ? { name: '쉼', letter: 'REST', octave: '' } : E.note(E.frequency(target)), open = active && state.matched && playing;
-    ctx.save(); ctx.globalAlpha = alpha; ctx.lineWidth = 1.5;
-    const gateColor = open ? '#a2c7aa' : '#b7a8cb', edge = open ? '#83b48f' : '#a394bb';
-    // A soft floating arch; the center veil visibly opens only for the right pitch.
-    ctx.fillStyle = gateColor; ctx.beginPath(); ctx.moveTo(x, 430); ctx.lineTo(x, 212); ctx.bezierCurveTo(x, 120, x + 110, 120, x + 110, 212); ctx.lineTo(x + 110, 430); ctx.lineTo(x + 87, 430); ctx.lineTo(x + 87, 214); ctx.bezierCurveTo(x + 87, 156, x + 23, 156, x + 23, 214); ctx.lineTo(x + 23, 430); ctx.closePath(); ctx.fill(); ctx.strokeStyle = edge; ctx.stroke();
-    ctx.fillStyle = open ? '#cce9c32a' : '#cbbce355'; ctx.fillRect(x + 23, 217, 64, 211);
-    ctx.setLineDash([4, 7]); ctx.strokeStyle = open ? '#a8c89b' : '#bbacd1'; ctx.beginPath(); ctx.moveTo(x + 55, 225); ctx.lineTo(x + 55, 410); ctx.stroke(); ctx.setLineDash([]);
-    for (let i = 0; i < 4; i++) star(x + 39 + i % 2 * 30, 243 + i * 43, 4, open ? '#8abd91' : '#b5a5cf');
-    roundRect(x - 5, 424, 120, 14, 7, open ? '#98ba97' : '#ab9ac0');
-    roundRect(x + 22, 172, 66, 60, 18, '#faf8fd', open ? '#98bd9d' : '#c1b4d3');
-    ctx.fillStyle = open ? '#5c9470' : '#8b76a5'; ctx.textAlign = 'center'; ctx.font = '800 28px "Noto Sans KR",sans-serif'; ctx.fillText(n.name, x + 55, 211);
-    ctx.font = '700 13px Nunito,sans-serif'; ctx.fillStyle = '#a192b5'; ctx.fillText(n.letter + n.octave, x + 55, 121);
-    if (active && playing && state.phase === 'singing') {
-      const r = E.currentRound(state), slot = r.notes[state.noteIndex];
-      roundRect(x - 4, 455, 118, 5, 3, '#d8d9d1'); roundRect(x - 4, 455, 118 * state.remaining / (slot.beats * r.secondsPerBeat), 5, 3, '#a7ba97');
-      ctx.font = '600 13px "Noto Sans KR",sans-serif'; ctx.fillStyle = '#879477'; ctx.fillText(`${state.noteIndex + 1} / ${r.notes.length} · ${beatLabel(slot.beats)}박`, x + 55, 486);
+  function drawGate(gate, slot, active = false) {
+    const { x, width: w } = gate;
+    if (gate.opacity <= 0 || x > sceneWidth + 30 || x + w < -30) return;
+    const open = active && state.matched && playing && !preview;
+    const blocked = active && state.blocked && playing && !preview;
+    const failed = gate.result === false;
+    ctx.save(); ctx.globalAlpha = gate.opacity * (active ? 1 : .78); ctx.lineWidth = 1.5;
+    const edge = failed || blocked ? '#cb9892' : open || gate.result === true ? '#88b498' : '#a99abb';
+    const fill = failed || blocked ? '#edc9c2' : open || gate.result === true ? '#bedac1' : '#d6cce4';
+    if (gate.rest) {
+      ctx.setLineDash([5, 6]); roundRect(x, 509, w, 50, 12, '#f7f9ed99', '#b6c2a0'); ctx.setLineDash([]);
+      ctx.font = '600 16px "Noto Sans KR",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#8c9b79'; ctx.fillText('쉼', x + w / 2, 540);
+      ctx.restore(); return;
+    }
+    // The drawn empty opening is the same gap used by engine.fitsGap.
+    roundRect(x, 78, w, gate.top - 78, 10, fill, edge);
+    roundRect(x, gate.bottom, w, 562 - gate.bottom, 10, fill, edge);
+    roundRect(x - 3, gate.top - 10, w + 6, 10, 4, edge);
+    roundRect(x - 3, gate.bottom, w + 6, 10, 4, edge);
+    ctx.fillStyle = open ? '#cde9c839' : '#ffffff25'; ctx.fillRect(x, gate.top, w, gate.bottom - gate.top);
+    ctx.setLineDash([4, 8]); ctx.strokeStyle = edge; ctx.beginPath(); ctx.moveTo(x, gate.center); ctx.lineTo(x + w, gate.center); ctx.stroke(); ctx.setLineDash([]);
+    const badgeW = Math.min(58, w - 4), labelX = x + Math.min(w / 2, 42);
+    roundRect(labelX - badgeW / 2, gate.top - 45, badgeW, 29, 8, '#fbfaff', edge);
+    ctx.fillStyle = failed ? '#bb8179' : open ? '#659173' : '#8f7ca4'; ctx.font = '800 17px "Noto Sans KR",sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(E.NOTES[gate.target % 12], labelX, gate.top - 24);
+    ctx.font = '600 11px "Noto Sans KR",sans-serif'; ctx.fillText(`${beatLabel(slot.beats)}박`, labelX, gate.bottom + 28);
+    if (blocked) { ctx.strokeStyle = '#c68c87'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + 9, gate.top - 64); ctx.lineTo(x + 22, gate.top - 53); ctx.moveTo(x + 22, gate.top - 64); ctx.lineTo(x + 9, gate.top - 53); ctx.stroke(); }
+    ctx.restore();
+  }
+  function drawPitchGuides(target, active) {
+    ctx.save(); ctx.textAlign = 'left';
+    const lanes = state.difficulty === 'hard' ? Array.from({ length: 12 }, (_, i) => 60 + i) : [60, 62, 64, 65, 67, 69, 71];
+    for (const midi of lanes) {
+      const y = E.noteY(midi), selected = active && target === midi;
+      ctx.lineWidth = selected ? 1.8 : 1; ctx.strokeStyle = selected ? '#9d8caf80' : '#94ae9428'; ctx.setLineDash(selected ? [6, 8] : [2, 8]);
+      ctx.beginPath(); ctx.moveTo(64, y); ctx.lineTo(sceneWidth, y); ctx.stroke();
+      ctx.font = `${selected ? '800' : '500'} 14px "Noto Sans KR",sans-serif`; ctx.fillStyle = selected ? '#8d73a5' : '#91a18c'; ctx.fillText(E.NOTES[midi % 12], 30, y + 5);
+    }
+    ctx.setLineDash([]); ctx.fillStyle = '#96a58e'; ctx.font = '500 11px "Noto Sans KR",sans-serif'; ctx.fillText('높은 음 ↑', 27, 121); ctx.fillText('낮은 음 ↓', 27, 490); ctx.fillText('소리 쉼', 27, E.FLIGHT.restY + 4);
+    if (active && target !== null) {
+      const y = E.noteY(target); ctx.setLineDash([4, 5]); ctx.strokeStyle = '#a28db488'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(E.FLIGHT.playerX, y, E.FLIGHT.radius + 3, 0, Math.PI * 2); ctx.stroke();
     }
     ctx.restore();
   }
   function drawCharacter(y) {
-    const x = 210, bob = reducedMotion ? 0 : Math.sin(visualTime * 2.6) * 7;
-    ctx.save(); ctx.translate(x, y + bob);
+    const live = playing || preview || state.status === 'paused';
+    const x = E.FLIGHT.playerX, bob = live || reducedMotion ? 0 : Math.sin(visualTime * 2.6) * 5;
+    ctx.save(); ctx.translate(x, y + bob); ctx.scale(live ? .58 : .8, live ? .58 : .8);
     const halo = ctx.createRadialGradient(0, 0, 12, 0, 0, 90); halo.addColorStop(0, '#fff6c880'); halo.addColorStop(1, '#fff6c800'); ctx.fillStyle = halo; ctx.fillRect(-90, -90, 180, 180);
     if (playing && state.matched) { ctx.strokeStyle = '#a8c9a7'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 58 + Math.sin(visualTime * 4) * 4, -.5, 1.9); ctx.stroke(); }
     ctx.save(); ctx.rotate(-.12); ctx.fillStyle = '#fffdf1'; ctx.strokeStyle = '#e3dcbf'; ctx.lineWidth = 1.5;
@@ -339,7 +366,7 @@
     ctx.fillStyle = '#756d61'; ctx.beginPath(); ctx.ellipse(-9, 0, 2.6, 3.9, 0, 0, Math.PI * 2); ctx.ellipse(10, 0, 2.6, 3.9, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#e7b0a0'; ctx.beginPath(); ctx.ellipse(-18, 9, 5.5, 3.5, 0, 0, Math.PI * 2); ctx.ellipse(19, 9, 5.5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#8c7960'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.arc(1, 7, 5, .1, Math.PI - .1); ctx.stroke();
-    if (playing) { ctx.font = '700 24px serif'; ctx.fillStyle = state.matched ? '#7ba480' : '#b6a1ce'; ctx.fillText('♪', 54, -36 + Math.sin(visualTime * 3) * 5); }
+    if (playing) { ctx.font = '700 24px serif'; ctx.fillStyle = state.blocked ? '#c89088' : state.matched ? '#7ba480' : '#b6a1ce'; ctx.fillText(state.hasPitch ? '♪' : '…', 54, -36); }
     ctx.restore();
   }
   function draw(dt) {
@@ -353,13 +380,28 @@
     ctx.fillStyle = colors[2] + '70'; ctx.beginPath(); ctx.moveTo(0, 540); ctx.bezierCurveTo(160, 360, 310, 575, 480, 474); ctx.bezierCurveTo(650, 370, 840, 554, 1100, 420); ctx.lineTo(1100, 600); ctx.lineTo(0, 600); ctx.fill();
     cloud(130, 490, 2.1, .65); cloud(610, 558, 2.8, .6); cloud(1090, 536, 2.5, .68);
     island(95, 565, 85, '#becbb6'); island(943, 499, 135, '#bfcbb7');
-    ctx.strokeStyle = '#d2ddd0'; ctx.lineWidth = 1.6; ctx.setLineDash([4, 9]); ctx.beginPath(); ctx.moveTo(80, 285); ctx.bezierCurveTo(400, 240, 600, 320, 1060, 275); ctx.stroke(); ctx.setLineDash([]);
-    if (!playing && state.status !== 'paused' && !resultShown) { drawGate(Math.min(670, sceneWidth * .72), state.target, false, .9); drawGate(960, 64, false, .35); }
-    else { drawGate(state.gateX + 535, E.currentRound(state).notes[Math.min(state.noteIndex + 1, E.currentRound(state).notes.length - 1)].midi, false, .3); drawGate(state.gateX, state.target, true); }
-    drawCharacter(!playing && state.status !== 'paused' && !resultShown && sceneWidth < 850 ? 125 : 277);
-    if (playing && state.phase === 'singing') {
-      const text = state.target === null ? '𝄽  잠깐 쉬어요' : '♪  ' + E.NOTES[state.target % 12] + '—';
-      roundRect(139, 352, 142, 34, 17, '#ffffffce'); ctx.font = '600 14px "Noto Sans KR",sans-serif'; ctx.fillStyle = state.matched ? '#77a080' : '#9a89b1'; ctx.textAlign = 'center'; ctx.fillText(text, 210, 374);
+    const view = rhythmView(), round = view.round, target = round.notes[view.index].midi;
+    const lobby = !playing && !preview && state.status !== 'paused' && !resultShown;
+    drawPitchGuides(target, !lobby);
+    for (let i = round.notes.length - 1; i >= 0; i--) {
+      const gate = E.gateGeometry(state, i, preview ? preview.position() : state.elapsed, round);
+      if (lobby) gate.x = Math.min(390, sceneWidth * .68) + i * 210;
+      if (preview && gate.active) gate.x = E.FLIGHT.playerX + E.FLIGHT.radius + 4 - ((view.phraseBeat - round.notes[i].beat) / round.notes[i].beats) * (gate.width + E.FLIGHT.radius * 2 + 24);
+      drawGate(gate, round.notes[i], !lobby && i === view.index);
+    }
+    const playerY = lobby ? 125 : preview ? target === null ? E.FLIGHT.restY : E.noteY(target) : state.playerY;
+    if (playing && !preview && !reducedMotion) {
+      flightTrail.push({ x: E.FLIGHT.playerX - 20, y: playerY, life: .45 });
+      for (const p of flightTrail) { p.x -= dt * 95; p.life -= dt; ctx.globalAlpha = Math.max(0, p.life) * .5; star(p.x, p.y, 3.5, '#e5c77c'); }
+      flightTrail = flightTrail.filter(p => p.life > 0); ctx.globalAlpha = 1;
+    }
+    drawCharacter(playerY);
+    if (playing && !preview) {
+      const detected = state.voiceMidi === null ? '소리 없음' : E.NOTES[((Math.round(state.voiceMidi) % 12) + 12) % 12];
+      const text = state.target === null ? '쉼표 · 쉬어요' : `${demo ? '시연' : '내 목소리'} ${detected}`;
+      const labelY = Math.max(96, playerY - 58);
+      roundRect(145, labelY, 130, 25, 12, '#ffffffd9'); ctx.font = '600 12px "Noto Sans KR",sans-serif'; ctx.fillStyle = state.blocked ? '#b98179' : state.matched ? '#6e9974' : '#9783aa'; ctx.textAlign = 'center'; ctx.fillText(text, E.FLIGHT.playerX, labelY + 17);
+      if (state.blocked && state.hasPitch) { ctx.font = '800 26px sans-serif'; ctx.fillText(playerY > E.noteY(state.target) ? '↑' : '↓', 155, playerY + 8); }
     }
     for (const p of particles) { if (playing) { p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 100 * dt; p.life -= dt; } ctx.globalAlpha = Math.max(0, p.life / 1.2); star(p.x, p.y, p.size, p.color, p.life); }
     particles = particles.filter(p => p.life > 0); ctx.globalAlpha = 1;

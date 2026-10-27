@@ -70,3 +70,38 @@ test('pause freezes the score; resuming resets only the current phrase and suppl
 test('invalid time deltas do not affect gameplay', () => {
   const s = E.create(); for (const dt of [0, -1, NaN, Infinity]) E.tick(s, dt, 440); assert.equal(s.elapsed, 0);
 });
+test('star height follows detected pitch and octave freedom uses a fixed note scale', () => {
+  for (let target = 60; target < 71; target++) assert.ok(E.voicePosition(E.frequency(target + 1)).y < E.voicePosition(E.frequency(target)).y);
+  for (let target = 60; target <= 71; target++) {
+    const y = E.noteY(target);
+    for (const octave of [-24, -12, 0, 12]) assert.ok(Math.abs(E.voicePosition(E.frequency(target + octave)).y - y) < 1e-6);
+  }
+  assert.equal(E.voicePosition(null).y, E.FLIGHT.restY); assert.equal(E.voicePosition(null).voiced, false);
+  const s = E.create({}, () => .8); run(s, 4, () => E.frequency(60));
+  assert.notEqual(s.target, 60); assert.equal(s.playerY, E.noteY(60)); assert.equal(s.blocked, true);
+});
+test('the rendered opening and star radius enforce the same tolerance as pitch judgment', () => {
+  for (const difficulty of ['easy', 'normal', 'hard']) for (const target of E.LEVELS[difficulty].notes) {
+    const s = E.create({ difficulty }); s.target = target;
+    const gap = E.gapFor(target, difficulty); assert.equal(gap.center, E.noteY(target));
+    for (const error of [0, E.LEVELS[difficulty].tolerance - .1, -E.LEVELS[difficulty].tolerance + .1]) {
+      const p = E.voicePosition(E.frequency(target + error / 100)); s.playerY = p.y; s.hasPitch = p.voiced; assert.ok(E.fitsGap(s), `${difficulty}/${target}/${error}`);
+    }
+    const wrong = E.voicePosition(E.frequency(target === 71 ? 70 : target + 1)); s.playerY = wrong.y;
+    assert.equal(E.fitsGap(s), false); s.hasPitch = false; assert.equal(E.fitsGap(s), false);
+  }
+});
+test('note gates approach at their own fixed pitch heights and freeze at a wrong pitch', () => {
+  const s = E.create({}, () => .8), first = E.gateGeometry(s, 0), next = E.gateGeometry(s, 1);
+  assert.notEqual(first.center, next.center); assert.ok(next.x > first.x);
+  run(s, 3.07, () => E.frequency(64)); const blocked = E.gateGeometry(s);
+  assert.equal(blocked.progress, 0); assert.ok(blocked.x >= E.FLIGHT.playerX + E.FLIGHT.radius); assert.ok(s.blocked);
+  run(s, .15); const moving = E.gateGeometry(s); assert.ok(moving.x < blocked.x); assert.ok(moving.progress > 0);
+  run(s, .15, () => E.frequency(64)); assert.equal(E.gateGeometry(s).x, moving.x); assert.equal(E.gateGeometry(s).center, first.center);
+});
+test('silence and incorrect octaves cannot fit a pitched gate or advance it', () => {
+  for (const hz of [null, E.frequency(48), E.frequency(72)]) {
+    const s = E.create({ freeOctave: false }); run(s, 3.5, () => hz);
+    assert.equal(s.matched, false); assert.equal(E.gateGeometry(s).progress, 0); assert.equal(s.score, 0);
+  }
+});

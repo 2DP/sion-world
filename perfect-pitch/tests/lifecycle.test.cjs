@@ -7,10 +7,10 @@ const E = require('../engine.js');
 const R = require('../rhythm.js');
 function app(options = {}) {
   let time = 0, raf, state, hz = 0, pendingResolve, pendingReject, requests = 0, paints = 0;
-  const elements = new Map(), events = {}, windowEvents = {}, storage = new Map(), tracks = [], audioTracks = [], timers = new Map();
+  const elements = new Map(), events = {}, windowEvents = {}, storage = new Map(), tracks = [], audioTracks = [], timers = new Map(), starPositions = [];
   let nextTimer = 0;
   const setTimer = fn => { timers.set(++nextTimer, fn); return nextTimer; }, clearTimer = id => timers.delete(id);
-  const drawing = new Proxy({ createLinearGradient: () => ({ addColorStop() {} }), createRadialGradient: () => ({ addColorStop() {} }), clearRect() { paints++; } }, { get: (o, k) => o[k] || (() => {}) });
+  const drawing = new Proxy({ createLinearGradient: () => ({ addColorStop() {} }), createRadialGradient: () => ({ addColorStop() {} }), clearRect() { paints++; }, translate(x, y) { if (x === E.FLIGHT.playerX) starPositions.push(y); } }, { get: (o, k) => o[k] || (() => {}) });
   class Element {
     constructor(id) { this.id = id; this.listeners = {}; this.hidden = false; this.disabled = false; this.style = {}; this.textContent = ''; this.innerHTML = ''; this.attributes = {}; this.classList = { toggle() {}, add() {}, remove() {} }; }
     addEventListener(name, fn) { this.listeners[name] = fn; }
@@ -50,7 +50,7 @@ function app(options = {}) {
   scope.window = scope;
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../game.js'), 'utf8'), scope);
   return {
-    elements, document, events, windowEvents, storage, tracks, audioTracks, timers, mode, state: () => state, requests: () => requests, paints: () => paints,
+    elements, document, events, windowEvents, storage, tracks, audioTracks, timers, starPositions, mode, state: () => state, requests: () => requests, paints: () => paints,
     click: id => elements.get(id).listeners.click(),
     setPitch: value => hz = value,
     advance(seconds, follow = false) { for (let i = 0; i < Math.ceil(seconds / .02); i++) { if (follow) hz = state.target === null ? 0 : E.frequency(state.target); time += 20; for (const fn of timers.values()) fn(); raf(time); } },
@@ -137,4 +137,12 @@ test('the melody shown and heard in the lobby is exactly the one played after en
   await ui.click('listen'); ui.advance(7); await ui.click('start');
   assert.deepEqual(ui.state().rounds[0].notes.map(n => n.midi), notes);
   assert.equal(ui.state().phase, 'countin'); assert.equal(ui.state().score, 0);
+});
+test('analyzer input moves the actual Canvas star up and down; silence cannot auto-align it', async () => {
+  const ui = app(); await ui.click('start'); ui.setPitch(E.frequency(60)); ui.advance(.4);
+  const low = ui.starPositions.at(-1); assert.ok(Math.abs(low - E.noteY(60)) < 1);
+  ui.setPitch(E.frequency(67)); ui.advance(.3); const high = ui.starPositions.at(-1);
+  assert.ok(high < low - 150); assert.equal(high, ui.state().playerY);
+  ui.setPitch(0); ui.advance(.3); assert.equal(ui.starPositions.at(-1), E.FLIGHT.restY); assert.equal(ui.state().hasPitch, false);
+  ui.click('pause'); const paused = ui.state().playerY; ui.setPitch(440); ui.advance(.5); assert.equal(ui.state().playerY, paused);
 });

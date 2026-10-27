@@ -20,7 +20,7 @@
     </header>
     <main>
       <section class="intro">
-        <div><div class="eyebrow"><span></span> A LITTLE VOICE, A BIG ADVENTURE</div><h1>노래하면, 길이 열려요<span>.</span></h1><p>작은 별과 함께, 내 목소리로 떠나는 음감 여행.</p></div>
+        <div><div class="eyebrow"><span></span> A LITTLE VOICE, A BIG ADVENTURE</div><h1>노래하면, 길이 열려요<span>.</span></h1><p>높은 음은 위로, 낮은 음은 아래로. 별을 문 틈에 맞춰요.</p></div>
         <div class="intro-doodle" aria-hidden="true"><span>도</span><span>레</span><span>미</span><i>〰</i></div>
       </section>
       <div class="game-layout">
@@ -38,20 +38,20 @@
               <p class="rhythm-tip">음표가 길면 길게, 짧으면 짧게 · 쉼표에서는 소리를 멈춰요</p>
             </section>
             <div class="sky" id="sky">
-              <canvas id="game" width="1100" height="600" aria-label="목소리로 작은 별을 움직여 음표 문을 통과하는 게임"></canvas>
+              <canvas id="game" width="1100" height="600" aria-label="목소리 음 높이로 별을 위아래로 움직여 음표 문 틈을 통과하는 게임"></canvas>
               <div class="scene-label"><span id="stage-number">01</span><div id="stage-name">구름 정원<small>CLOUD GARDEN</small></div></div>
               <span class="demo-badge" id="demo-badge" hidden>자동 시연 · 기록 저장 안 됨</span>
               <div class="game-message" id="game-message" role="status" aria-live="polite"></div>
               <div class="start-panel" id="start-panel">
                 <span class="panel-kicker" id="panel-kicker">READY TO SING?</span>
                 <h2 id="panel-title">목소리에 날개를 달아볼까요?</h2>
-                <p id="panel-text">네 박자를 센 뒤, 음표의 길이대로 멜로디를 불러요.</p>
+                <p id="panel-text">음이 높아지면 별이 올라가요.<br>문 틈과 높이를 맞추고 박자만큼 유지해요.</p>
                 <div id="result" class="result" hidden></div>
                 <button class="primary-button" id="start" type="button"><span aria-hidden="true">♩</span> 마이크 켜고 시작 <span aria-hidden="true">→</span></button>
                 <button class="text-button" id="demo" type="button">먼저 둘러보기 <span aria-hidden="true">↗</span></button>
                 <p class="error" id="error" role="alert" hidden></p>
               </div>
-              <div class="sky-footer"><span>✦ FOLLOW YOUR VOICE</span><span id="canvas-hint">높이보다 음정이 중요해요</span></div>
+              <div class="sky-footer"><span>✦ FOLLOW YOUR VOICE</span><span id="canvas-hint">높은 음 ↑ · 낮은 음 ↓</span></div>
             </div>
             <div class="journey"><span>오늘의 비행</span><div class="journey-track" id="journey" role="progressbar" aria-label="비행 진행" aria-valuemin="0" aria-valuemax="12" aria-valuenow="0"><i id="journey-fill"></i></div><strong id="journey-text">12개의 음표 문</strong></div>
           </div>
@@ -80,7 +80,7 @@
           <div class="record-card"><span class="record-icon" aria-hidden="true">♜</span><div><span>나의 최고 비행</span><small id="record-caption">연습 · 쉬움 · 옥타브 자유</small></div><strong id="best-score">0<small>점</small></strong></div>
         </aside>
       </div>
-      <section class="how-to" aria-label="게임 방법"><div class="how-title"><span class="eyebrow">HOW TO PLAY</span><h2>비트 위에 목소리를.</h2></div><div class="step"><span>01</span><div><strong>네 박자를 듣고 준비</strong><p>쿵, 짝! 깜박이는 숫자를 따라가요.</p></div></div><div class="step"><span>02</span><div><strong>멜로디를 이어 불러요</strong><p>음표의 너비가 유지할 길이예요.</p></div></div><div class="step"><span>03</span><div><strong>짧게, 길게, 잠깐 쉼!</strong><p>높은 스테이지는 박자도 다양해져요.</p></div></div></section>
+      <section class="how-to" aria-label="게임 방법"><div class="how-title"><span class="eyebrow">HOW TO PLAY</span><h2>목소리로 높이를 맞춰요.</h2></div><div class="step"><span>01</span><div><strong>네 박자를 듣고 준비</strong><p>쿵, 짝! 깜박이는 숫자를 따라가요.</p></div></div><div class="step"><span>02</span><div><strong>높은 음은 위로, 낮은 음은 아래로</strong><p>내 목소리의 높이가 별의 위치예요.</p></div></div><div class="step"><span>03</span><div><strong>문 틈에 맞춰 유지해요</strong><p>높이가 맞을 때만 지나갈 수 있어요.</p></div></div></section>
     </main>
     <footer><span>SION WORLD <i>×</i> LITTLE SOUND CLUB</span><span>서두르지 말고, 나만의 음을 찾아요 <span aria-hidden="true">✦</span></span></footer>
   </div>

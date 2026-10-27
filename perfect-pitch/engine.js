@@ -19,8 +19,41 @@
     [[.5, .5, 1, -.5, .5, 1, 1.5, .5, 2], [.5, 1.5, .5, .5, 1, -.5, .5, 1, 2], [1, -.5, .5, .5, .5, 1.5, .5, 1, 2], [.5, .5, .5, .5, 1, -.5, .5, 1, 1.5, 1.5]]
   ];
   const TEMPOS = [84, 96, 108];
+  // Shared drawing/collision coordinates. Higher pitches always have smaller Y values.
+  const FLIGHT = { playerX: 210, radius: 26, baseMidi: 60, baseY: 456, stepY: 27, minY: 88, restY: 536, speed: 230 };
   const frequency = midi => 440 * 2 ** ((midi - 69) / 12);
   const midi = hz => 69 + 12 * Math.log2(hz / 440);
+  const noteY = value => FLIGHT.baseY - (value - FLIGHT.baseMidi) * FLIGHT.stepY;
+  function voicePosition(hz, freeOctave = true) {
+    if (!Number.isFinite(hz) || hz <= 0) return { voiced: false, midi: null, y: FLIGHT.restY };
+    const raw = midi(hz), nearest = Math.round(raw);
+    // Fold octaves by the detected note, never by the target: changing a gate cannot move the star.
+    const displayed = freeOctave ? 60 + ((nearest % 12) + 12) % 12 + (raw - nearest) : raw;
+    return { voiced: true, midi: displayed, y: Math.max(FLIGHT.minY, Math.min(FLIGHT.restY, noteY(displayed))) };
+  }
+  function gapFor(target, difficulty = 'easy') {
+    const center = target === null ? FLIGHT.restY : noteY(target);
+    const half = FLIGHT.radius + LEVELS[difficulty].tolerance / 100 * FLIGHT.stepY;
+    return { center, top: center - half, bottom: center + half, half };
+  }
+  function fitsGap(state, target = state.target) {
+    if (target === null) return !state.hasPitch;
+    if (!state.hasPitch) return false;
+    const gap = gapFor(target, state.difficulty);
+    return state.playerY - FLIGHT.radius >= gap.top - 1e-7 && state.playerY + FLIGHT.radius <= gap.bottom + 1e-7;
+  }
+  function gateGeometry(state, index = state.noteIndex, elapsed = state.elapsed, round = currentRound(state)) {
+    const slot = round.notes[index], start = round.start + (round.countIn + slot.beat) * round.secondsPerBeat;
+    const end = start + slot.beats * round.secondsPerBeat;
+    const width = Math.max(26, slot.beats * round.secondsPerBeat * FLIGHT.speed - 22);
+    const required = Math.max(.001, slot.beats * round.secondsPerBeat - .105) * LEVELS[state.difficulty].coverage;
+    const progress = Math.min(1, slot.matchedTime / required);
+    const contactX = FLIGHT.playerX + FLIGHT.radius + 4;
+    let x = elapsed < start ? contactX + (start - elapsed) * FLIGHT.speed : contactX - progress * (width + FLIGHT.radius * 2 + 24);
+    if (slot.result === true && elapsed > end) x -= (elapsed - end) * FLIGHT.speed;
+    const opacity = slot.result === false && elapsed > end ? Math.max(0, 1 - (elapsed - end) / .35) : 1;
+    return { ...gapFor(slot.midi, state.difficulty), x, width, start, end, progress, opacity, rest: slot.midi === null, target: slot.midi, result: slot.result, active: elapsed >= start && elapsed < end };
+  }
   function note(hz) {
     if (!Number.isFinite(hz) || hz <= 0) return null;
     const n = Math.round(midi(hz)), index = ((n % 12) + 12) % 12;
@@ -94,6 +127,7 @@
     const state = {
       difficulty, mode: options.mode === 'challenge' ? 'challenge' : 'practice', freeOctave: options.freeOctave !== false,
       status: 'running', phase: 'countin', target: 60, gateX: 1050, hold: 0,
+      playerY: FLIGHT.restY, voiceMidi: null, hasPitch: false, blocked: false,
       gates: 0, total: 12, passed: 0, lives: 3, score: 0, combo: 0, maxCombo: 0, matched: false, cents: Infinity,
       elapsed: 0, event: null, noteIndex: 0, beat: 0, phraseBeat: 0, rounds: makeRounds(difficulty, random)
     };
@@ -110,17 +144,15 @@
     const n = r.notes[state.noteIndex]; state.target = n.midi;
     state.remaining = Math.max(0, (n.beat + n.beats - state.phraseBeat) * r.secondsPerBeat);
     state.hold = n.judgedTime ? Math.min(1, n.matchedTime / n.judgedTime) : 0;
-    if (state.phase === 'countin') state.gateX = 1050 - 750 * Math.min(1, state.beat / r.countIn);
-    else {
-      const progress = r.notes.reduce((sum, slot) => sum + (slot.result === true ? slot.beats : slot.result === null ? Math.min(slot.beats, slot.matchedTime / r.secondsPerBeat) : 0), 0);
-      state.gateX = 300 - 240 * progress / r.beats;
-    }
+    state.gateX = gateGeometry(state).x;
+    state.blocked = state.phase === 'singing' && n.midi !== null && !fitsGap(state);
   }
   function restartRound(state) {
     if (state.status === 'won' || state.status === 'lost') return;
     const r = currentRound(state);
     for (const n of r.notes) { n.matchedTime = 0; n.judgedTime = 0; n.result = null; }
     state.elapsed = r.start; state.matched = false; state.event = null; state.cents = Infinity;
+    state.playerY = FLIGHT.restY; state.voiceMidi = null; state.hasPitch = false; state.blocked = false;
     updatePosition(state);
   }
   function settle(state, success) {
@@ -142,6 +174,8 @@
     if (state.status !== 'running' || !Number.isFinite(dt) || dt <= 0) return state;
     dt = Math.min(dt, .25);
     const config = LEVELS[state.difficulty];
+    const position = voicePosition(hz, state.freeOctave);
+    state.playerY = position.y; state.voiceMidi = position.midi; state.hasPitch = position.voiced;
     while (dt > 1e-8 && state.status === 'running') {
       const r = currentRound(state), n = r.notes[state.noteIndex];
       const countEnd = r.start + r.countIn * r.secondsPerBeat;
@@ -149,7 +183,7 @@
       const boundary = state.phase === 'countin' ? countEnd : end;
       const step = Math.min(dt, Math.max(1e-8, boundary - state.elapsed));
       state.cents = centsFrom(hz, n.midi, state.freeOctave);
-      state.matched = state.phase === 'singing' && (n.midi === null ? hz === null || hz === undefined : Math.abs(state.cents) <= config.tolerance);
+      state.matched = state.phase === 'singing' && fitsGap(state, n.midi) && (n.midi === null || Math.abs(state.cents) <= config.tolerance);
       if (state.phase === 'singing') {
         // Small onset/release windows accommodate vocal transitions and microphone latency.
         const judged = Math.max(0, Math.min(state.elapsed + step, end - .04) - Math.max(state.elapsed, start + .065));
@@ -171,5 +205,5 @@
     }
     return state;
   }
-  return { NOTES, LETTERS, LEVELS, PATTERNS, TEMPOS, frequency, midi, note, centsFrom, detectPitch, makeRounds, currentRound, restartRound, create, tick };
+  return { NOTES, LETTERS, LEVELS, PATTERNS, TEMPOS, FLIGHT, frequency, midi, note, noteY, voicePosition, gapFor, fitsGap, gateGeometry, centsFrom, detectPitch, makeRounds, currentRound, restartRound, create, tick };
 });
