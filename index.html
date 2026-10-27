@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#fff8e8" />
     <title>SION WORLD - 게임 놀이터</title>
-    <meta name="description" content="SION WORLD의 알록달록 게임 놀이터! 별빛 타워 디펜스, 냠냠 스네이크, 버블 팡, 별빛 땅따먹기, 별빛 비트, 파스텔 스텝, 첨벙클럽, 아이돌 키우기, 블록 봄버를 플레이하세요." />
+    <meta name="description" content="SION WORLD의 알록달록 게임 놀이터! 음표 비행, 별빛 타워 디펜스, 냠냠 스네이크, 버블 팡, 별빛 땅따먹기, 별빛 비트, 파스텔 스텝, 첨벙클럽, 아이돌 키우기, 블록 봄버를 플레이하세요." />
     <style>
       * { box-sizing: border-box; }
       :root { color-scheme: light; --ink: #343653; }
@@ -122,6 +122,8 @@
       .territory .play { background: #dff1e6; color: #346c60; }
       .snake h3 { display: flex; align-items: center; gap: 10px; color: #507448; }
       .snake .play { background: #e5edcf; color: #4b713e; }
+      .pitch h3 { display: flex; align-items: center; gap: 10px; color: #82709f; }
+      .pitch .play { background: #eae4f4; color: #79648f; }
       .description { margin: 0 0 22px; color: #626278; line-height: 1.7; font-size: 15px; word-break: keep-all; }
       .play { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding: 14px 18px; border-radius: 15px; background: #fce0eb; color: #833959; font-size: 17px; font-weight: 800; }
       .swim .play { background: #d9efff; color: #245d87; }
@@ -152,9 +154,19 @@
       <nav aria-labelledby="games-heading">
         <div class="section-heading">
           <h2 id="games-heading">나의 게임 놀이터</h2>
-          <span class="count">게임 9개</span>
+          <span class="count">게임 10개</span>
         </div>
         <ul class="games">
+          <li>
+            <a class="game pitch" href="./perfect-pitch/" aria-labelledby="pitch-title" aria-describedby="pitch-description">
+              <div class="scene"><img class="arcade-preview" src="./perfect-pitch/assets/preview.svg" alt="작은 별이 목소리로 음을 맞추며 라벤더 음표 문을 통과하는 구름 정원" width="800" height="400" /></div>
+              <div class="game-info">
+                <h3 id="pitch-title"><img class="idol-icon" src="./perfect-pitch/assets/icon.svg" alt="" width="38" height="38" />음표 비행</h3>
+                <p class="description" id="pitch-description">비트 위에 목소리를, 멜로디를 쭉!<br />점점 다채로워지는 음과 박자를 따라 구름 문을 통과해요.</p>
+                <span class="play">목소리로 날아보기 <span class="arrow" aria-hidden="true">→</span></span>
+              </div>
+            </a>
+          </li>
           <li>
             <a class="game territory" href="./tower-defense/" aria-labelledby="tower-title" aria-describedby="tower-description">
               <div class="scene"><img class="arcade-preview" src="./tower-defense/assets/preview.svg" alt="파스텔 정원에서 네 가지 수호 타워로 별빛 성을 지키는 타워 디펜스" width="800" height="400" /></div>
