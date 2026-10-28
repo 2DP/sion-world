@@ -1,0 +1,24 @@
+<!doctype html><html lang="ko"><meta charset="utf-8"><title>MIXROOM audio integration checks</title><style>body{background:#172027;color:#dcebd4;font:15px monospace;padding:30px}button{padding:15px;background:#b8ed77;border:0}li{padding:6px}.fail{color:#ff9090}</style><h1>MIXROOM 오디오 통합 검사</h1><button id="run">오디오 그래프 검사 시작</button><p id="status">대기</p><ul id="results"></ul><script type="module">
+import {AudioEngine} from '../audio.js';
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+document.querySelector('#run').onclick=async()=>{
+const button=document.querySelector('#run');button.disabled=true;let engine;
+const result=(name,ok,detail='')=>{const li=document.createElement('li');li.textContent=`${ok?'PASS':'FAIL'} ${name} ${detail}`;if(!ok)li.className='fail';document.querySelector('#results').append(li);};
+try{
+engine=new AudioEngine();await engine.init();const c=engine.ctx;engine.speaker.disconnect();engine.phoneGate.disconnect();engine.splitGate.disconnect();
+const b=c.createBuffer(1,c.sampleRate*12,c.sampleRate),data=b.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=Math.sin(i/c.sampleRate*80*2*Math.PI)*.3;
+const track={id:'fixture',title:'Test sine',bpm:120,firstBeat:0};await engine.load(0,track,b);await engine.load(1,{...track,bpm:128},b);
+engine.cross=0;engine.updateCross();engine.control(0,'volume',1);engine.play(0,true);await wait(200);
+const level=engine.levels().master.rms;result('PCM renders through real AudioWorklet and mixer',level>.05,level.toFixed(4));
+engine.control(0,'low',-26);await wait(200);const cut=engine.levels().master.rms;result('LOW EQ attenuates bass',cut<level*.25,cut.toFixed(4));engine.control(0,'low',0);await wait(100);
+engine.cross=1;engine.updateCross();await wait(200);result('Crossfader fully mutes opposite deck',engine.levels().master.rms<.00001);
+engine.decks[0].monitor=true;engine.updateMonitor();const cue=c.createAnalyser();cue.fftSize=1024;engine.cueBus.connect(cue);const cueData=new Float32Array(1024);await wait(200);cue.getFloatTimeDomainData(cueData);const cueRMS=Math.sqrt(cueData.reduce((s,v)=>s+v*v,0)/cueData.length);result('Cue remains audible with master channel closed',cueRMS>.1,cueRMS.toFixed(4));result('Cue does not leak into master bus',engine.levels().master.rms<.00001);
+engine.sync(1);engine.play(1,true);await wait(300);result('Synced deck adopts master BPM',Math.abs(engine.decks[1].rate*128-120)<.001);
+const p0=engine.position(0)*120/60,p1=engine.position(1)*128/60,error=Math.abs(((p0-p1+.5)%1+1)%1-.5);result('Starting a synced stopped deck aligns beat phase',error<.02,error.toFixed(5));
+engine.rate(0,1.04);await wait(150);result('Synced follower tracks master tempo changes',Math.abs(engine.decks[1].rate*128-124.8)<.001);
+engine.startRecording();await wait(300);const blob=await engine.stopRecording();result('MediaRecorder produces an audio recording',blob.size>300,blob.size+' bytes');
+engine.decks[1].fx.on=true;engine.decks[1].fx.update();await wait(100);result('Effects output is finite',Number.isFinite(engine.levels().master.rms));
+document.querySelector('#status').textContent=document.querySelectorAll('.fail').length?'CHECKS FAILED':'ALL CHECKS PASSED';
+}catch(e){result('Runtime',false,e.stack);document.querySelector('#status').textContent='ERROR';}finally{if(engine?.ctx)await engine.ctx.close();button.disabled=false;}
+};
+</script></html>

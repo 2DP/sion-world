@@ -1,0 +1,128 @@
+[
+  {
+    "file": "house124.wav",
+    "duration": 123.87097505668935,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.19461549818515778,
+    "bytes": 5462754
+  },
+  {
+    "file": "house128.wav",
+    "duration": 120.0,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.20946668088436127,
+    "bytes": 5292044
+  },
+  {
+    "file": "hiphop90.wav",
+    "duration": 128.0,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.85999995470047,
+    "rms": 0.19188953936100006,
+    "bytes": 5644844
+  },
+  {
+    "file": "hiphop94.wav",
+    "duration": 122.55319727891157,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.85999995470047,
+    "rms": 0.18715783953666687,
+    "bytes": 5404640
+  },
+  {
+    "file": "dance128.wav",
+    "duration": 120.0,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.19998686015605927,
+    "bytes": 5292044
+  },
+  {
+    "file": "dance132.wav",
+    "duration": 116.36362811791383,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.19878524541854858,
+    "bytes": 5131680
+  },
+  {
+    "file": "sample-kick.wav",
+    "duration": 0.44997732426303855,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8067620992660522,
+    "rms": 0.25289133191108704,
+    "bytes": 19888
+  },
+  {
+    "file": "sample-clap.wav",
+    "duration": 0.24,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.09802374988794327,
+    "bytes": 10628
+  },
+  {
+    "file": "sample-hat.wav",
+    "duration": 0.2700226757369614,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.1306249499320984,
+    "bytes": 11952
+  },
+  {
+    "file": "sample-riser.wav",
+    "duration": 2.0,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.10399772971868515,
+    "bytes": 88244
+  },
+  {
+    "file": "sample-impact.wav",
+    "duration": 1.5,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8363791704177856,
+    "rms": 0.12261170893907547,
+    "bytes": 66194
+  },
+  {
+    "file": "sample-voice.wav",
+    "duration": 0.8,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.27963098883628845,
+    "bytes": 35324
+  },
+  {
+    "file": "sample-chord.wav",
+    "duration": 1.2,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.20974083244800568,
+    "bytes": 52964
+  },
+  {
+    "file": "sample-laser.wav",
+    "duration": 0.7,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.854117751121521,
+    "rms": 0.22818326950073242,
+    "bytes": 30914
+  }
+]
