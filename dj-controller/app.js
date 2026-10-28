@@ -64,7 +64,7 @@ async function boot(){
   }catch(e){started=false;$('#start-info').textContent=e.message;throw e;}finally{$('#start').disabled=false;restoring=false;}
 }
 $('#start').addEventListener('click',safe(boot));
-async function prepare(){try{const res=await fetch('./music-manifest.json');if(!res.ok)throw new Error('음악 목록을 불러오지 못했습니다. 새로고침해 주세요.');manifest=await res.json();tracks=manifest.tracks;renderLibrary();$('#library-info').textContent=`MIXROOM ORIGINALS · 오리지널 음악 ${tracks.length}곡`;$('#title-0').textContent=tracks[0].title;$('#title-1').textContent=tracks[1].title;$('#welcome').showModal();}catch(e){toast(e.message);$('#status').textContent='LOAD ERROR';}}
+async function prepare(){try{const res=await fetch('./music-manifest.json?v=2');if(!res.ok)throw new Error('음악 목록을 불러오지 못했습니다. 새로고침해 주세요.');manifest=await res.json();tracks=manifest.tracks;renderLibrary();$('#library-info').textContent=`MIXROOM ORIGINALS · 오리지널 음악 ${tracks.length}곡`;$('#title-0').textContent=tracks[0].title;$('#title-1').textContent=tracks[1].title;$('#welcome').showModal();}catch(e){toast(e.message);$('#status').textContent='LOAD ERROR';}}
 prepare();
 
 function cueDown(i){const d=engine.decks[i];if(!d.buffer)return;if(d.playing){engine.play(i,false);engine.seek(i,d.cue);d.cueHeld=false;}else{if(Math.abs(d.position-d.cue)>.08)d.cue=d.position;engine.seek(i,d.cue);engine.play(i,true);d.cueHeld=true;}persist();}
