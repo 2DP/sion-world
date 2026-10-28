@@ -7,3 +7,5 @@ The six instrumental compositions use synthesized drums, electric piano, sustain
 Files are mono 16-bit PCM WAV at 22,050 Hz for reliable browser decoding without extra runtime dependencies. Peaks are normalized to 0.86 (about -1.3 dBFS), leaving headroom for mixing. The eight one-shot samples use the same synthesis building blocks. `SYNTH YEAH` is a formant-style oscillator sound, not a recorded voice.
 
 The manifest contains `tracks` and `samples` arrays. Each track includes its relative asset URL, BPM, key, genre, duration, bar count, and named phrase boundaries. Browser decoding can resample these assets to the active audio context's rate; calculate duration and playback position using the decoded buffer's actual sample rate.
+
+Run python tools/party-generate.py after the base generator to add the ten energetic club compositions (16 songs total). The expansion is idempotent and preserves the six base tracks and eight samples. Each new score has its own progression, motif, tempo and rhythm, with bright harmonic leads, sidechain bass, breakdowns and builds. Total library size: about 80 MiB.

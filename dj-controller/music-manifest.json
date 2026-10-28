@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "sampleRate": 22050,
   "license": "Original synthesis created for MIXROOM. No third-party samples.",
   "tracks": [
@@ -196,6 +196,386 @@
       "duration": 116.36362811791383,
       "firstBeat": 0,
       "url": "assets/dance132.wav",
+      "phrases": [
+        {
+          "bar": 0,
+          "label": "INTRO"
+        },
+        {
+          "bar": 8,
+          "label": "GROOVE"
+        },
+        {
+          "bar": 24,
+          "label": "BREAK"
+        },
+        {
+          "bar": 32,
+          "label": "BUILD"
+        },
+        {
+          "bar": 40,
+          "label": "DROP"
+        },
+        {
+          "bar": 56,
+          "label": "OUTRO"
+        }
+      ]
+    },
+    {
+      "id": "sunburst",
+      "title": "Sunburst Parade",
+      "bpm": 128,
+      "key": "C",
+      "genre": "FESTIVAL HOUSE",
+      "bars": 64,
+      "artist": "MIXROOM ORIGINALS",
+      "duration": 120.0,
+      "firstBeat": 0,
+      "url": "assets/sunburst.wav",
+      "phrases": [
+        {
+          "bar": 0,
+          "label": "INTRO"
+        },
+        {
+          "bar": 8,
+          "label": "GROOVE"
+        },
+        {
+          "bar": 24,
+          "label": "BREAK"
+        },
+        {
+          "bar": 32,
+          "label": "BUILD"
+        },
+        {
+          "bar": 40,
+          "label": "DROP"
+        },
+        {
+          "bar": 56,
+          "label": "OUTRO"
+        }
+      ]
+    },
+    {
+      "id": "mirrorball",
+      "title": "Mirrorball Express",
+      "bpm": 126,
+      "key": "D",
+      "genre": "DISCO HOUSE",
+      "bars": 64,
+      "artist": "MIXROOM ORIGINALS",
+      "duration": 121.9047619047619,
+      "firstBeat": 0,
+      "url": "assets/mirrorball.wav",
+      "phrases": [
+        {
+          "bar": 0,
+          "label": "INTRO"
+        },
+        {
+          "bar": 8,
+          "label": "GROOVE"
+        },
+        {
+          "bar": 24,
+          "label": "BREAK"
+        },
+        {
+          "bar": 32,
+          "label": "BUILD"
+        },
+        {
+          "bar": 40,
+          "label": "DROP"
+        },
+        {
+          "bar": 56,
+          "label": "OUTRO"
+        }
+      ]
+    },
+    {
+      "id": "neonrush",
+      "title": "Neon Rush",
+      "bpm": 132,
+      "key": "Am",
+      "genre": "ELECTRO",
+      "bars": 64,
+      "artist": "MIXROOM ORIGINALS",
+      "duration": 116.36362811791383,
+      "firstBeat": 0,
+      "url": "assets/neonrush.wav",
+      "phrases": [
+        {
+          "bar": 0,
+          "label": "INTRO"
+        },
+        {
+          "bar": 8,
+          "label": "GROOVE"
+        },
+        {
+          "bar": 24,
+          "label": "BREAK"
+        },
+        {
+          "bar": 32,
+          "label": "BUILD"
+        },
+        {
+          "bar": 40,
+          "label": "DROP"
+        },
+        {
+          "bar": 56,
+          "label": "OUTRO"
+        }
+      ]
+    },
+    {
+      "id": "skyline",
+      "title": "Skyline Lift",
+      "bpm": 138,
+      "key": "Em",
+      "genre": "TRANCE",
+      "bars": 64,
+      "artist": "MIXROOM ORIGINALS",
+      "duration": 111.3043537414966,
+      "firstBeat": 0,
+      "url": "assets/skyline.wav",
+      "phrases": [
+        {
+          "bar": 0,
+          "label": "INTRO"
+        },
+        {
+          "bar": 8,
+          "label": "GROOVE"
+        },
+        {
+          "bar": 24,
+          "label": "BREAK"
+        },
+        {
+          "bar": 32,
+          "label": "BUILD"
+        },
+        {
+          "bar": 40,
+          "label": "DROP"
+        },
+        {
+          "bar": 56,
+          "label": "OUTRO"
+        }
+      ]
+    },
+    {
+      "id": "laserhearts",
+      "title": "Laser Hearts",
+      "bpm": 130,
+      "key": "F",
+      "genre": "FUTURE HOUSE",
+      "bars": 64,
+      "artist": "MIXROOM ORIGINALS",
+      "duration": 118.15383219954649,
+      "firstBeat": 0,
+      "url": "assets/laserhearts.wav",
+      "phrases": [
+        {
+          "bar": 0,
+          "label": "INTRO"
+        },
+        {
+          "bar": 8,
+          "label": "GROOVE"
+        },
+        {
+          "bar": 24,
+          "label": "BREAK"
+        },
+        {
+          "bar": 32,
+          "label": "BUILD"
+        },
+        {
+          "bar": 40,
+          "label": "DROP"
+        },
+        {
+          "bar": 56,
+          "label": "OUTRO"
+        }
+      ]
+    },
+    {
+      "id": "tropical",
+      "title": "Tropical Voltage",
+      "bpm": 124,
+      "key": "G",
+      "genre": "TROPICAL HOUSE",
+      "bars": 64,
+      "artist": "MIXROOM ORIGINALS",
+      "duration": 123.87097505668935,
+      "firstBeat": 0,
+      "url": "assets/tropical.wav",
+      "phrases": [
+        {
+          "bar": 0,
+          "label": "INTRO"
+        },
+        {
+          "bar": 8,
+          "label": "GROOVE"
+        },
+        {
+          "bar": 24,
+          "label": "BREAK"
+        },
+        {
+          "bar": 32,
+          "label": "BUILD"
+        },
+        {
+          "bar": 40,
+          "label": "DROP"
+        },
+        {
+          "bar": 56,
+          "label": "OUTRO"
+        }
+      ]
+    },
+    {
+      "id": "midnight",
+      "title": "Midnight Turbo",
+      "bpm": 140,
+      "key": "Dm",
+      "genre": "TECHNO",
+      "bars": 64,
+      "artist": "MIXROOM ORIGINALS",
+      "duration": 109.71428571428571,
+      "firstBeat": 0,
+      "url": "assets/midnight.wav",
+      "phrases": [
+        {
+          "bar": 0,
+          "label": "INTRO"
+        },
+        {
+          "bar": 8,
+          "label": "GROOVE"
+        },
+        {
+          "bar": 24,
+          "label": "BREAK"
+        },
+        {
+          "bar": 32,
+          "label": "BUILD"
+        },
+        {
+          "bar": 40,
+          "label": "DROP"
+        },
+        {
+          "bar": 56,
+          "label": "OUTRO"
+        }
+      ]
+    },
+    {
+      "id": "bounce",
+      "title": "Bounce District",
+      "bpm": 134,
+      "key": "Bm",
+      "genre": "UK GARAGE",
+      "bars": 64,
+      "artist": "MIXROOM ORIGINALS",
+      "duration": 114.62684807256235,
+      "firstBeat": 0,
+      "url": "assets/bounce.wav",
+      "phrases": [
+        {
+          "bar": 0,
+          "label": "INTRO"
+        },
+        {
+          "bar": 8,
+          "label": "GROOVE"
+        },
+        {
+          "bar": 24,
+          "label": "BREAK"
+        },
+        {
+          "bar": 32,
+          "label": "BUILD"
+        },
+        {
+          "bar": 40,
+          "label": "DROP"
+        },
+        {
+          "bar": 56,
+          "label": "OUTRO"
+        }
+      ]
+    },
+    {
+      "id": "starlight",
+      "title": "Starlight Sprint",
+      "bpm": 172,
+      "key": "F#m",
+      "genre": "DRUM & BASS",
+      "bars": 80,
+      "artist": "MIXROOM ORIGINALS",
+      "duration": 111.62789115646258,
+      "firstBeat": 0,
+      "url": "assets/starlight.wav",
+      "phrases": [
+        {
+          "bar": 0,
+          "label": "INTRO"
+        },
+        {
+          "bar": 8,
+          "label": "GROOVE"
+        },
+        {
+          "bar": 24,
+          "label": "BREAK"
+        },
+        {
+          "bar": 32,
+          "label": "BUILD"
+        },
+        {
+          "bar": 40,
+          "label": "DROP"
+        },
+        {
+          "bar": 72,
+          "label": "OUTRO"
+        }
+      ]
+    },
+    {
+      "id": "confetti",
+      "title": "Confetti Sunrise",
+      "bpm": 136,
+      "key": "A",
+      "genre": "DANCE POP",
+      "bars": 64,
+      "artist": "MIXROOM ORIGINALS",
+      "duration": 112.941179138322,
+      "firstBeat": 0,
+      "url": "assets/confetti.wav",
       "phrases": [
         {
           "bar": 0,

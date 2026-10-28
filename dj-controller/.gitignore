@@ -3,3 +3,5 @@ node_modules/
 *.tar.gz
 .sites-checkout/
 .openai/
+
+__pycache__/

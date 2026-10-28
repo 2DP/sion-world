@@ -124,5 +124,95 @@
     "peak": 0.854117751121521,
     "rms": 0.22818326950073242,
     "bytes": 30914
+  },
+  {
+    "file": "sunburst.wav",
+    "duration": 120.0,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.22210296988487244,
+    "bytes": 5292044
+  },
+  {
+    "file": "mirrorball.wav",
+    "duration": 121.9047619047619,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.22145317494869232,
+    "bytes": 5376044
+  },
+  {
+    "file": "neonrush.wav",
+    "duration": 116.36362811791383,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.22825036942958832,
+    "bytes": 5131680
+  },
+  {
+    "file": "skyline.wav",
+    "duration": 111.3043537414966,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.23840990662574768,
+    "bytes": 4908566
+  },
+  {
+    "file": "laserhearts.wav",
+    "duration": 118.15383219954649,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.22795459628105164,
+    "bytes": 5210628
+  },
+  {
+    "file": "tropical.wav",
+    "duration": 123.87097505668935,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.2215222418308258,
+    "bytes": 5462754
+  },
+  {
+    "file": "midnight.wav",
+    "duration": 109.71428571428571,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.85999995470047,
+    "rms": 0.24458688497543335,
+    "bytes": 4838444
+  },
+  {
+    "file": "bounce.wav",
+    "duration": 114.62684807256235,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.20273315906524658,
+    "bytes": 5055088
+  },
+  {
+    "file": "starlight.wav",
+    "duration": 111.62789115646258,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.23308132588863373,
+    "bytes": 4922834
+  },
+  {
+    "file": "confetti.wav",
+    "duration": 112.941179138322,
+    "sampleRate": 22050,
+    "channels": 1,
+    "peak": 0.8600000143051147,
+    "rms": 0.2337830811738968,
+    "bytes": 4980750
   }
 ]
