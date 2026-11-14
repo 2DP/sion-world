@@ -45,6 +45,13 @@
     s.enemies=s.enemies.filter(e=>!e.escaped);
     if(s.hp<=0){s.status='lost';return;}
     for(const t of s.towers){ t.cooldown=Math.max(0,t.cooldown-dt);if(t.cooldown>0)continue;const st=stats(t);const target=s.enemies.filter(e=>e.hp>0&&Math.hypot(e.x-t.x,e.y-t.y)<=st.range).sort((a,b)=>b.d-a.d)[0];if(!target)continue;t.cooldown=st.cooldown;t.angle=Math.atan2(target.y-t.y,target.x-t.x);s.effects.push({x:t.x,y:t.y,tx:target.x,ty:target.y,type:t.type,life:.2});const victims=t.type==='cannon'?s.enemies.filter(e=>e.hp>0&&Math.hypot(e.x-target.x,e.y-target.y)<64):[target];for(const e of victims){e.hp-=st.damage*(t.type==='magic'?1:1-e.armor);if(t.type==='frost')e.slow=2;}}
+    for(const e of s.enemies){
+      if(e.type!=='boss')continue;
+      let earned=0;
+      for(const threshold of [.75,.5,.25])if(e.hp<=e.maxHp*threshold)earned++;
+      const paid=e.bountyPaid||0;
+      if(earned>paid){const amount=(earned-paid)*25;s.gold+=amount;e.bountyPaid=earned;s.effects.push({type:'coin',x:e.x,y:e.y,amount,life:.9});}
+    }
     s.enemies=s.enemies.filter(e=>{if(e.hp>0)return true;s.gold+=e.reward;s.score+=e.reward*10;s.kills++;return false;});
     if(!s.enemies.length&&!s.queue.length){s.gold+=35+s.wave*3;s.score+=100*s.wave;s.effects=[];s.status=s.wave===15?'won':'ready';if(s.status==='won')s.score+=s.hp*100;}
   }
