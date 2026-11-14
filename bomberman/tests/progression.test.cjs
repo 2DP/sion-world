@@ -97,3 +97,12 @@ test('start rewards are bounded and only apply to the player after stage one', (
     assert.ok(s.actors.slice(1).every(a => a.shield === 0 && a.capacity === 1));
   }
 });
+
+test('red X storm tiles block movement for player and both CPU teams, but warning tiles remain walkable',()=>{
+ const s=arena();
+ for(const a of s.actors){
+  at(a,3,2);s.time=119;assert.equal(E.canWalk(s,a,3,1),true);
+  s.time=120;assert.equal(E.canWalk(s,a,3,1),false);assert.equal(E.move(s,a,'up'),false);
+  assert.equal(a.y,2);s.time=a.nextMove;assert.equal(E.move(s,a,'down'),true);
+ }
+});

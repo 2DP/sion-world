@@ -103,7 +103,7 @@
   const burning = (s, x, y) => s.flames.some(f => f.until > s.time + 1e-8 && f.cells.has(index(s, x, y)));
   const activeBombs = (s, a) => s.bombs.filter(b => b.owner === a.id).length;
   function canWalk(s, a, x, y) {
-    if (tile(s, x, y)) return false;
+    if (tile(s, x, y) || stormDue(s, x, y) <= s.time + 1e-8) return false;
     const b = bombAt(s, x, y);
     return !b || (x === a.x && y === a.y && b.grace.has(a.id));
   }
