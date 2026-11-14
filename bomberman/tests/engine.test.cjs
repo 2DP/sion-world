@@ -17,7 +17,7 @@ function at(a, x, y) { a.x = a.prevX = x; a.y = a.prevY = y; }
 test('twelve stages add enemies every two rounds and grow maps for both teams', () => {
   for (let stage = 1; stage <= E.STAGES.length; stage++) {
     const s = E.create({stage,seed:5});
-    assert.equal(s.enemies, Math.ceil(stage/2)); assert.equal(s.allies,stage<7?1:2);
+    assert.equal(s.enemies, Math.ceil(stage/2)); assert.equal(s.allies,Math.max(1,s.enemies-1));
     assert.equal(s.actors.length,1+s.enemies+s.allies);
     assert.equal(new Set(s.actors.map(a=>E.key(a.x,a.y))).size,s.actors.length);
     if(stage>1) { const prev=E.STAGES[stage-2]; assert.ok(s.width*s.height>prev.width*prev.height); }

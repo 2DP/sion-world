@@ -3,13 +3,13 @@
   'use strict';
   const DIRS = { up: [0, -1], right: [1, 0], down: [0, 1], left: [-1, 0] };
   const STAGES = [
-    ['첫 번째 불꽃',13,11,1,1], ['함께 걷는 길',15,11,1,1],
-    ['두 번째 라이벌',15,13,2,1], ['넓어진 골목',17,13,2,1],
-    ['세 갈래 작전',17,15,3,1], ['블록 정원',19,15,3,1],
-    ['지원군 도착',21,17,4,2], ['팀워크의 시간',21,19,4,2],
-    ['다섯 라이벌',23,19,5,2], ['커다란 놀이터',25,21,5,2],
-    ['마지막 작전',27,21,6,2], ['불꽃 팀 챔피언',29,23,6,2]
-  ].map(([name,width,height,enemies,allies], i) => ({ name,width,height,enemies,allies,stormStart:120 + Math.floor(i / 2) * 15 }));
+    ['첫 번째 불꽃',13,11,1], ['함께 걷는 길',15,11,1],
+    ['두 번째 라이벌',15,13,2], ['넓어진 골목',17,13,2],
+    ['세 갈래 작전',17,15,3], ['블록 정원',19,15,3],
+    ['지원군 도착',21,17,4], ['팀워크의 시간',21,19,4],
+    ['다섯 라이벌',23,19,5], ['커다란 놀이터',25,21,5],
+    ['마지막 작전',27,21,6], ['불꽃 팀 챔피언',29,23,6]
+  ].map(([name,width,height,enemies], i) => ({ name,width,height,enemies,allies:Math.max(1,enemies-1),stormStart:120 + Math.floor(i / 2) * 15 }));
   const COLORS = ['#247f77', '#e57460', '#9875bc', '#d69a37', '#538fcb', '#c66f9e'];
   const ITEMS = Object.freeze({
     bomb: { name: '폭탄 추가', weight: 25 }, fire: { name: '범위 강화', weight: 25 },
@@ -62,12 +62,14 @@
       bombs: [], flames: [], actors: [], events: [], nextBombId: 0 };
     const midX = Math.floor(s.width / 2) | 1, midY = Math.floor(s.height / 2) | 1;
     const enemySpawns = [[s.width-2,s.height-2],[s.width-2,1],[s.width-2,midY],[midX,1],[midX,s.height-2],[midX,midY]];
-    const points = [[1,1,0], ...enemySpawns.slice(0,cfg.enemies).map(p => [...p,1]), ...[[1,s.height-2],[1,midY]].slice(0,cfg.allies).map(p => [...p,0])];
+    const quarterX = Math.floor(s.width / 4) | 1;
+    const allySpawns = [[1,s.height-2],[1,midY],[quarterX,1],[quarterX,s.height-2],[quarterX,midY]];
+    const points = [[1,1,0], ...enemySpawns.slice(0,cfg.enemies).map(p => [...p,1]), ...allySpawns.slice(0,cfg.allies).map(p => [...p,0])];
     const reserved = new Set();
     for (const [x, y] of points) {
       const cx = Math.max(2, Math.min(s.width - 3, x));
       const cy = Math.max(2, Math.min(s.height - 3, y));
-      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) {
         reserved.add(key(cx + dx, cy + dy));
         reserved.add(key(s.width - 1 - cx - dx, s.height - 1 - cy - dy));
       }

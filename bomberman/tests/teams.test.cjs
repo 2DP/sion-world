@@ -15,7 +15,7 @@ test('only elimination of the entire friendly team causes defeat',()=>{
   const s=arena(7); s.actors[0].alive=false;
   const allies=s.actors.filter(a=>a.id&&a.team===0);
   allies[0].alive=false; E.step(s); assert.equal(s.phase,'playing');
-  allies[1].alive=false; E.step(s); assert.equal(s.phase,'defeat');
+  allies.slice(1).forEach(a=>a.alive=false); E.step(s); assert.equal(s.phase,'defeat');
 });
 test('last enemy elimination waits for every bomb and residual flame, with no new bombs',()=>{
   const s=arena(),p=s.actors[0]; at(p,5,5); E.place(s,p); at(p,1,1);
@@ -41,8 +41,8 @@ test('settlement runs chain explosions and pauses without premature result event
   E.step(s); assert.equal(s.events.length,0);
 });
 test('teammate blasts do not hurt allies, but the owner still takes damage',()=>{
-  for(const ownerTeam of [0,1]) {
-    const s=arena(3), members=s.actors.filter(a=>a.team===ownerTeam),owner=members[0],friend=members[1];
+  for(const [ownerTeam,ownerIndex] of [[0,0],[0,1],[1,0]]) {
+    const s=arena(3), members=s.actors.filter(a=>a.team===ownerTeam),owner=members[ownerIndex],friend=members[1-ownerIndex];
     at(owner,3,3); at(friend,5,3); friend.shield=1; E.place(s,owner); ticks(s,120);
     assert.equal(owner.alive,false); assert.equal(friend.alive,true); assert.equal(friend.shield,1);
     assert.equal(owner.kills,0);
@@ -58,5 +58,5 @@ test('AI does not attack a teammate standing in its firing line',()=>{
 test('stage twelve supports ally-only campaign victory after the last blast',()=>{
   const s=arena(12); s.actors[0].alive=false;
   s.actors.filter(a=>a.team===1).forEach(a=>a.alive=false); E.step(s);
-  assert.equal(s.phase,'complete'); assert.equal(E.teamCounts(s).ours,2);
+  assert.equal(s.phase,'complete'); assert.equal(E.teamCounts(s).ours,5);
 });
