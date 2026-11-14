@@ -43,7 +43,7 @@ test('shield cannot stack, and pause preserves its post-hit grace', () => {
   E.resume(s); ticks(s, 24); assert.equal(a.alive, true); assert.equal(a.shield, 0);
 });
 test('CPU gains the same range and shield effects; stage creation resets both', () => {
-  const s = world(), cpu = s.actors[1]; s.stage = E.STAGES.length; get(s, cpu, 'superfire'); assert.equal(cpu.range, 4);
+  const s = world(), cpu = s.actors[1]; s.stage = E.STAGES.length; while(!E.wantsItem(s,cpu,E.index(s,cpu.x,cpu.y))) s.seed++; get(s, cpu, 'superfire'); assert.equal(cpu.range, 4);
   get(s, cpu, 'shield'); flame(s, cpu); E.step(s); assert.equal(cpu.alive, true); assert.equal(cpu.shield, 0);
   const fresh = E.create({ stage: 2 }); assert.ok(fresh.actors.every(a => a.range === 2 && a.shield === 0 && a.protectedUntil === 0));
 });

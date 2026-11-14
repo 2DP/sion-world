@@ -79,7 +79,7 @@
         const item = s.items[i], repeats = a.memory.filter(v => v === i).length;
         const loot = useful(a, item) && E.wantsItem(s, a, i);
         const trap = personality === 'trapper' && near <= 3 ? (4 - exits) * 1.2 : 0;
-        const score = (loot ? (personality === 'collector' ? 22 : 14) * level.itemInterest : 0)
+        const score = (loot ? (a.team === 0 ? 32 : personality === 'collector' ? 22 : 14) * level.itemInterest : 0)
           + crates * (personality === 'collector' ? 3.2 : 2.6)
           - near * level.attack * (personality === 'attacker' ? 1.2 : .65)
           + trap - p.depth * .5 - repeats * .8 + exits * .2 + s.rng() * .25;
@@ -127,7 +127,7 @@
       const test = { id: -1, x: a.x, y: a.y, range: a.range, due: s.time + 2 }, cells = E.blast(s, test);
       const crates = cells.some(i => s.tiles[i] === 2);
       const attack = s.actors.some(r => E.opponents(a, r) && r.alive && (cells.includes(E.index(s, r.x, r.y)) ||
-        (s.stage >= 9 && s.difficulty === 'hard' && E.DIRS[r.dir] && cells.includes(E.index(s, r.x + E.DIRS[r.dir][0], r.y + E.DIRS[r.dir][1])))));
+        (s.stage >= 13 && s.difficulty === 'hard' && E.DIRS[r.dir] && cells.includes(E.index(s, r.x + E.DIRS[r.dir][0], r.y + E.DIRS[r.dir][1])))));
       if ((crates || attack) && s.rng() < (crates ? .45 + level.activity * .55 : level.attack * (s.difficulty === 'easy' ? .55 : 1))) {
         // Account for the full reaction delay after planting, not just instantaneous movement.
         const delayed = { ...a, nextMove: Math.max(a.nextMove, s.time + delay + 1 / 60) };

@@ -4,7 +4,7 @@ const E = require('../engine.js');
 const AI = require('../ai.js');
 
 function arena(stage = 1) {
-  const s = E.create({ seed: 123, stage: stage <= 5 ? stage * 2 - 1 : stage, phase: 'playing' });
+  const s = E.create({ seed: 123, stage: stage <= 5 ? stage * 3 - 2 : stage, phase: 'playing' });
   s.actors = s.actors.filter(a => a.id === 0 || a.team === 1); // Isolate legacy single-player rule cases; team coverage lives in teams.test.cjs.
   s.tiles = s.tiles.map(t => t === 2 ? 0 : t); s.hidden = {}; return s;
 }
@@ -17,12 +17,12 @@ function at(a, x, y) { a.x = a.prevX = x; a.y = a.prevY = y; }
 test('twelve stages add enemies every two rounds and grow maps for both teams', () => {
   for (let stage = 1; stage <= E.STAGES.length; stage++) {
     const s = E.create({stage,seed:5});
-    assert.equal(s.enemies, Math.ceil(stage/2)); assert.equal(s.allies,Math.max(1,s.enemies-1));
+    assert.equal(s.enemies, Math.ceil(stage/3)); assert.equal(s.allies,Math.max(1,s.enemies-1));
     assert.equal(s.actors.length,1+s.enemies+s.allies);
     assert.equal(new Set(s.actors.map(a=>E.key(a.x,a.y))).size,s.actors.length);
     if(stage>1) { const prev=E.STAGES[stage-2]; assert.ok(s.width*s.height>prev.width*prev.height); }
   }
-  assert.equal(E.STAGES.at(-1).width,29); assert.equal(E.STAGES.at(-1).height,23);
+  assert.equal(E.STAGES.at(-1).width,37); assert.equal(E.STAGES.at(-1).height,27);
 });
 test('240 generated maps have symmetric blocks/items, legal spawns, escape routes and connected destructible terrain', () => {
   for (let stage = 1; stage <= E.STAGES.length; stage++) for (let seed = 0; seed < 20; seed++) {
@@ -113,7 +113,7 @@ test('all remaining rivals must be defeated before a stage clears', () => {
   E.step(s); assert.equal(s.phase, 'playing'); s.actors[3].alive = false; E.step(s); assert.equal(s.phase, 'stage-clear');
 });
 test('stage twelve ends in final victory; new stage resets abilities and actors', () => {
-  const s = arena(12); s.actors.slice(1).forEach(a => a.alive = false); E.step(s); assert.equal(s.phase, 'complete');
+  const s = arena(18); s.actors.slice(1).forEach(a => a.alive = false); E.step(s); assert.equal(s.phase, 'complete');
   const next = E.create({ stage: 4 }); assert.equal(next.phase, 'ready'); assert.equal(next.actors[0].range, 2); assert.equal(next.actors.length, 1 + next.enemies + next.allies);
 });
 test('the last CPU and player dying together is a draw, with other survivors it is defeat', () => {

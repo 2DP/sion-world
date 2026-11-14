@@ -42,7 +42,7 @@ test('settlement runs chain explosions and pauses without premature result event
 });
 test('teammate blasts do not hurt allies, but the owner still takes damage',()=>{
   for(const [ownerTeam,ownerIndex] of [[0,0],[0,1],[1,0]]) {
-    const s=arena(3), members=s.actors.filter(a=>a.team===ownerTeam),owner=members[ownerIndex],friend=members[1-ownerIndex];
+    const s=arena(4), members=s.actors.filter(a=>a.team===ownerTeam),owner=members[ownerIndex],friend=members[1-ownerIndex];
     at(owner,3,3); at(friend,5,3); friend.shield=1; E.place(s,owner); ticks(s,120);
     assert.equal(owner.alive,false); assert.equal(friend.alive,true); assert.equal(friend.shield,1);
     assert.equal(owner.kills,0);
@@ -55,8 +55,8 @@ test('AI does not attack a teammate standing in its firing line',()=>{
   at(s.actors[1],3,5); ally.ai.next=0;
   assert.equal(AI.input(s,ally).bomb,true);
 });
-test('stage twelve supports ally-only campaign victory after the last blast',()=>{
-  const s=arena(12); s.actors[0].alive=false;
+test('stage eighteen supports ally-only campaign victory after the last blast',()=>{
+  const s=arena(18); s.actors[0].alive=false;
   s.actors.filter(a=>a.team===1).forEach(a=>a.alive=false); E.step(s);
   assert.equal(s.phase,'complete'); assert.equal(E.teamCounts(s).ours,5);
 });

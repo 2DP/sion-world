@@ -49,7 +49,7 @@ function app(options = {}) {
   return { elements, handlers, storage, state: () => current, click: id => elements.get(id).click(),
     advance: ticks => { for (let n = 0; n < ticks; n++) { now += 1000 / 60 + .001; raf(now); } } };
 }
-test('real UI handlers advance through 12 team stages, unlock stages, save once per win, and finish the campaign', () => {
+test('real UI handlers advance through 18 team stages, unlock stages, save once per win, and finish the campaign', () => {
   const ui = app();
   assert.equal(ui.elements.get('stages').children[1].disabled, true);
   ui.click('primary');
@@ -66,7 +66,7 @@ test('real UI handlers advance through 12 team stages, unlock stages, save once 
   }
   assert.match(ui.elements.get('overlay-title').innerHTML, /챔피언/);
   ui.click('secondary'); assert.ok(ui.elements.get('stages').children.every(b => !b.disabled));
-  ui.elements.get('stages').children[11].click(); assert.equal(ui.state().stage, 12);
+  ui.elements.get('stages').children[17].click(); assert.equal(ui.state().stage, 18);
   ui.click('primary'); assert.equal(ui.state().enemies, 6);
 });
 test('defeat retries the same stage, while pause and blur clear pending input and freeze time', () => {

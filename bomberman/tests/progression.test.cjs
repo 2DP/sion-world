@@ -26,7 +26,7 @@ test('stage penalties progressively reduce resting and increase actual item pick
     }
     pickups.push(collected); actions.push(active);
   }
-  assert.equal(pickups[0], 10); assert.equal(pickups.at(-1), 100);
+  assert.equal(pickups[0], 5); assert.equal(pickups.at(-1), 55);
   for (let i=1;i<pickups.length;i++) assert.ok(pickups[i]>pickups[i-1]);
   for (let i = 1; i < actions.length; i++) assert.ok(actions[i] > actions[i - 1], JSON.stringify(actions));
 });
@@ -66,7 +66,7 @@ test('border warns eight seconds ahead, pauses, affects both sides and leaves a 
 });
 
 test('player kills are attributed once; suicide is separate; chains keep original ownership', () => {
-  const s = arena(3), p = s.actors[0]; at(p, 3, 3); E.place(s, p); at(p, 1, 5);
+  const s = arena(4), p = s.actors[0]; at(p, 3, 3); E.place(s, p); at(p, 1, 5);
   at(s.actors[1], 4, 3); at(s.actors[2], 3, 4);
   s.time = 2 - 1/60; E.step(s);
   assert.equal(p.kills, 2); assert.equal(s.events.filter(e => e.type === 'death' && e.killerId === 0).length, 2);

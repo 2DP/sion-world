@@ -35,7 +35,7 @@
   const held = new Map(), particles = [];
   let heldOrder = 0;
   let stageBonus = null, revealAt = 0, newBest = false, lastKillAt = -Infinity, combo = 0, lastWarning = null;
-  const stageHint = n => n <= 3 ? '느긋한 시작 · 아군과 함께 아이템을 모으세요' : n <= 6 ? '차근차근 강해지는 적 · 길을 함께 열어요' : n <= 9 ? '지원군 합류 · 넓어진 맵에서 협력하세요' : '마지막 팀 대결 · 동료와 함께 살아남으세요';
+  const stageHint = n => n <= 6 ? '느긋한 시작 · 아군과 함께 아이템을 모으세요' : n <= 6 ? '차근차근 강해지는 적 · 길을 함께 열어요' : n <= 14 ? '지원군 합류 · 넓어진 맵에서 협력하세요' : '마지막 팀 대결 · 동료와 함께 살아남으세요';
   const stageNumber = n => String(n).padStart(2, '0');
   let manualZoom = null, zoomed = false;
   function deathCopy() {
@@ -102,7 +102,7 @@
       ready: '아군 ' + state.allies + '명과 함께 적 ' + state.enemies + '명을 이겨요!<br>우리 팀이 남아 있으면 ' + (selected === E.STAGES.length ? '최종 우승이에요.' : '다음 스테이지가 열려요.'),
       paused: '폭탄도, 컴퓨터도 잠깐 쉬고 있어요.<br>준비되면 다시 이어서 플레이하세요.',
       'stage-clear': (state.actors[0].alive ? '우리 팀 승리!' : '아군이 해냈어요! 우리 팀 승리!') + '<br>다음 단계: 적 ' + (E.STAGES[selected]?.enemies || 0) + '명 · 아군 ' + (E.STAGES[selected]?.allies || 0) + '명',
-      complete: '12단계의 팀 대결을 모두 이겼어요!<br>우리 팀이 놀이터의 챔피언이에요!',
+      complete: '18단계의 팀 대결을 모두 이겼어요!<br>우리 팀이 놀이터의 챔피언이에요!',
       defeat: '우리 팀이 모두 탈락했어요.<br>' + deathCopy(),
       draw: '남은 폭탄과 불꽃이 끝난 뒤<br>양쪽 팀 모두 탈락해 무승부예요.'
     };

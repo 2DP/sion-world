@@ -8,20 +8,22 @@
     ['세 갈래 작전',17,15,3], ['블록 정원',19,15,3],
     ['지원군 도착',21,17,4], ['팀워크의 시간',21,19,4],
     ['다섯 라이벌',23,19,5], ['커다란 놀이터',25,21,5],
-    ['마지막 작전',27,21,6], ['불꽃 팀 챔피언',29,23,6]
-  ].map(([name,width,height,enemies], i) => ({ name,width,height,enemies,allies:Math.max(1,enemies-1),stormStart:120 + Math.floor(i / 2) * 15 }));
+    ['마지막 작전',27,21,6], ['불꽃 팀 챔피언',29,23,6],
+    ['새로운 원정',31,23,5], ['초록 미로',31,25,5], ['협동 작전',33,25,5],
+    ['불꽃 요새',35,25,6], ['최후의 진격',35,27,6], ['우리 팀 챔피언',37,27,6]
+  ].map(([name,width,height,enemies], i) => ({ name,width,height,enemies:Math.ceil((i+1)/3),allies:Math.max(1,Math.ceil((i+1)/3)-1),stormStart:120 + Math.floor(i / 2) * 15 }));
   const COLORS = ['#247f77', '#e57460', '#9875bc', '#d69a37', '#538fcb', '#c66f9e'];
   const ITEMS = Object.freeze({
-    bomb: { name: '폭탄 추가', weight: 25 }, fire: { name: '범위 강화', weight: 25 },
-    speed: { name: '이동 강화', weight: 15 }, shield: { name: '1회용 실드', weight: 25 },
+    bomb: { name: '폭탄 추가', weight: 30 }, fire: { name: '범위 강화', weight: 30 },
+    speed: { name: '이동 강화', weight: 22 }, shield: { name: '1회용 실드', weight: 8 },
     superfire: { name: '슈퍼 불꽃', weight: 10 }
   });
   const MAX_RANGE = 6, SHIELD_GRACE = .8;
   const CPU_LEVELS = STAGES.map((_, i) => {
-    const t = i / (STAGES.length - 1);
-    return { activity: .35 + .65 * t, itemInterest: .1 + .9 * t, attack: .2 + .8 * t, cooldown: 3.2 - 2.35 * t, delay: .55 * (1 - t) };
+    const t = Math.pow(i / (STAGES.length - 1), 1.5);
+    return { activity: .25 + .65 * t, itemInterest: .05 + .5 * t, attack: .12 + .73 * t, cooldown: 4 - 2.7 * t, delay: .65 * (1 - t) };
   });
-  const ALLY_LEVEL = { activity: .8, itemInterest: .8, attack: .7, cooldown: 1.5, delay: .15 };
+  const ALLY_LEVEL = { activity: 1, itemInterest: 1, attack: .7, cooldown: 1.5, delay: .15 };
   const cpuLevel = (s, a) => a && a.id && a.team === 0 ? ALLY_LEVEL : CPU_LEVELS[s.stage - 1];
   const opponents = (a, b) => a.team !== b.team;
   const teamCounts = s => ({ ours: s.actors.filter(a => a.alive && a.team === 0).length, enemies: s.actors.filter(a => a.alive && a.team === 1).length });
@@ -59,7 +61,7 @@
     const s = { ...cfg, stage, seed, rng, difficulty: ['easy', 'normal', 'hard'].includes(options.difficulty) ? options.difficulty : 'easy',
       time: 0, tick: 0, settling: false, phase: options.phase || 'ready', countdown: 3,
       tiles: Array(cfg.width * cfg.height).fill(0), hidden: {}, items: {}, pending: {},
-      bombs: [], flames: [], actors: [], events: [], nextBombId: 0 };
+      bombs: [], flames: [], actors: [], events: [], nextCrateAt: 15, nextBombId: 0 };
     const midX = Math.floor(s.width / 2) | 1, midY = Math.floor(s.height / 2) | 1;
     const enemySpawns = [[s.width-2,s.height-2],[s.width-2,1],[s.width-2,midY],[midX,1],[midX,s.height-2],[midX,midY]];
     const quarterX = Math.floor(s.width / 4) | 1;
@@ -85,6 +87,7 @@
         if (rng() < .45) { const type = randomItem(rng); s.hidden[i] = s.hidden[j] = type; }
       }
     }
+    s.crateSites = s.tiles.flatMap((t,i) => t === 2 ? [i] : []);
     points.forEach(([x, y, team], id) => s.actors.push({
       id, team, x, y, prevX: x, prevY: y, movedAt: -1, dir: 'down', alive: true,
       color: team === 0 ? (id ? '#369ca0' : COLORS[0]) : COLORS[1 + (id - 1) % (COLORS.length - 1)], name: id === 0 ? '나' : team === 0 ? '아군 ' + (id - cfg.enemies) : '적 ' + id, capacity: 1, range: 2, speed: 4,
@@ -170,6 +173,31 @@
       a.alive = false; s.events.push({ type: 'death', x: a.x, y: a.y, color: a.color, id: a.id, killerId: killer?.id ?? null });
     }
   }
+  // Restore one distant crate without cutting any currently open route.
+  function regrow(s) {
+    if (s.settling || s.time < s.nextCrateAt) return;
+    s.nextCrateAt = s.time + 12;
+    if (s.bombs.length || s.flames.length) return;
+    const candidates = (s.crateSites || []).filter(i => {
+      const x=i%s.width,y=Math.floor(i/s.width);
+      return !s.tiles[i] && !s.items[i] && !s.pending[i] && stormDue(s,x,y)>s.time+20 &&
+        s.actors.every(a=>!a.alive || Math.abs(a.x-x)+Math.abs(a.y-y)>4);
+    });
+    if (!candidates.length) return;
+    const i=candidates[Math.floor(s.rng()*candidates.length)];
+    const neighbors=Object.values(DIRS).map(([dx,dy])=>index(s,i%s.width+dx,Math.floor(i/s.width)+dy)).filter(j=>s.tiles[j]===0);
+    s.tiles[i]=2;
+    const seen=new Set(neighbors.slice(0,1)),queue=[...seen];
+    for(let n=0;n<queue.length;n++) {
+      const j=queue[n],x=j%s.width,y=Math.floor(j/s.width);
+      for(const [dx,dy] of Object.values(DIRS)) { const k=index(s,x+dx,y+dy);
+        if(!tile(s,x+dx,y+dy)&&!seen.has(k)){seen.add(k);queue.push(k);}
+      }
+    }
+    if(neighbors.some(j=>!seen.has(j))) {s.tiles[i]=0;return;}
+    if(s.rng()<.45) s.hidden[i]=randomItem(s.rng);
+    s.events.push({type:'crate',x:i%s.width,y:Math.floor(i/s.width)});
+  }
   function step(s, input = {}, dt = 1 / 60, controller) {
     s.events = [];
     if (s.phase === 'countdown') { s.countdown = Math.max(0, s.countdown - dt); if (s.countdown < 1e-8) { s.phase = 'playing'; s.events.push({ type: 'start' }); } return; }
@@ -212,6 +240,7 @@
       if (!teams.ours) s.phase = teams.enemies ? 'defeat' : 'draw';
       else if (!teams.enemies) s.phase = s.stage === STAGES.length ? 'complete' : 'stage-clear';
     }
+    if (s.phase === 'playing') regrow(s);
     if (s.phase !== 'playing') s.events.push({ type: 'result', result: s.phase });
   }
   function pause(s) { if (s.phase === 'playing' || s.phase === 'countdown') { s.resumePhase = s.phase; s.phase = 'paused'; return true; } return false; }
