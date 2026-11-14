@@ -193,7 +193,7 @@
       const warning = Math.ceil(border.due - state.time);
       if (warning !== lastWarning) { tone('warning'); lastWarning = warning; }
     } else if (!border.warning) lastWarning = null;
-    text('battle-notice', revealAt ? deathCopy() : ['complete', 'stage-clear'].includes(state.phase) ? '우리 팀 승리! 마지막 불꽃까지 모두 확인했어요.' : ['defeat', 'draw'].includes(state.phase) ? '경기가 끝났어요. 다시 도전해 보세요!' : state.settling ? '마지막 폭탄과 불꽃이 끝날 때까지 기다려요! 아직 피할 수 있어요.' : !p.alive ? '관전 중 · 아군이 싸우고 있어요! 우리 팀이 남아 있으면 패배가 아니에요.' : border.warning ? '⚠ ' + Math.max(1, Math.ceil(border.due - state.time)) + '초 후 표시된 바닥이 위험해져요! 중앙으로 이동 · 실드 방어 불가' : border.ring ? '⚠ 바깥쪽은 위험해요! 중앙에서 승부를 끝내세요 · 실드 방어 불가' : stageHint(selected));
+    text('battle-notice', state.rescue ? '구조 중… ' + Math.round(state.rescue.elapsed / 1.5 * 100) + '% · 움직이지 마세요 (팀당 1회)' : revealAt ? deathCopy() : ['complete', 'stage-clear'].includes(state.phase) ? '우리 팀 승리! 마지막 불꽃까지 모두 확인했어요.' : ['defeat', 'draw'].includes(state.phase) ? '경기가 끝났어요. 다시 도전해 보세요!' : state.settling ? '마지막 폭탄과 불꽃이 끝날 때까지 기다려요! 아직 피할 수 있어요.' : !p.alive ? '관전 중 · 아군이 싸우고 있어요! 구조 기회가 남으면 아군이 구하러 와요.' : border.warning ? '⚠ ' + Math.max(1, Math.ceil(border.due - state.time)) + '초 후 표시된 바닥이 위험해져요! 중앙으로 이동 · 실드 방어 불가' : border.ring ? '⚠ 바깥쪽은 위험해요! 중앙에서 승부를 끝내세요 · 실드 방어 불가' : stageHint(selected) + ' · 팀 구조 ' + state.rescuesLeft + '회 남음');
     notice.classList.toggle('danger', !!revealAt || border.warning || border.ring > 0);
     text('alive', E.teamCounts(state).enemies);
     text('team-alive', '우리 팀 ' + E.teamCounts(state).ours + ' / ' + (state.allies + 1));
@@ -297,6 +297,7 @@
       const view = $('map-view');
       if (followed) { view.scrollLeft = (followed.x + .5) * canvas.clientWidth / state.width - view.clientWidth / 2; view.scrollTop = (followed.y + .5) * canvas.clientHeight / state.height - view.clientHeight / 2; }
     }
+    for(const a of E.rescueTargets(state)){circle(a.x*cell+24,a.y*cell+24,18,'#fff5ce');label('+ 구조',a.x*cell+24,a.y*cell+24,11,'#247f77');}
     state.actors.slice().sort((a, b) => a.y - b.y || a.id - b.id).forEach(drawActor);
     const death = state.actors[0].death;
     if (revealAt && death) {

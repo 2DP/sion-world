@@ -76,10 +76,11 @@
         const near = Math.min(...rivals.map(r => Math.abs(r.x - p.x) + Math.abs(r.y - p.y)));
         const crates = Object.values(E.DIRS).filter(([dx, dy]) => E.tile(s, p.x + dx, p.y + dy) === 2).length;
         const exits = Object.values(E.DIRS).filter(([dx, dy]) => !E.tile(s, p.x + dx, p.y + dy)).length;
+        const rescueNear = a.team === 0 && E.rescueTargets(s).some(r=>Math.abs(r.x-p.x)+Math.abs(r.y-p.y)<=1);
         const item = s.items[i], repeats = a.memory.filter(v => v === i).length;
         const loot = useful(a, item) && E.wantsItem(s, a, i);
         const trap = personality === 'trapper' && near <= 3 ? (4 - exits) * 1.2 : 0;
-        const score = (loot ? (a.team === 0 ? 32 : personality === 'collector' ? 22 : 14) * level.itemInterest : 0)
+        const score = (rescueNear ? 100 : 0) + (loot ? (a.team === 0 ? 32 : personality === 'collector' ? 22 : 14) * level.itemInterest : 0)
           + crates * (personality === 'collector' ? 3.2 : 2.6)
           - near * level.attack * (personality === 'attacker' ? 1.2 : .65)
           + trap - p.depth * .5 - repeats * .8 + exits * .2 + s.rng() * .25;
@@ -123,6 +124,7 @@
     if (!safe(s, f, a.x, a.y, s.time, f.until)) {
       a.ai.evading = true; a.ai.dir = retreat.dir; return { dir: retreat.dir };
     }
+    if(a.team===0 && E.rescueTargets(s).some(r=>Math.abs(r.x-a.x)+Math.abs(r.y-a.y)<=1)){a.ai.dir=null;return {};}
     if (s.time >= a.ai.nextBomb && !E.bombAt(s, a.x, a.y) && E.activeBombs(s, a) < a.capacity) {
       const test = { id: -1, x: a.x, y: a.y, range: a.range, due: s.time + 2 }, cells = E.blast(s, test);
       const crates = cells.some(i => s.tiles[i] === 2);

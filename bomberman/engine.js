@@ -61,7 +61,7 @@
     const s = { ...cfg, stage, seed, rng, difficulty: ['easy', 'normal', 'hard'].includes(options.difficulty) ? options.difficulty : 'easy',
       time: 0, tick: 0, settling: false, phase: options.phase || 'ready', countdown: 3,
       tiles: Array(cfg.width * cfg.height).fill(0), hidden: {}, items: {}, pending: {},
-      bombs: [], flames: [], actors: [], events: [], nextCrateAt: 15, nextBombId: 0 };
+      bombs: [], flames: [], actors: [], events: [], rescuesLeft: 1, rescue: null, nextCrateAt: 15, nextBombId: 0 };
     const midX = Math.floor(s.width / 2) | 1, midY = Math.floor(s.height / 2) | 1;
     const enemySpawns = [[s.width-2,s.height-2],[s.width-2,1],[s.width-2,midY],[midX,1],[midX,s.height-2],[midX,midY]];
     const quarterX = Math.floor(s.width / 4) | 1;
@@ -173,6 +173,25 @@
       a.alive = false; s.events.push({ type: 'death', x: a.x, y: a.y, color: a.color, id: a.id, killerId: killer?.id ?? null });
     }
   }
+  const rescueTargets = s => s.rescuesLeft > 0 && !s.settling ? s.actors.filter(a => !a.alive && a.team === 0 && a.death &&
+    !tile(s,a.x,a.y) && !bombAt(s,a.x,a.y) && !burning(s,a.x,a.y) && stormDue(s,a.x,a.y)>s.time+2) : [];
+  function rescueStep(s,dt) {
+    let pair=null;
+    for(const target of rescueTargets(s)) {
+      const helper=s.actors.find(a=>a.alive && a.team===0 && Math.abs(a.x-target.x)+Math.abs(a.y-target.y)<=1 &&
+        !bombAt(s,a.x,a.y) && !burning(s,a.x,a.y));
+      if(helper){pair={target:target.id,helper:helper.id,x:helper.x,y:helper.y};break;}
+    }
+    if(!pair){s.rescue=null;return;}
+    const old=s.rescue;
+    s.rescue={...pair,elapsed:old && Object.keys(pair).every(k=>pair[k]===old[k]) ? old.elapsed+dt : dt};
+    if(s.rescue.elapsed+1e-8<1.5)return;
+    const a=s.actors.find(a=>a.id===pair.target);
+    a.alive=true;a.death=null;a.protectedUntil=s.time+2;a.nextMove=s.time;
+    a.ai={next:0,dir:null,nextBomb:s.time+1};a.memory=[];
+    s.rescuesLeft--;s.rescue=null;
+    s.events.push({type:'rescue',id:a.id,x:a.x,y:a.y});
+  }
   // Restore one distant crate without cutting any currently open route.
   function regrow(s) {
     if (s.settling || s.time < s.nextCrateAt) return;
@@ -181,7 +200,7 @@
     const candidates = (s.crateSites || []).filter(i => {
       const x=i%s.width,y=Math.floor(i/s.width);
       return !s.tiles[i] && !s.items[i] && !s.pending[i] && stormDue(s,x,y)>s.time+20 &&
-        s.actors.every(a=>!a.alive || Math.abs(a.x-x)+Math.abs(a.y-y)>4);
+        s.actors.every(a=>(!a.alive && !(s.rescuesLeft>0 && a.team===0 && a.death)) || Math.abs(a.x-x)+Math.abs(a.y-y)>4);
     });
     if (!candidates.length) return;
     const i=candidates[Math.floor(s.rng()*candidates.length)];
@@ -234,6 +253,7 @@
       }
       if (intents.get(a.id)?.bomb) place(s, a);
     }
+    rescueStep(s,dt);
     const teams = teamCounts(s);
     if (!teams.ours || !teams.enemies) s.settling = true;
     if (s.settling && !s.bombs.length && !s.flames.length) {
@@ -245,7 +265,7 @@
   }
   function pause(s) { if (s.phase === 'playing' || s.phase === 'countdown') { s.resumePhase = s.phase; s.phase = 'paused'; return true; } return false; }
   function resume(s) { if (s.phase === 'paused') { s.phase = s.resumePhase; return true; } return false; }
-  const api = { DIRS, STAGES, COLORS, ITEMS, MAX_RANGE, SHIELD_GRACE, CPU_LEVELS, cpuLevel, opponents, teamCounts, PERSONALITIES, wantsItem, stormDue, storm, create, random, key, index, tile, bombAt, burning, activeBombs, canWalk, move, place, blast, step, pause, resume };
+  const api = { DIRS, STAGES, COLORS, ITEMS, MAX_RANGE, SHIELD_GRACE, CPU_LEVELS, cpuLevel, rescueTargets, opponents, teamCounts, PERSONALITIES, wantsItem, stormDue, storm, create, random, key, index, tile, bombAt, burning, activeBombs, canWalk, move, place, blast, step, pause, resume };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.BlockBomber = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
