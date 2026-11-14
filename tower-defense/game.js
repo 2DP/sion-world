@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const E=window.TD,$=id=>document.getElementById(id),canvas=$('canvas'),ctx=canvas.getContext('2d'),KEY='sion-world-tower-defense-v1';
-  let saved={records:{},sound:false};try{const data=JSON.parse(localStorage.getItem(KEY));if(data&&typeof data==='object'){saved.sound=data.sound===true;if(data.records&&typeof data.records==='object')for(const [k,v] of Object.entries(data.records)){if(/^\d-(easy|normal)$/.test(k)&&v&&Number.isFinite(v.score)&&v.score>=0)saved.records[k]={score:v.score,cleared:v.cleared===true};}}}catch{}
+  let saved={records:{},sound:false};try{const data=JSON.parse(localStorage.getItem(KEY));if(data&&typeof data==='object'){saved.sound=data.sound===true;if(data.records&&typeof data.records==='object')for(const [k,v] of Object.entries(data.records)){if(/^\d-(easy|normal|hard|veryHard)$/.test(k)&&v&&Number.isFinite(v.score)&&v.score>=0)saved.records[k]={score:v.score,cleared:v.cleared===true};}}}catch{}
   let state=E.create(),chosen='arrow',selected=null,hover=null,keyboard={x:120,y:216},paused=false,speed=1,last=0,accumulator=0,finished=false,audio=null,uiKey='',lastUI='';
   const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(saved));}catch{}};
   function tone(freq=520){if(!saved.sound)return;try{audio??=new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type='sine';o.frequency.setValueAtTime(freq,audio.currentTime);o.frequency.exponentialRampToValueAtTime(freq*.6,audio.currentTime+.1);g.gain.setValueAtTime(.035,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.12);o.connect(g).connect(audio.destination);o.start();o.stop(audio.currentTime+.13);}catch{}}

@@ -1,5 +1,5 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const E=require('../engine.js');
-for(let map=0;map<3;map++)for(const difficulty of ['easy','normal'])test(`전체 15웨이브 클리어 가능: 지도 ${map+1} / ${difficulty}`,()=>{
+for(let map=0;map<3;map++)for(const difficulty of Object.keys(E.difficulties))test(`전체 15웨이브 클리어 가능: 지도 ${map+1} / ${difficulty}`,()=>{
   const s=E.create(map,difficulty);
   for(let wave=1;wave<=15;wave++){
     const spots=[];

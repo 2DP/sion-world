@@ -1,4 +1,12 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const E=require('../engine.js');
+test('추가 난이도는 모든 적과 보스의 체력·이동 속도 및 성 생명력에 적용',()=>{
+  for(const [difficulty,hp,health,speed]of [['easy',30,.78,1],['normal',20,1,1],['hard',15,1.35,1.1],['veryHard',10,1.8,1.2]]){
+    const s=E.create(0,difficulty);assert.equal(s.difficulty,difficulty);assert.equal(s.hp,hp);E.start(s);
+    for(const type of Object.keys(E.enemies)){const e=E.spawnEnemy(s,type);assert.equal(e.maxHp,E.enemies[type].hp*health);assert.equal(e.speed,E.enemies[type].speed*speed);}
+    s.queue=[];const e=s.enemies[0];E.step(s,.1);assert.ok(Math.abs(e.d-E.enemies.basic.speed*speed*.1)<1e-9);
+  }
+});
+test('알 수 없는 난이도는 쉬움으로 안전하게 대체',()=>{for(const value of ['unknown','toString','__proto__',null]){const s=E.create(0,value);assert.equal(s.difficulty,'easy');assert.equal(s.hp,30);E.start(s);assert.ok(Number.isFinite(E.spawnEnemy(s,'boss').hp));}});
 test('길과 중복 건설을 막고 골드를 정확히 차감',()=>{const s=E.create();assert.equal(E.build(s,'arrow',120,120),null);const t=E.build(s,'arrow',120,216);assert.ok(t);assert.equal(s.gold,195);assert.equal(E.build(s,'magic',120,216),null);assert.equal(E.build(s,'missing',120,216),null);assert.equal(E.build(s,'arrow',-50,0),null);});
 test('강화 상한과 판매 환급, 잔액 부족',()=>{const s=E.create();s.gold=1000;const t=E.build(s,'arrow',120,216);assert.ok(E.upgrade(s,t.id));assert.ok(E.upgrade(s,t.id));assert.equal(t.level,3);assert.equal(E.upgrade(s,t.id),false);const gold=s.gold;assert.ok(E.sell(s,t.id));assert.equal(s.gold,gold+Math.floor(t.spent*.7));assert.equal(E.sell(s,t.id),false);s.gold=0;assert.equal(E.build(s,'arrow',120,216),null);});
 test('웨이브는 중복 시작할 수 없고 5번째에 보스 등장',()=>{const s=E.create();assert.ok(E.start(s));assert.equal(E.start(s),false);s.status='ready';s.wave=4;E.start(s);assert.equal(s.queue.at(-1),'boss');});
